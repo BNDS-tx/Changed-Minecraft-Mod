@@ -1,0 +1,121 @@
+package net.ltxprogrammer.changed.client.renderer;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.ltxprogrammer.changed.Changed;
+import net.ltxprogrammer.changed.client.FormRenderHandler;
+import net.ltxprogrammer.changed.client.renderer.layers.*;
+import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel;
+import net.ltxprogrammer.changed.client.renderer.model.CustomizedLatexWolfMale;
+import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorLatexMaleWolfModel;
+import net.ltxprogrammer.changed.entity.ChangedEntity;
+import net.ltxprogrammer.changed.entity.beast.CustomizedEntity;
+import net.ltxprogrammer.changed.util.Color3;
+import net.minecraft.client.Camera;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.renderer.entity.layers.EyesLayer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.HumanoidArm;
+import org.jetbrains.annotations.NotNull;
+
+public class CustomizedEntityRenderer extends AdvancedHumanoidRenderer<CustomizedEntity, CustomizedLatexWolfMale, ArmorLatexMaleWolfModel<CustomizedEntity>> {
+    private static final ResourceLocation TEXTURE = Changed.modResource("textures/customized_entity/customized_entity.png");
+
+    public CustomizedEntityRenderer (EntityRendererProvider.Context context) {
+        super(context, new CustomizedLatexWolfMale(context.bakeLayer(CustomizedLatexWolfMale.LAYER_LOCATION)), ArmorLatexMaleWolfModel.MODEL_SET, 0.5f);
+        this.addLayer(new LatexParticlesLayer<>(this, getModel()));
+        this.addLayer(new CustomEmissiveBodyLayer<>(this, Changed.modResource("textures/customized_entity/customized_entity_glow.png"), 0.75f));
+        this.addLayer(TransfurCapeLayer.normalCape(this, context.getModelSet()));
+        this.addLayer(GasMaskLayer.forSnouted(this, context.getModelSet()));
+        this.addLayer(new CustomEyesLayer<>(this, context.getModelSet(), CustomEyesLayer::scleraColor, CustomEyesLayer.fixedColorGlowing(Color3.parseHex("#ff1818")), CustomEyesLayer.fixedColorGlowing(Color3.parseHex("#ff1818")), CustomEyesLayer::noRender, CustomEyesLayer::noRender));
+    }
+
+    @Override
+    public ResourceLocation getTextureLocation(CustomizedEntity entity) {
+        return TEXTURE;
+    }
+
+
+    private static class CustomEmissiveBodyLayer<M extends EntityModel<T>, T extends ChangedEntity> extends EyesLayer<T, M> implements FirstPersonLayer<T> {
+        private final RenderType renderType;
+        private final ResourceLocation emissiveTexture;
+        private final float healthThreshold;
+
+        public CustomEmissiveBodyLayer(RenderLayerParent<T, M> p_116964_, ResourceLocation emissiveTexture, float healthThreshold) {
+            super(p_116964_);
+            this.renderType = RenderType.eyes(emissiveTexture);
+            this.emissiveTexture = emissiveTexture;
+            this.healthThreshold = healthThreshold;
+        }
+
+        public ResourceLocation getEmissiveTexture() {
+            return this.emissiveTexture;
+        }
+
+        @Override
+        public void render(@NotNull PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int packedLight, T entity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+            if (entity.getUnderlyingPlayer() == null && entity instanceof CustomizedEntity customizedEntity && customizedEntity.isPhase2()) {
+                VertexConsumer vertexConsumer = bufferSource.getBuffer(this.renderType());
+                this.getParentModel().renderToBuffer(poseStack, vertexConsumer, 15728640, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+            }
+
+            if (entity.getUnderlyingPlayer() == null && entity.getHealth() <= entity.getMaxHealth() * healthThreshold) {
+                VertexConsumer vertexConsumer = bufferSource.getBuffer(this.renderType());
+                this.getParentModel().renderToBuffer(poseStack, vertexConsumer, 15728640, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+            } else if (entity.getUnderlyingPlayer() != null) {
+                VertexConsumer vertexConsumer = bufferSource.getBuffer(this.renderType());
+                this.getParentModel().renderToBuffer(poseStack, vertexConsumer, 15728640, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+            }
+        }
+
+
+        public @NotNull RenderType renderType() {
+            return this.renderType;
+        }
+
+        @Override
+        public void renderFirstPersonOnFace(PoseStack stack, MultiBufferSource bufferSource, int packedLight, T entity, Camera camera) {
+            FirstPersonLayer.super.renderFirstPersonOnFace(stack, bufferSource, packedLight, entity, camera);
+        }
+
+        @Override
+        public void renderFirstPersonOnArms(PoseStack stack, MultiBufferSource bufferSource, int packedLight, T entity, HumanoidArm arm, PartPose armPose, PoseStack stackCorrector, float partialTick) {
+            FirstPersonLayer.super.renderFirstPersonOnArms(stack, bufferSource, packedLight, entity, arm, armPose, stackCorrector, partialTick);
+            if (entity.getUnderlyingPlayer() != null) {
+                stack.pushPose();
+                stack.scale(1.0002F, 1.0002F, 1.0002F);
+                EntityModel<T> var8 = this.getParentModel();
+                if (var8 instanceof AdvancedHumanoidModel<?> armedModel) {
+                    FormRenderHandler.renderModelPartWithTexture(armedModel.getArm(arm), stackCorrector, stack, bufferSource.getBuffer(this.renderType()), 15728880, 1.0F);
+                }
+                stack.popPose();
+            }
+
+            if (entity.getUnderlyingPlayer() == null && entity instanceof CustomizedEntity customizedEntity && customizedEntity.isPhase2()) {
+                stack.pushPose();
+                stack.scale(1.0002F, 1.0002F, 1.0002F);
+                EntityModel<T> var8 = this.getParentModel();
+                if (var8 instanceof AdvancedHumanoidModel<?> armedModel) {
+                    FormRenderHandler.renderModelPartWithTexture(armedModel.getArm(arm), stackCorrector, stack, bufferSource.getBuffer(this.renderType()), 15728880, 1.0F);
+                }
+                stack.popPose();
+            }
+
+            if (entity.getUnderlyingPlayer() == null && entity.getHealth() <= entity.getMaxHealth() * healthThreshold) {
+                stack.pushPose();
+                stack.scale(1.0002F, 1.0002F, 1.0002F);
+                EntityModel<T> var8 = this.getParentModel();
+                if (var8 instanceof AdvancedHumanoidModel<?> armedModel) {
+                    FormRenderHandler.renderModelPartWithTexture(armedModel.getArm(arm), stackCorrector, stack, bufferSource.getBuffer(this.renderType()), 15728880, 1.0F);
+                }
+                stack.popPose();
+            }
+        }
+    }
+}

@@ -756,6 +756,20 @@
   
     "changed.exoskeleton.prompt": "[%s]> %s",
   "changed.exoskeleton.battery_low": "电池电量低",
-  "changed.exoskeleton.battery_critical": "电池电量严重不足"
+  "changed.exoskeleton.battery_critical": "电池电量严重不足",
+  "subtitles.changed.exoskeleton_step": "Exoskeleton steps",
+  "subtitles.changed.exoskeleton_chime": "Digital chime",
+  "subtitles.changed.exoskeleton_lock": "Exoskeleton equipped",
+  "death.attack.changed:electrocution": "%s was electrocuted",
+  "death.attack.changed:electrocution.player": "%1$s was electrocuted whilst fighting %2$s",
+  "changed.stasis.slot.fluid.tooltip": "Fluid canister to fill the chamber",
+  "changed.stasis.command.create_entity": "Create Entity",
+  "changed.stasis.command.discard_entity": "Discard Entity",
+  "changed.accessory.slot_disabled_by": "Slot disabled by:",
+
+  "changed.ability.thunder": "雷霆闪电",
+  "changed.ability.thunder_path": "闪电之路",
+  "changed.ability.shock_wave": "冲击波",
+  "changed.ability.dodge": "闪避能力"
 }
 

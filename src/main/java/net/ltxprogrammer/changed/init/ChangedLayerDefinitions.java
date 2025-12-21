@@ -117,6 +117,8 @@ public class ChangedLayerDefinitions {
 
         event.registerLayerDefinition(CustomLatexModel.LAYER_LOCATION, CustomLatexModel::createBodyLayer);
 
+        event.registerLayerDefinition(CustomizedLatexWolfMale.LAYER_LOCATION, CustomizedLatexWolfMale::createBodyLayer);
+
         ArmorNoneModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition);
         ArmorNoTailModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition);
         ArmorUpperBodyModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition);

@@ -150,6 +150,8 @@ public class ChangedEntityRenderers {
 
         registerHumanoid(event, ChangedEntities.CUSTOM_LATEX.get(), CustomLatexRenderer::new);
 
+        registerHumanoid(event, ChangedEntities.CUSTOMIZED_ENTITY.get(), CustomizedEntityRenderer::new);
+
         event.registerEntityRenderer(ChangedEntities.MILK_PUDDING.get(), MilkPuddingRenderer::new);
         event.registerEntityRenderer(ChangedEntities.SHARK.get(), SharkRenderer::new);
 

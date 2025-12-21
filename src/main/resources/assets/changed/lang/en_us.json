@@ -750,5 +750,21 @@
 
   "changed.exoskeleton.prompt": "[%s]> %s",
   "changed.exoskeleton.battery_low": "Battery level low",
-  "changed.exoskeleton.battery_critical": "Battery level critical"
+  "changed.exoskeleton.battery_critical": "Battery level critical",
+
+  "changed.ability.thunder": "雷霆闪电",
+  "changed.ability.thunder_path": "闪电之路",
+  "changed.ability.shock_wave": "冲击波",
+  "changed.ability.dodge": "闪避能力",
+
+
+  "changed.stasis.run": "完成修改",
+  "changed.stasis.capture_next": "捕获下一个",
+  "changed.stasis.toggle_stasis": "冷冻状态：%s",
+  "changed.stasis.slot.fill.tooltip": "填充冷冻仓",
+  "item.changed.latex_hyena_taur_spawn_egg": "胶液鬣狗刷怪蛋",
+  "block.changed.tiles_white_connected": "白色可连接瓷砖",
+  "block.changed.tiles_greenhouse_connected": "温室可连接瓷砖",
+  "block.changed.tiles_grayblue_connected": "灰蓝色可连接瓷砖",
+  "block.changed.tiles_darkblue": "深蓝色瓷砖"
 }
