@@ -3,8 +3,12 @@ package net.ltxprogrammer.changed.ability;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.ability.handler.CounterDodgeType;
 import net.ltxprogrammer.changed.ability.handler.DodgeAbilityInstance;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
+
+import java.util.Collection;
+import java.util.Collections;
 
 public class DodgeAbility extends AbstractAbility<DodgeAbilityInstance> {
 
@@ -40,6 +44,13 @@ public class DodgeAbility extends AbstractAbility<DodgeAbilityInstance> {
 
     public ResourceLocation getTexture(IAbstractChangedEntity entity) {
         return Changed.modResource("textures/abilities/dodge_ability.png");
+    }
+
+    private static final Collection<Component> DESCRIPTION = Collections.singleton(new TranslatableComponent("ability.changed.dodge.desc"));
+
+    @Override
+    public Collection<Component> getAbilityDescription(IAbstractChangedEntity entity) {
+        return DESCRIPTION;
     }
 
     @Override

@@ -2,6 +2,7 @@ package net.ltxprogrammer.changed.ability;
 
 import net.ltxprogrammer.changed.data.AccessorySlots;
 import net.ltxprogrammer.changed.entity.*;
+import net.ltxprogrammer.changed.entity.beast.AzurebyssEntity;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.init.ChangedEntities;
@@ -74,6 +75,8 @@ public interface IAbstractChangedEntity {
         boolean doesAbsorption;
         if (getEntity() instanceof TamableLatexEntity tamableLatex && tamableLatex.isTame())
             doesAbsorption = true;
+        else if (getEntity() instanceof AzurebyssEntity azurebyss)
+            doesAbsorption = azurebyss.getTransfurMode() == TransfurMode.ABSORPTION;
         else if (getEntity() instanceof ChangedEntity changedEntity)
             doesAbsorption = changedEntity.getTransfurMode() == TransfurMode.ABSORPTION;
         else if (getTransfurVariantInstance() != null)

@@ -3,9 +3,7 @@ package net.ltxprogrammer.changed.entity.beast;
 import net.ltxprogrammer.changed.ability.handler.DodgeAbilityInstance;
 import net.ltxprogrammer.changed.entity.*;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
-import net.ltxprogrammer.changed.init.ChangedAbilities;
-import net.ltxprogrammer.changed.init.ChangedAttributes;
-import net.ltxprogrammer.changed.init.ChangedDamageSources;
+import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -27,6 +25,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ForgeMod;
@@ -34,16 +33,19 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.Random;
 import java.util.UUID;
 
-public class CustomizedEntity extends ChangedEntity {
+public class AzurebyssEntity extends ChangedEntity {
     private static final EntityDataAccessor<Boolean> PHASE2 =
-            SynchedEntityData.defineId(CustomizedEntity.class, EntityDataSerializers.BOOLEAN);
+            SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> PHASE3 =
-            SynchedEntityData.defineId(CustomizedEntity.class, EntityDataSerializers.BOOLEAN);
+            SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
     private boolean shouldBleed;
+    private boolean setUndying = true;
+    private int healingChance = 3;
 
-    public CustomizedEntity(EntityType<? extends ChangedEntity> type, Level level) {
+    public AzurebyssEntity(EntityType<? extends AzurebyssEntity> type, Level level) {
         super(type, level);
         this.setAttributes(getAttributes());
         xpReward = 3000;
@@ -56,14 +58,16 @@ public class CustomizedEntity extends ChangedEntity {
 
     public static AttributeSupplier.Builder createAttributes() {
         AttributeSupplier.Builder builder = Mob.createMobAttributes();
-        builder.add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 0);
-        builder = builder.add(Attributes.MOVEMENT_SPEED, 0.3);
-        builder = builder.add(Attributes.MAX_HEALTH, 425);
-        builder = builder.add(Attributes.ARMOR, 12.5);
+        builder = builder.add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 10D);
+        builder = builder.add(Attributes.MOVEMENT_SPEED, 1.5);
+        builder = builder.add(Attributes.ARMOR, 20);
+        builder = builder.add(Attributes.ARMOR_TOUGHNESS, 10);
+        builder = builder.add(Attributes.MAX_HEALTH, 500);
         builder = builder.add(Attributes.ATTACK_DAMAGE, 15);
-        builder = builder.add(Attributes.FOLLOW_RANGE, 16);
-        builder = builder.add(Attributes.KNOCKBACK_RESISTANCE, 0.3);
+        builder = builder.add(Attributes.FOLLOW_RANGE, 64);
+        builder = builder.add(Attributes.KNOCKBACK_RESISTANCE, 1);
         builder = builder.add(Attributes.ATTACK_KNOCKBACK, 1);
+        builder = builder.add(ForgeMod.SWIM_SPEED.get(), 1.1);
         return builder;
     }
 
@@ -79,17 +83,34 @@ public class CustomizedEntity extends ChangedEntity {
     }
 
     protected void setAttributes(AttributeMap attributes) {
-        Objects.requireNonNull(attributes.getInstance(ChangedAttributes.TRANSFUR_DAMAGE.get())).setBaseValue((8));
+        Objects.requireNonNull(attributes.getInstance(ChangedAttributes.TRANSFUR_DAMAGE.get())).setBaseValue((10));
         Objects.requireNonNull(attributes.getInstance(Attributes.MAX_HEALTH)).setBaseValue((500));
         Objects.requireNonNull(attributes.getInstance(Attributes.FOLLOW_RANGE)).setBaseValue(64.0);
-        Objects.requireNonNull(attributes.getInstance(Attributes.MOVEMENT_SPEED)).setBaseValue(1.15);
+        Objects.requireNonNull(attributes.getInstance(Attributes.MOVEMENT_SPEED)).setBaseValue(1.5);
         Objects.requireNonNull(attributes.getInstance(ForgeMod.SWIM_SPEED.get())).setBaseValue((1.1));
-        Objects.requireNonNull(attributes.getInstance(Attributes.ATTACK_DAMAGE)).setBaseValue(10);
-        Objects.requireNonNull(attributes.getInstance(Attributes.ARMOR)).setBaseValue(18);
+        Objects.requireNonNull(attributes.getInstance(Attributes.ATTACK_DAMAGE)).setBaseValue(15);
+        Objects.requireNonNull(attributes.getInstance(Attributes.ARMOR)).setBaseValue(20);
         Objects.requireNonNull(attributes.getInstance(Attributes.ARMOR_TOUGHNESS)).setBaseValue(10);
-        Objects.requireNonNull(attributes.getInstance(Attributes.KNOCKBACK_RESISTANCE)).setBaseValue(0.25);
-        Objects.requireNonNull(attributes.getInstance(Attributes.ATTACK_KNOCKBACK)).setBaseValue(0.85);
+        Objects.requireNonNull(attributes.getInstance(Attributes.KNOCKBACK_RESISTANCE)).setBaseValue(1);
+        Objects.requireNonNull(attributes.getInstance(Attributes.ATTACK_KNOCKBACK)).setBaseValue(1);
     }
+
+    @Override
+    public void knockback(double strength, double x, double z) {
+        // 什么都不做 = 不被击退
+    }
+
+    public boolean getAllowedUndeath() { return setUndying; }
+
+    public void setAllowedUndeath(boolean value) { setUndying = value; }
+
+    public boolean isAble2Healing() { return healingChance > 0; }
+
+    public int getHealingChance() { return healingChance; }
+
+    public void increaseHealingChance() { if (healingChance < 3) healingChance++; }
+
+    public void decreaseHealingChance() { if (healingChance > 0) healingChance--; }
 
     @Override
     public boolean startRiding(@NotNull Entity EntityIn, boolean force) {
@@ -112,14 +133,18 @@ public class CustomizedEntity extends ChangedEntity {
         return 1000;
     }
 
+    public static <T extends ChangedEntity> boolean checkEntitySpawnRules(EntityType<T> entityType, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, Random random) {
+        return false;
+    }
+
     @Override
     public LatexType getLatexType() {
-        return LatexType.NEUTRAL;
+        return LatexType.WHITE_LATEX;
     }
 
     @Override
     public TransfurMode getTransfurMode() {
-        return TransfurMode.NONE;
+        return TransfurMode.ABSORPTION;
     }
 
     @Override
@@ -287,7 +312,7 @@ public class CustomizedEntity extends ChangedEntity {
         }
     }
 
-    public void setSpeed(CustomizedEntity entity) {
+    public void setSpeed(AzurebyssEntity entity) {
         AttributeModifier speedModifier = new AttributeModifier(UUID.fromString("10-0-0-0-0"), "Speed", -0.4, AttributeModifier.Operation.MULTIPLY_BASE);
         if (entity.getPose() == Pose.SWIMMING) {
             if (!entity.getAttribute(Attributes.MOVEMENT_SPEED).hasModifier(speedModifier)) {

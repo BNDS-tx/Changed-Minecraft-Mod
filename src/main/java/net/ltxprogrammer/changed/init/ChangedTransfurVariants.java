@@ -184,15 +184,16 @@ public class ChangedTransfurVariants {
     public static final RegistryObject<TransfurVariant<CustomLatexEntity>> CUSTOM_LATEX = register("form_custom_latex",
             TransfurVariant.Builder.of(ChangedEntities.CUSTOM_LATEX).stepSize(0.7f));
 
-    public static final RegistryObject<TransfurVariant<CustomizedEntity>> CUSTOMIZED_ENTITY = register("ztty_exp09_azurebyss_modified",
-            TransfurVariant.Builder.of(ChangedEntities.CUSTOMIZED_ENTITY)
+    public static final RegistryObject<TransfurVariant<AzurebyssEntity>> AZUREBYSS_ENTITY = register("ztty_exp09_azurebyss_modified",
+            TransfurVariant.Builder.of(ChangedEntities.AZUREBYSS_ENTITY).sound(ChangedSounds.MONSTER2.getLocation())
                 .reducedFall()
                 .jumpStrength(1.5F)
                 .abilities(List.of(
                                 entityType -> ChangedAbilities.THUNDERBOLT.get(),
                                 entityType -> ChangedAbilities.THUNDER_PATH.get(),
                                 entityType -> ChangedAbilities.SHOCKWAVE.get(),
-                                entityType -> ChangedAbilities.DODGE.get()
+                                entityType -> ChangedAbilities.DODGE.get(),
+                                entityType -> ChangedAbilities.UNDEATH.get()
                         )
                 )
                 .transfurMode(TransfurMode.ABSORPTION)
@@ -207,7 +208,7 @@ public class ChangedTransfurVariants {
                         )
                 )
                 .nightVision()
-                .addAbility(ChangedAbilities.TOGGLE_NIGHT_VISION));;
+                .addAbility(ChangedAbilities.TOGGLE_NIGHT_VISION));
 
     public static final Supplier<? extends TransfurVariant<?>> FALLBACK_VARIANT = WHITE_LATEX_WOLF_MALE;
 

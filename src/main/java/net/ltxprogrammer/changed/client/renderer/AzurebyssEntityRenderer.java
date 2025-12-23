@@ -6,10 +6,10 @@ import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.client.FormRenderHandler;
 import net.ltxprogrammer.changed.client.renderer.layers.*;
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel;
-import net.ltxprogrammer.changed.client.renderer.model.CustomizedLatexWolfMale;
+import net.ltxprogrammer.changed.client.renderer.model.AzurebyssWolfModel;
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorLatexMaleWolfModel;
 import net.ltxprogrammer.changed.entity.ChangedEntity;
-import net.ltxprogrammer.changed.entity.beast.CustomizedEntity;
+import net.ltxprogrammer.changed.entity.beast.AzurebyssEntity;
 import net.ltxprogrammer.changed.util.Color3;
 import net.minecraft.client.Camera;
 import net.minecraft.client.model.EntityModel;
@@ -24,20 +24,20 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.HumanoidArm;
 import org.jetbrains.annotations.NotNull;
 
-public class CustomizedEntityRenderer extends AdvancedHumanoidRenderer<CustomizedEntity, CustomizedLatexWolfMale, ArmorLatexMaleWolfModel<CustomizedEntity>> {
-    private static final ResourceLocation TEXTURE = Changed.modResource("textures/customized_entity/customized_entity.png");
+public class AzurebyssEntityRenderer extends AdvancedHumanoidRenderer<AzurebyssEntity, AzurebyssWolfModel, ArmorLatexMaleWolfModel<AzurebyssEntity>> {
+    private static final ResourceLocation TEXTURE = Changed.modResource("textures/azurebyss_entity/customized_entity.png");
 
-    public CustomizedEntityRenderer (EntityRendererProvider.Context context) {
-        super(context, new CustomizedLatexWolfMale(context.bakeLayer(CustomizedLatexWolfMale.LAYER_LOCATION)), ArmorLatexMaleWolfModel.MODEL_SET, 0.5f);
+    public AzurebyssEntityRenderer(EntityRendererProvider.Context context) {
+        super(context, new AzurebyssWolfModel(context.bakeLayer(AzurebyssWolfModel.LAYER_LOCATION)), ArmorLatexMaleWolfModel.MODEL_SET, 0.5f);
         this.addLayer(new LatexParticlesLayer<>(this, getModel()));
-        this.addLayer(new CustomEmissiveBodyLayer<>(this, Changed.modResource("textures/customized_entity/customized_entity_glow.png"), 0.75f));
+        this.addLayer(new CustomEmissiveBodyLayer<>(this, Changed.modResource("textures/azurebyss_entity/customized_entity_glow.png"), 0.75f));
         this.addLayer(TransfurCapeLayer.normalCape(this, context.getModelSet()));
         this.addLayer(GasMaskLayer.forSnouted(this, context.getModelSet()));
         this.addLayer(new CustomEyesLayer<>(this, context.getModelSet(), CustomEyesLayer::scleraColor, CustomEyesLayer.fixedColorGlowing(Color3.parseHex("#ff1818")), CustomEyesLayer.fixedColorGlowing(Color3.parseHex("#ff1818")), CustomEyesLayer::noRender, CustomEyesLayer::noRender));
     }
 
     @Override
-    public ResourceLocation getTextureLocation(CustomizedEntity entity) {
+    public ResourceLocation getTextureLocation(AzurebyssEntity entity) {
         return TEXTURE;
     }
 
@@ -60,7 +60,7 @@ public class CustomizedEntityRenderer extends AdvancedHumanoidRenderer<Customize
 
         @Override
         public void render(@NotNull PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int packedLight, T entity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-            if (entity.getUnderlyingPlayer() == null && entity instanceof CustomizedEntity customizedEntity && customizedEntity.isPhase2()) {
+            if (entity.getUnderlyingPlayer() == null && entity instanceof AzurebyssEntity azurebyssEntity && azurebyssEntity.isPhase2()) {
                 VertexConsumer vertexConsumer = bufferSource.getBuffer(this.renderType());
                 this.getParentModel().renderToBuffer(poseStack, vertexConsumer, 15728640, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
             }
@@ -97,7 +97,7 @@ public class CustomizedEntityRenderer extends AdvancedHumanoidRenderer<Customize
                 stack.popPose();
             }
 
-            if (entity.getUnderlyingPlayer() == null && entity instanceof CustomizedEntity customizedEntity && customizedEntity.isPhase2()) {
+            if (entity.getUnderlyingPlayer() == null && entity instanceof AzurebyssEntity azurebyssEntity && azurebyssEntity.isPhase2()) {
                 stack.pushPose();
                 stack.scale(1.0002F, 1.0002F, 1.0002F);
                 EntityModel<T> var8 = this.getParentModel();

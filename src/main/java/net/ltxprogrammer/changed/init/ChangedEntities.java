@@ -3,7 +3,7 @@ package net.ltxprogrammer.changed.init;
 import com.mojang.datafixers.util.Pair;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.entity.ChangedEntity;
-import net.ltxprogrammer.changed.entity.beast.CustomizedEntity;
+import net.ltxprogrammer.changed.entity.beast.AzurebyssEntity;
 import net.ltxprogrammer.changed.entity.SeatEntity;
 import net.ltxprogrammer.changed.entity.beast.*;
 import net.ltxprogrammer.changed.entity.beast.boss.BehemothHandLeft;
@@ -362,9 +362,9 @@ public class ChangedEntities {
     public static final RegistryObject<EntityType<GasParticle>> GAS_PARTICLE = REGISTRY.register("gas_particle",
             () -> EntityType.Builder.of(GasParticle::new, MobCategory.MISC).sized(0.75F, 0.75F).clientTrackingRange(4).updateInterval(10).build("gas_particle"));
 
-    public static final RegistryObject<EntityType<CustomizedEntity>> CUSTOMIZED_ENTITY = registerSpawning("customized_entity", 0xFFFFFF, 0xFAFAFA,
-            EntityType.Builder.of(CustomizedEntity::new, ChangedMobCategories.CHANGED).clientTrackingRange(10).sized(0.8F, 2.05F),
-            ChangedEntities::overworldOnly, SpawnPlacements.Type.ON_GROUND, CustomizedEntity::checkEntitySpawnRules);
+    public static final RegistryObject<EntityType<AzurebyssEntity>> AZUREBYSS_ENTITY = registerSpawning("azurebyss_entity", 0xFFFFFF, 0xFAFAFA,
+            EntityType.Builder.of(AzurebyssEntity::new, ChangedMobCategories.CHANGED).clientTrackingRange(10).sized(0.8F, 2.05F),
+            ChangedEntities::overworldOnly, SpawnPlacements.Type.ON_GROUND, AzurebyssEntity::checkEntitySpawnRules, AzurebyssEntity::createAttributes);
 
     // TODO make register function for non `ChangedEntity`
 

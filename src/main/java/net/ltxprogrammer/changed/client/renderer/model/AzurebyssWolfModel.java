@@ -8,7 +8,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.client.renderer.animate.AnimatorPresets;
 import net.ltxprogrammer.changed.client.renderer.animate.HumanoidAnimator;
-import net.ltxprogrammer.changed.entity.beast.CustomizedEntity;
+import net.ltxprogrammer.changed.entity.beast.AzurebyssEntity;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -18,9 +18,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class CustomizedLatexWolfMale extends AdvancedHumanoidModel<CustomizedEntity> implements AdvancedHumanoidModelInterface<CustomizedEntity, CustomizedLatexWolfMale>{
+public class AzurebyssWolfModel extends AdvancedHumanoidModel<AzurebyssEntity> implements AdvancedHumanoidModelInterface<AzurebyssEntity, AzurebyssWolfModel>{
 	// This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
-	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Changed.modResource("customized_entity"), "main");
+	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Changed.modResource("textures/azurebyss_entity/customized_entity.png"), "main");
 	private final ModelPart LeftLeg;
 	private final ModelPart LeftLowerLeg2;
 	private final ModelPart LeftFoot2;
@@ -58,9 +58,9 @@ public class CustomizedLatexWolfMale extends AdvancedHumanoidModel<CustomizedEnt
 	private final ModelPart LeftArmPawBeans;
 	private final ModelPart LeftArmFurLower;
 	private final ModelPart LeftHandFur2;
-	private final HumanoidAnimator<CustomizedEntity, CustomizedLatexWolfMale> animator;
+	private final HumanoidAnimator<AzurebyssEntity, AzurebyssWolfModel> animator;
 
-	public CustomizedLatexWolfMale(ModelPart root) {
+	public AzurebyssWolfModel(ModelPart root) {
 		super(root);
 		this.LeftLeg = root.getChild("LeftLeg");
 		this.LeftLowerLeg2 = this.LeftLeg.getChild("LeftLowerLeg2");
@@ -312,17 +312,17 @@ public class CustomizedLatexWolfMale extends AdvancedHumanoidModel<CustomizedEnt
 	}
 
 	@Override
-	public void prepareMobModel(@NotNull CustomizedEntity entity, float limbSwing, float limbSwingAmount, float partialTicks) {
+	public void prepareMobModel(@NotNull AzurebyssEntity entity, float limbSwing, float limbSwingAmount, float partialTicks) {
 		// Let the animator handle prepareMobModel()
 		this.prepareMobModel(animator, entity, limbSwing, limbSwingAmount, partialTicks);
 	}
 
-	public void setupHand(CustomizedEntity entity) {
+	public void setupHand(AzurebyssEntity entity) {
 		animator.setupHand();
 	}
 
 	@Override
-	public void setupAnim(@NotNull CustomizedEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+	public void setupAnim(@NotNull AzurebyssEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
 		animator.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 		super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 	}
@@ -354,7 +354,7 @@ public class CustomizedLatexWolfMale extends AdvancedHumanoidModel<CustomizedEnt
 	}
 
 	@Override
-	public HumanoidAnimator<CustomizedEntity, CustomizedLatexWolfMale> getAnimator(CustomizedEntity entity) {
+	public HumanoidAnimator<AzurebyssEntity, AzurebyssWolfModel> getAnimator(AzurebyssEntity entity) {
 		return animator;
 	}
 }

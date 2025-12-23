@@ -4,6 +4,7 @@ import net.ltxprogrammer.changed.ability.AbstractAbility;
 import net.ltxprogrammer.changed.ability.AbstractAbilityInstance;
 import net.ltxprogrammer.changed.client.gui.AbstractRadialScreen;
 import net.ltxprogrammer.changed.entity.TransfurMode;
+import net.ltxprogrammer.changed.entity.beast.AzurebyssEntity;
 import net.ltxprogrammer.changed.init.ChangedAbilities;
 import net.ltxprogrammer.changed.init.ChangedRegistry;
 
@@ -43,6 +44,18 @@ public class AbilityColors {
 
             return Optional.empty();
         }, ChangedAbilities.SWITCH_TRANSFUR_MODE.get());
+
+        colors.register((abilityInstance, layer) -> {
+            var scheme = getAbilityColors(abilityInstance);
+
+            boolean isUndeath = ((AzurebyssEntity) abilityInstance.entity.getChangedEntity()).getAllowedUndeath();
+            if (layer == 0 && !isUndeath)
+                return Optional.of(scheme.foreground().toInt());
+            else if (layer == 1 && isUndeath)
+                return Optional.of(scheme.foreground().toInt());
+
+            return Optional.empty();
+        }, ChangedAbilities.UNDEATH.get());
 
         return colors;
     }

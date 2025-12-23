@@ -2,13 +2,12 @@ package net.ltxprogrammer.changed.ability;
 
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.init.ChangedTransfurVariants;
-import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
-import net.ltxprogrammer.changed.ability.SimpleAbility;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.init.ChangedEffects;
 import net.ltxprogrammer.changed.init.ChangedSounds;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -19,6 +18,8 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -70,19 +71,26 @@ public class ShockWaveAbility extends SimpleAbility {
         return Changed.modResource("textures/abilities/thunder_wave.png"); //Place holder
     }
 
+    private static final Collection<Component> DESCRIPTION = Collections.singleton(new TranslatableComponent("ability.changed.shock_wave.desc"));
+
+    @Override
+    public Collection<Component> getAbilityDescription(IAbstractChangedEntity entity) {
+        return DESCRIPTION;
+    }
+
     @Override
     public boolean canUse(IAbstractChangedEntity entity) {
         Player player = (Player) entity.getEntity();
         TransfurVariantInstance<?> LatexInstace = ProcessTransfur.getPlayerTransfurVariant(player);
         TransfurVariant<?> Variant = entity.getChangedEntity().getSelfVariant();
-        return player.getFoodData().getFoodLevel() >= 10 && Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get() || Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get()
+        return player.getFoodData().getFoodLevel() >= 10 && Variant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get() || Variant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()
                 && !Spectator(entity.getEntity());
     }
 
     @Override
     public int getCoolDown(IAbstractChangedEntity entity) {
         TransfurVariant<?> Variant = entity.getChangedEntity().getSelfVariant();
-        if (Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get()) {
+        if (Variant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()) {
             return 60;
         }
         return 100;
@@ -91,7 +99,7 @@ public class ShockWaveAbility extends SimpleAbility {
     @Override
     public int getChargeTime(IAbstractChangedEntity entity) {
         TransfurVariant<?> Variant = entity.getChangedEntity().getSelfVariant();
-        if (Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get()) {
+        if (Variant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()) {
             return 16;
         }
         return 30;

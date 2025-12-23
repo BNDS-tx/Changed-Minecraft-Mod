@@ -4,6 +4,7 @@ import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.init.ChangedTransfurVariants;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -17,6 +18,9 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.Collection;
+import java.util.Collections;
 
 public class ThunderBoltAbility extends SimpleAbility {
 
@@ -64,11 +68,18 @@ public class ThunderBoltAbility extends SimpleAbility {
         return Changed.modResource("textures/abilities/thunderbolt.png");
     }
 
+    private static final Collection<Component> DESCRIPTION = Collections.singleton(new TranslatableComponent("ability.changed.thunder.desc"));
+
+    @Override
+    public Collection<Component> getAbilityDescription(IAbstractChangedEntity entity) {
+        return DESCRIPTION;
+    }
+
     @Override
     public boolean canUse(IAbstractChangedEntity entity) {
         Player player = (Player) entity.getEntity();
         TransfurVariant<?> Variant = entity.getChangedEntity().getSelfVariant();
-        return player.getFoodData().getFoodLevel() >= 10 && (Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get() || Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get()) && !Spectator(entity.getEntity());
+        return player.getFoodData().getFoodLevel() >= 10 && (Variant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()) && !Spectator(entity.getEntity());
     }
 
     public UseType getUseType(IAbstractChangedEntity entity) {
@@ -78,7 +89,7 @@ public class ThunderBoltAbility extends SimpleAbility {
     @Override
     public int getChargeTime(IAbstractChangedEntity entity) {
         TransfurVariant<?> Variant = entity.getChangedEntity().getSelfVariant();
-        if (Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get()) {
+        if (Variant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()) {
             return 15;
         }
         return 20;
@@ -87,7 +98,7 @@ public class ThunderBoltAbility extends SimpleAbility {
     @Override
     public int getCoolDown(IAbstractChangedEntity entity) {
         TransfurVariant<?> Variant = entity.getChangedEntity().getSelfVariant();
-        if (Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get()) {
+        if (Variant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()) {
             return 15;
         }
         return 25;
@@ -95,7 +106,7 @@ public class ThunderBoltAbility extends SimpleAbility {
 
     public float ReachAmount(IAbstractChangedEntity entity) {
         TransfurVariant<?> Variant = entity.getChangedEntity().getSelfVariant();
-        if (Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get()) {
+        if (Variant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()) {
             return 10;
         }
         return 3.5F;

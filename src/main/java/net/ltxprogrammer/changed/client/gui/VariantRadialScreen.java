@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
+import net.ltxprogrammer.changed.init.ChangedEntities;
 import net.ltxprogrammer.changed.init.ChangedTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -21,8 +22,10 @@ public abstract class VariantRadialScreen<T extends AbstractContainerMenu> exten
                 getColors(variant).setForegroundToBright().foreground(), variant.getHost());
     }
 
+    private static final String PATH_AZU = "textures/gui/radial/azu/";
     private static final String PATH_ORGANIC = "textures/gui/radial/organic/";
     private static final String PATH_GOO = "textures/gui/radial/goo/";
+    private static final String PATH_AZU_SELECTED = "textures/gui/radial/azu_selected/";
     private static final String PATH_ORGANIC_SELECTED = "textures/gui/radial/organic_selected/";
     private static final String PATH_GOO_SELECTED = "textures/gui/radial/goo_selected/";
 
@@ -32,6 +35,8 @@ public abstract class VariantRadialScreen<T extends AbstractContainerMenu> exten
         boolean renderSelected = thisHovered || (!anyHovered && this.isSelected(section));
         if (variant == null || variant.getEntityType().is(ChangedTags.EntityTypes.LATEX))
             return Changed.modResource((renderSelected ? PATH_GOO_SELECTED : PATH_GOO) + section + ".png");
+        else if (variant.getEntityType() == ChangedEntities.AZUREBYSS_ENTITY.get())
+            return Changed.modResource((renderSelected ? PATH_AZU_SELECTED : PATH_AZU) + section + ".png");
         else
             return Changed.modResource((renderSelected ? PATH_ORGANIC_SELECTED : PATH_ORGANIC) + section + ".png");
     }

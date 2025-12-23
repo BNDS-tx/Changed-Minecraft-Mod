@@ -5,6 +5,7 @@ import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.init.ChangedTransfurVariants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -16,6 +17,9 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.Collection;
+import java.util.Collections;
 
 public class ThunderPathAbility extends AbstractAbility<ThunderPathAbility.Instance> {
 
@@ -47,6 +51,13 @@ public class ThunderPathAbility extends AbstractAbility<ThunderPathAbility.Insta
         return Changed.modResource("textures/abilities/thunderbolt.png");
     }
 
+    private static final Collection<Component> DESCRIPTION = Collections.singleton(new TranslatableComponent("ability.changed.thunder_path.desc"));
+
+    @Override
+    public Collection<Component> getAbilityDescription(IAbstractChangedEntity entity) {
+        return DESCRIPTION;
+    }
+
     public UseType getUseType(IAbstractChangedEntity entity) {
         return UseType.HOLD;
     }
@@ -54,7 +65,7 @@ public class ThunderPathAbility extends AbstractAbility<ThunderPathAbility.Insta
     @Override
     public int getChargeTime(IAbstractChangedEntity entity) {
         TransfurVariant<?> Variant = entity.getChangedEntity().getSelfVariant();
-        if (Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get()) {
+        if (Variant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()) {
             return 15;
         }
         return 20;
@@ -63,7 +74,7 @@ public class ThunderPathAbility extends AbstractAbility<ThunderPathAbility.Insta
     @Override
     public int getCoolDown(IAbstractChangedEntity entity) {
         TransfurVariant<?> Variant = entity.getChangedEntity().getSelfVariant();
-        if (Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get()) {
+        if (Variant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()) {
             return 30;
         }
         return 45;
@@ -71,7 +82,7 @@ public class ThunderPathAbility extends AbstractAbility<ThunderPathAbility.Insta
 
     public float ReachAmount(IAbstractChangedEntity entity) {
         TransfurVariant<?> Variant = entity.getChangedEntity().getSelfVariant();
-        if (Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get()) {
+        if (Variant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()) {
             return 8;
         }
         return 5;
@@ -124,7 +135,7 @@ public class ThunderPathAbility extends AbstractAbility<ThunderPathAbility.Insta
             this.MaxThunderIndex = (int) ReachAmount(entity);
             Player player = (Player) entity.getEntity();
             TransfurVariant<?> Variant = entity.getChangedEntity().getSelfVariant();
-            return player.getFoodData().getFoodLevel() >= 10 && (Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get() || Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get()) && !Spectator(entity.getEntity());
+            return player.getFoodData().getFoodLevel() >= 10 && (Variant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()) && !Spectator(entity.getEntity());
         }
 
         public UseType getUseType() {
@@ -134,7 +145,7 @@ public class ThunderPathAbility extends AbstractAbility<ThunderPathAbility.Insta
 
         public float ReachAmount(IAbstractChangedEntity entity) {
             TransfurVariant<?> Variant = entity.getChangedEntity().getSelfVariant();
-            if (Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get()) {
+            if (Variant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()) {
                 return 15;
             }
             return 10;
@@ -142,7 +153,7 @@ public class ThunderPathAbility extends AbstractAbility<ThunderPathAbility.Insta
 
         public int MaxAmount(IAbstractChangedEntity entity) {
             TransfurVariant<?> Variant = entity.getChangedEntity().getSelfVariant();
-            if (Variant == ChangedTransfurVariants.CUSTOMIZED_ENTITY.get()) {
+            if (Variant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()) {
                 return 8;
             }
             return 5;
