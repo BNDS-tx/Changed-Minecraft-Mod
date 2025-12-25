@@ -8,7 +8,9 @@
 
 ---
 
-This repository holds the source code for the **Changed: Minecraft Mod**. Releases are compiled and published to both Modrinth and Curseforge. Credits for contributors are available on [GitHub Insights](https://github.com/LtxProgrammer/Changed-Minecraft-Mod/graphs/contributors) and in the mod menu.
+This repository holds the source code for the **Changed: Minecraft Mod Modefied by Azurebyss(BNDS-tx)**. Releases **of original mod only** are compiled and published to both Modrinth and Curseforge. Credits for contributors **of original mod** are available on [GitHub Insights of Original Mod](https://github.com/LtxProgrammer/Changed-Minecraft-Mod/graphs/contributors) and in the mod menu.
+
+All descriptions bellow and icons with links above are for the **original Changed: Minecraft Mod by LtxProgrammer**, and this modification is currently based on Changed: Minecraft Mod v1.14.1c for Minecraft 1.18.2 and not sure whether will stay up-yo-date with the original mod.
 
 ## How can I help?
 Any aspiring developer is welcome to fork and create a pull request to submit their content. Programmers, texture artists, and 3D modelers all have a place here.
