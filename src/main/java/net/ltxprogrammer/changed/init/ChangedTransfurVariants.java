@@ -185,7 +185,7 @@ public class ChangedTransfurVariants {
             TransfurVariant.Builder.of(ChangedEntities.CUSTOM_LATEX).stepSize(0.7f));
 
     public static final RegistryObject<TransfurVariant<AzurebyssEntity>> AZUREBYSS_ENTITY = register("ztty_exp09_azurebyss_modified",
-            TransfurVariant.Builder.of(ChangedEntities.AZUREBYSS_ENTITY).sound(ChangedSounds.MONSTER2.getLocation())
+            TransfurVariant.Builder.of(ChangedEntities.AZUREBYSS_ENTITY).scares(AbstractSkeleton.class)
                 .reducedFall()
                 .jumpStrength(1.5F)
                 .abilities(List.of(

@@ -767,6 +767,10 @@
   "changed.stasis.command.discard_entity": "Discard Entity",
   "changed.accessory.slot_disabled_by": "Slot disabled by:",
 
+  "entity.changed.azurebyss": "Azurebyss",
+
+  "item.changed.azurebyss_spawn_egg": "Azurebyss 生成蛋",
+
   "changed.ability.thunder": "雷霆闪电",
   "ability.changed.thunder.desc": "召唤一道闪电，劈向目标并造成较大伤害。",
 

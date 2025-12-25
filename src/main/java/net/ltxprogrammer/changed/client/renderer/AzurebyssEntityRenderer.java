@@ -31,16 +31,19 @@ public class AzurebyssEntityRenderer extends AdvancedHumanoidRenderer<AzurebyssE
         super(context, new AzurebyssWolfModel(context.bakeLayer(AzurebyssWolfModel.LAYER_LOCATION)), ArmorLatexMaleWolfModel.MODEL_SET, 0.5f);
         this.addLayer(new LatexParticlesLayer<>(this, getModel()));
         this.addLayer(new CustomEmissiveBodyLayer<>(this, Changed.modResource("textures/azurebyss_entity/customized_entity_glow.png"), 0.75f));
-        this.addLayer(TransfurCapeLayer.normalCape(this, context.getModelSet()));
-        this.addLayer(GasMaskLayer.forSnouted(this, context.getModelSet()));
+        this.addLayer(new GasMaskLayer<>(this, context.getModelSet()));
         this.addLayer(new CustomEyesLayer<>(this, context.getModelSet(), CustomEyesLayer::scleraColor, CustomEyesLayer.fixedColorGlowing(Color3.parseHex("#ff1818")), CustomEyesLayer.fixedColorGlowing(Color3.parseHex("#ff1818")), CustomEyesLayer::noRender, CustomEyesLayer::noRender));
     }
 
     @Override
-    public ResourceLocation getTextureLocation(AzurebyssEntity entity) {
-        return TEXTURE;
+    public void render(@NotNull AzurebyssEntity entity, float yRot, float partialTicks, @NotNull PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int packedLight) {
+        super.render(entity, yRot, partialTicks, poseStack, bufferSource, packedLight);
     }
 
+    @Override
+    public @NotNull ResourceLocation getTextureLocation(@NotNull AzurebyssEntity entity) {
+        return TEXTURE;
+    }
 
     private static class CustomEmissiveBodyLayer<M extends EntityModel<T>, T extends ChangedEntity> extends EyesLayer<T, M> implements FirstPersonLayer<T> {
         private final RenderType renderType;

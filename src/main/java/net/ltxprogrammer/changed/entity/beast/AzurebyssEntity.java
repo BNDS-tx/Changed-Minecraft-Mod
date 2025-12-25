@@ -1,10 +1,12 @@
 package net.ltxprogrammer.changed.entity.beast;
 
+import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.ability.handler.DodgeAbilityInstance;
 import net.ltxprogrammer.changed.entity.*;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
+import net.ltxprogrammer.changed.util.Color3;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
@@ -112,6 +114,19 @@ public class AzurebyssEntity extends ChangedEntity {
 
     public void decreaseHealingChance() { if (healingChance > 0) healingChance--; }
 
+    public void setDisable(boolean isDisabled) {
+        var instance = IAbstractChangedEntity.forEitherSafe(this.maybeGetUnderlying()).map(IAbstractChangedEntity::getTransfurVariantInstance).orElse(null);
+        if (instance != null) {
+            instance.itemUseMode = isDisabled ? UseItemMode.NONE : UseItemMode.NORMAL;
+            instance.miningStrength = isDisabled ? MiningStrength.WEAK : MiningStrength.NORMAL;
+            instance.refreshAttributes();
+        }
+    }
+
+    public Color3 getTransfurColor(TransfurCause cause) {
+        return Color3.getColor("#f1afaf");
+    }
+
     @Override
     public boolean startRiding(@NotNull Entity EntityIn, boolean force) {
         if (EntityIn instanceof Boat || EntityIn instanceof Minecart) {
@@ -166,6 +181,10 @@ public class AzurebyssEntity extends ChangedEntity {
                 }
             }
         }
+        if (this.getHealth() > 4F && !isAble2Healing()) {
+            setDisable(false);
+            this.maybeGetUnderlying().removeAllEffects();
+        } else setDisable(!isAble2Healing());
     }
 
     public LivingEntity getSelf() {

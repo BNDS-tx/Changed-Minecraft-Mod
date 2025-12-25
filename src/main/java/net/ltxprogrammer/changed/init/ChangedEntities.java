@@ -6,9 +6,7 @@ import net.ltxprogrammer.changed.entity.ChangedEntity;
 import net.ltxprogrammer.changed.entity.beast.AzurebyssEntity;
 import net.ltxprogrammer.changed.entity.SeatEntity;
 import net.ltxprogrammer.changed.entity.beast.*;
-import net.ltxprogrammer.changed.entity.beast.boss.BehemothHandLeft;
-import net.ltxprogrammer.changed.entity.beast.boss.BehemothHandRight;
-import net.ltxprogrammer.changed.entity.beast.boss.BehemothHead;
+import net.ltxprogrammer.changed.entity.beast.boss.*;
 import net.ltxprogrammer.changed.entity.projectile.GasParticle;
 import net.ltxprogrammer.changed.entity.projectile.LatexInkball;
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton;
@@ -362,7 +360,7 @@ public class ChangedEntities {
     public static final RegistryObject<EntityType<GasParticle>> GAS_PARTICLE = REGISTRY.register("gas_particle",
             () -> EntityType.Builder.of(GasParticle::new, MobCategory.MISC).sized(0.75F, 0.75F).clientTrackingRange(4).updateInterval(10).build("gas_particle"));
 
-    public static final RegistryObject<EntityType<AzurebyssEntity>> AZUREBYSS_ENTITY = registerSpawning("azurebyss_entity", 0xFFFFFF, 0xFAFAFA,
+    public static final RegistryObject<EntityType<AzurebyssEntity>> AZUREBYSS_ENTITY = registerSpawning("azurebyss", 0xf1afaf, 0xff5e5e,
             EntityType.Builder.of(AzurebyssEntity::new, ChangedMobCategories.CHANGED).clientTrackingRange(10).sized(0.8F, 2.05F),
             ChangedEntities::overworldOnly, SpawnPlacements.Type.ON_GROUND, AzurebyssEntity::checkEntitySpawnRules, AzurebyssEntity::createAttributes);
 

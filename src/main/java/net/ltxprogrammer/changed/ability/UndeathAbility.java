@@ -1,6 +1,8 @@
 package net.ltxprogrammer.changed.ability;
 
 import net.ltxprogrammer.changed.Changed;
+import net.ltxprogrammer.changed.entity.MiningStrength;
+import net.ltxprogrammer.changed.entity.UseItemMode;
 import net.ltxprogrammer.changed.entity.beast.AzurebyssEntity;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.init.ChangedEntities;
@@ -14,7 +16,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -43,10 +44,7 @@ public class UndeathAbility extends SimpleAbility {
         if (entity.getLevel().isClientSide) return;
         if (!(entity.getChangedEntity() instanceof AzurebyssEntity)) return;
 
-        if (((AzurebyssEntity) entity.getChangedEntity()).getAllowedUndeath())
-            ((AzurebyssEntity) entity.getChangedEntity()).setAllowedUndeath(false);
-        else
-            ((AzurebyssEntity) entity.getChangedEntity()).setAllowedUndeath(true);
+        ((AzurebyssEntity) entity.getChangedEntity()).setAllowedUndeath(!((AzurebyssEntity) entity.getChangedEntity()).getAllowedUndeath());
 
         setDirty(entity);
         entity.displayClientMessage(new TranslatableComponent("ability.changed.undeath.select", displayUndeathCondition(entity.getChangedEntity())), true);
@@ -76,10 +74,14 @@ public class UndeathAbility extends SimpleAbility {
     private Boolean setBooleanFromString(String s) { return s.equals("1"); }
 
     @Override
-    public void tick(IAbstractChangedEntity entity) {}
+    public void tick(IAbstractChangedEntity entity) {
+        super.tick(entity);
+    }
 
     @Override
-    public void stopUsing(IAbstractChangedEntity entity) {}
+    public void stopUsing(IAbstractChangedEntity entity) {
+        super.stopUsing(entity);
+    }
 
     @Override
     public int getCoolDown(IAbstractChangedEntity entity) {
@@ -108,35 +110,33 @@ public class UndeathAbility extends SimpleAbility {
             if (!allowUndying(entity)) return;
             if (((Player)entity).getHealth() - event.getAmount() > 0) return;
 
-            event.setCanceled(true);
-            ((Player)entity).setHealth(1F);
-            triggerUndying(entity);
+            triggerUndying(event, entity);
         } else if (!allowUndying(entity) && allowUndying(source)) {
             if (source.level.isClientSide) return;
-            if (!(entity instanceof LivingEntity) || ((LivingEntity)entity).getHealth() - event.getAmount() > 0) return;
+            if (!(entity instanceof LivingEntity)
+                    || ((LivingEntity)entity).getHealth() - event.getAmount() > 0) return;
 
-            if (IAbstractChangedEntity.forEitherSafe(source).isPresent()
-                    && !((AzurebyssEntity)IAbstractChangedEntity.forEitherSafe(source).get().getChangedEntity()).isAble2Healing()) {
-                ((Player)source).removeEffect(MobEffects.WEAKNESS);
-                ((Player)source).removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
-                ((Player)source).removeEffect(MobEffects.JUMP);
-            }
-            ((AzurebyssEntity)IAbstractChangedEntity.forEitherSafe(source).get().getChangedEntity()).increaseHealingChance();
+            triggerUndyingChance(source);
         }
     }
 
     private static boolean allowUndying(Entity entity) {
         if (entity == null) return false;
-        if (entity instanceof Player && TransfurVariant.getEntityVariant((Player)entity).getEntityType() == ChangedEntities.AZUREBYSS_ENTITY.get()) {
+        if (entity instanceof Player && TransfurVariant.getEntityVariant((Player)entity) != null
+                && TransfurVariant.getEntityVariant((Player)entity).getEntityType() == ChangedEntities.AZUREBYSS_ENTITY.get()) {
             Optional<IAbstractChangedEntity> opt = IAbstractChangedEntity.forEitherSafe(entity);
-            Boolean live = false;
+            boolean live = false;
             if (opt.isPresent()) { live = ((AzurebyssEntity) opt.get().getChangedEntity()).getAllowedUndeath(); }
             return live;
         } else return false;
     }
 
-    private static void triggerUndying(Entity entity) {
+    private static void triggerUndying(LivingHurtEvent event, Entity entity) {
         if (IAbstractChangedEntity.forEitherSafe(entity).isEmpty()) return;
+
+        event.setCanceled(true);
+        ((Player)entity).setHealth(1F);
+
         if (((AzurebyssEntity)IAbstractChangedEntity.forEitherSafe(entity).get().getChangedEntity()).isAble2Healing()) {
             ((Player)entity).removeAllEffects();
             ((Player)entity).addEffect(
@@ -157,7 +157,7 @@ public class UndeathAbility extends SimpleAbility {
                     new MobEffectInstance(
                             MobEffects.MOVEMENT_SLOWDOWN,
                             5 * 20,
-                            1
+                            5
                     )
             );
             ((Player)entity).addEffect(
@@ -171,7 +171,7 @@ public class UndeathAbility extends SimpleAbility {
                     new MobEffectInstance(
                             MobEffects.ABSORPTION,
                             5 * 20,
-                            1
+                            2
                     )
             );
             ((AzurebyssEntity)IAbstractChangedEntity.forEitherSafe(entity).get().getChangedEntity()).decreaseHealingChance();
@@ -203,5 +203,18 @@ public class UndeathAbility extends SimpleAbility {
         IAbstractChangedEntity.forEitherSafe(entity).get().displayClientMessage(
                 new TranslatableComponent("changed.ability.undeath.point_remain",
                         ((AzurebyssEntity)IAbstractChangedEntity.forEitherSafe(entity).get().getChangedEntity()).getHealingChance()), true);
+    }
+
+    private static void triggerUndyingChance(Entity source) {
+        if (IAbstractChangedEntity.forEitherSafe(source).isEmpty()) return;
+
+        if (IAbstractChangedEntity.forEitherSafe(source).isPresent()
+                && !((AzurebyssEntity)IAbstractChangedEntity.forEitherSafe(source).get().getChangedEntity()).isAble2Healing()) {
+            ((Player)source).removeEffect(MobEffects.WEAKNESS);
+            ((Player)source).removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+            ((Player)source).removeEffect(MobEffects.JUMP);
+        }
+
+        ((AzurebyssEntity)IAbstractChangedEntity.forEitherSafe(source).get().getChangedEntity()).increaseHealingChance();
     }
 }
