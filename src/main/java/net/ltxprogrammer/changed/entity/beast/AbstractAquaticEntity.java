@@ -3,6 +3,7 @@ package net.ltxprogrammer.changed.entity.beast;
 import net.ltxprogrammer.changed.entity.ChangedEntity;
 import net.ltxprogrammer.changed.entity.LatexType;
 import net.ltxprogrammer.changed.entity.TransfurMode;
+import net.ltxprogrammer.changed.init.ChangedGameRules;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -43,6 +44,8 @@ public abstract class AbstractAquaticEntity extends ChangedEntity implements Aqu
     }
 
     public static <T extends ChangedEntity> boolean checkEntitySpawnRules(EntityType<T> entityType, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, Random random) {
+        if (!world.getLevel().getGameRules().getBoolean(ChangedGameRules.RULE_AUTOMATIC_SPAWN_ENTITY))
+            return false;
         if (!world.canSeeSkyFromBelowWater(pos))
             return false;
         if (random.nextFloat() > 0.5f)

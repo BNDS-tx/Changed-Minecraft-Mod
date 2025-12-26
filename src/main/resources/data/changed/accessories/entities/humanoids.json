@@ -71,7 +71,9 @@
     "changed:phage_latex_wolf_female",
     "changed:phage_latex_wolf_male",
 
-    "changed:special_latex"
+    "changed:special_latex",
+
+    "changed:azurebyss"
   ],
   "slots": [
     "changed:body",
