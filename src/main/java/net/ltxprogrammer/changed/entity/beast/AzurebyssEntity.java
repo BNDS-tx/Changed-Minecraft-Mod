@@ -3,6 +3,7 @@ package net.ltxprogrammer.changed.entity.beast;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.ability.handler.DodgeAbilityInstance;
 import net.ltxprogrammer.changed.entity.*;
+import net.ltxprogrammer.changed.entity.robot.Exoskeleton;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
@@ -102,24 +103,46 @@ public class AzurebyssEntity extends ChangedEntity {
         // 什么都不做 = 不被击退
     }
 
-    public boolean getAllowedUndeath() { return setUndying; }
+    public boolean getAllowedUndeath() { return this.setUndying; }
 
-    public void setAllowedUndeath(boolean value) { setUndying = value; }
+    public void setAllowedUndeath(boolean value) { this.setUndying = value; }
 
-    public boolean isAble2Healing() { return healingChance > 0; }
+    public boolean isAble2Healing() { return this.healingChance > 0; }
 
-    public int getHealingChance() { return healingChance; }
+    private boolean shouldDisable() { return this.healingChance < 0; }
 
-    public void increaseHealingChance() { if (healingChance < 3) healingChance++; }
+    public int getHealingChance() { return Math.max(this.healingChance, 0); }
 
-    public void decreaseHealingChance() { if (healingChance > 0) healingChance--; }
+    public void increaseHealingChance() {
+        if (this.healingChance <= 0) this.healingChance = 1;
+        else if (this.healingChance < 3) this.healingChance++;
+    }
 
-    public void setDisable(boolean isDisabled) {
+    public void decreaseHealingChance() { if (this.healingChance >= 0) this.healingChance--; }
+
+    private void setDisable(boolean isDisabled) {
+        boolean hasExo = Exoskeleton.getEntityExoskeleton(this.maybeGetUnderlying()).isPresent();
+        if (hasExo) return;
         var instance = IAbstractChangedEntity.forEitherSafe(this.maybeGetUnderlying()).map(IAbstractChangedEntity::getTransfurVariantInstance).orElse(null);
         if (instance != null) {
             instance.itemUseMode = isDisabled ? UseItemMode.NONE : UseItemMode.NORMAL;
             instance.miningStrength = isDisabled ? MiningStrength.WEAK : MiningStrength.NORMAL;
             instance.refreshAttributes();
+            if (this.maybeGetUnderlying().getHealth() > 4F) {
+                if (this.maybeGetUnderlying().getEffect(MobEffects.WEAKNESS) != null
+                        && Objects.requireNonNull(this.maybeGetUnderlying().getEffect(MobEffects.WEAKNESS)).getAmplifier() == 10)
+                    this.maybeGetUnderlying().removeEffect(MobEffects.WEAKNESS);
+                if (this.maybeGetUnderlying().getEffect(MobEffects.MOVEMENT_SLOWDOWN) != null
+                        && Objects.requireNonNull(this.maybeGetUnderlying().getEffect(MobEffects.MOVEMENT_SLOWDOWN)).getAmplifier() == 10)
+                    this.maybeGetUnderlying().removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+                if (this.maybeGetUnderlying().getEffect(MobEffects.JUMP) != null
+                        && Objects.requireNonNull(this.maybeGetUnderlying().getEffect(MobEffects.JUMP)).getAmplifier() == -50)
+                    this.maybeGetUnderlying().removeEffect(MobEffects.JUMP);
+            } else if (shouldDisable()) {
+                this.maybeGetUnderlying().addEffect(new MobEffectInstance(MobEffects.WEAKNESS, Integer.MAX_VALUE, 10));
+                this.maybeGetUnderlying().addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, Integer.MAX_VALUE, 10));
+                this.maybeGetUnderlying().addEffect(new MobEffectInstance(MobEffects.JUMP, Integer.MAX_VALUE, -50));
+            }
         }
     }
 
@@ -181,10 +204,7 @@ public class AzurebyssEntity extends ChangedEntity {
                 }
             }
         }
-        if (this.getHealth() > 4F && !isAble2Healing()) {
-            setDisable(false);
-            this.maybeGetUnderlying().removeAllEffects();
-        } else setDisable(!isAble2Healing());
+        setDisable(this.getHealth() <= 4F && shouldDisable());
     }
 
     public LivingEntity getSelf() {
@@ -250,11 +270,11 @@ public class AzurebyssEntity extends ChangedEntity {
         super.addAdditionalSaveData(tag);
         tag.putBoolean("Phase2", isPhase2());
         tag.putBoolean("Phase3", isPhase3());
-        tag.putBoolean("Bleeding", shouldBleed);
+        tag.putBoolean("Bleeding", this.shouldBleed);
     }
 
     public boolean isBleeding() {
-        return shouldBleed;
+        return this.shouldBleed;
     }
 
     @Override

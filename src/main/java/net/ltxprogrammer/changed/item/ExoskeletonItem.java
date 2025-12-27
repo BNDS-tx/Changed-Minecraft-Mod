@@ -8,7 +8,10 @@ import net.ltxprogrammer.changed.data.AccessorySlotType;
 import net.ltxprogrammer.changed.data.AccessorySlots;
 import net.ltxprogrammer.changed.entity.robot.AbstractRobot;
 import net.ltxprogrammer.changed.entity.robot.ChargerType;
+import net.ltxprogrammer.changed.entity.robot.Exoskeleton;
+import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.init.ChangedDamageSources;
+import net.ltxprogrammer.changed.init.ChangedEntities;
 import net.ltxprogrammer.changed.init.ChangedSounds;
 import net.ltxprogrammer.changed.init.ChangedTags;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
@@ -17,6 +20,7 @@ import net.ltxprogrammer.changed.util.EntityUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.network.chat.*;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -42,6 +46,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DispenserBlock;
 
 import javax.annotation.Nullable;
+import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -69,6 +75,8 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
 
     public static final int EXOSKELETON_EQUIP_DELAY = 30;
 
+    private static float targetYaw = 0;
+
     public ExoskeletonItem(Properties builder, Supplier<EntityType<T>> entityType) {
         super(builder.durability(CHARGE_IN_SECONDS), entityType);
         DispenserBlock.registerBehavior(this, AccessoryItem.DISPENSE_ITEM_BEHAVIOR);
@@ -81,7 +89,7 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
 
     @Override
     public boolean allowedInSlot(ItemStack itemStack, LivingEntity wearer, AccessorySlotType slot) {
-        if (!canUse(itemStack)) {
+        if (!canUse(itemStack, Exoskeleton.getEntityExoskeleton(wearer).isPresent())) {
             return false;
         }
 
@@ -136,8 +144,8 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
         return super.useOn(context);
     }
 
-    protected boolean canUse(ItemStack stack) {
-        return !(stack.getDamageValue() >= stack.getMaxDamage() - 1);
+    private boolean canUse(ItemStack stack, boolean inUse) {
+        return !(stack.getDamageValue() >= stack.getMaxDamage() - (inUse ?0 :1));
     }
 
     private static Component makePrompt(ItemStack itemStack, Component text) {
@@ -180,6 +188,14 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
                 if (damage <= 0) {
                     return false;
                 }
+            } else if (damage < 0) {
+                if (stack.getDamageValue() + damage < 0) damage = -stack.getDamageValue();
+            }
+
+            if (wearer != null) {
+                if (stack.getDamageValue() + damage >= stack.getMaxDamage() - 1) {
+                    damage = stack.getMaxDamage() - stack.getDamageValue() - 1;
+                }
             }
 
             if (wearer != null && damage != 0) {
@@ -219,14 +235,17 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
     public void accessoryTick(AccessorySlotContext<?> slotContext) {
         boolean ignoreDamage = slotContext.wearer() instanceof Player player && player.getAbilities().invulnerable;
 
-        if (!canUse(slotContext.stack())) {
+        if (!canUse(slotContext.stack(), true)) {
             if (!slotContext.wearer().level.isClientSide && !ignoreDamage)
                 AccessorySlots.tryReplaceSlot(slotContext.wearer(), slotContext.slotType(), ItemStack.EMPTY);
         }
 
         else if (slotContext.wearer().tickCount % 20 == 0) {
             if (!ignoreDamage)
-                degradeCharge(slotContext, 1);
+                if (TransfurVariant.getEntityVariant(slotContext.wearer()) != null
+                        && TransfurVariant.getEntityVariant(slotContext.wearer()).getEntityType() == ChangedEntities.AZUREBYSS_ENTITY.get()) {
+                    if ((slotContext.wearer().tickCount / 20) % 4 == 0) degradeCharge(slotContext, -1);
+                } else degradeCharge(slotContext, 1);
         }
 
         if (slotContext.wearer().isInWaterOrRain() && !ignoreDamage) {
@@ -236,6 +255,39 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
                 slotContext.wearer().hurt(ChangedDamageSources.ELECTROCUTION, 3);
                 TscWeapon.applyShock(slotContext.wearer(), 3);
                 degradeCharge(slotContext, 30);
+            }
+        }
+
+        if (!canUse(slotContext.stack(), false)) {
+            if (slotContext.wearer() instanceof ServerPlayer wearer) {
+                wearer.setYHeadRot(targetYaw);
+                wearer.setYRot(targetYaw);
+                wearer.setXRot(30F);
+                wearer.connection.send(new ClientboundPlayerPositionPacket(wearer.getX(), wearer.getY(), wearer.getZ(), targetYaw, 30F, EnumSet.noneOf(ClientboundPlayerPositionPacket.RelativeArgument.class), 0, wearer.isOnGround()));
+            }
+
+            if (slotContext.wearer() instanceof ServerPlayer wearer) {
+                wearer.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, Integer.MAX_VALUE, 10));
+                wearer.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, Integer.MAX_VALUE, 10));
+                wearer.addEffect(new MobEffectInstance(MobEffects.JUMP, Integer.MAX_VALUE, -50));
+                wearer.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, Integer.MAX_VALUE, 10));
+                wearer.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, Integer.MAX_VALUE, 10));
+                if (wearer.tickCount % 40 == 0 && wearer.getHealth() > 1) wearer.hurt(DamageSource.GENERIC, 1.0F);
+            }
+        } else {
+            if (slotContext.wearer() instanceof ServerPlayer wearer) {
+                if (wearer.getEffect(MobEffects.WEAKNESS) != null
+                        && Objects.requireNonNull(wearer.getEffect(MobEffects.WEAKNESS)).getAmplifier() == 10)
+                    wearer.removeEffect(MobEffects.WEAKNESS);
+                if (wearer.getEffect(MobEffects.MOVEMENT_SLOWDOWN) != null
+                        && Objects.requireNonNull(wearer.getEffect(MobEffects.MOVEMENT_SLOWDOWN)).getAmplifier() == 10)
+                    wearer.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+                if (wearer.getEffect(MobEffects.JUMP) != null
+                        && Objects.requireNonNull(wearer.getEffect(MobEffects.JUMP)).getAmplifier() == -50)
+                    wearer.removeEffect(MobEffects.JUMP);
+                wearer.removeEffect(MobEffects.BLINDNESS);
+                wearer.removeEffect(MobEffects.DIG_SLOWDOWN);
+                targetYaw = wearer.getYHeadRot();
             }
         }
     }
@@ -276,6 +328,17 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
             ChangedSounds.sendLocalSound(wearer, ChangedSounds.EXOSKELETON_LOCK, 0.7f, 1.5f);
         }
 
+        slotContext.wearer().addEffect(
+                new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 2 * 20, 5, false, false, false));
+    }
+
+    @Override
+    public void accessoryRemoved(AccessorySlotContext<?> slotContext) {
+        slotContext.wearer().removeEffect(MobEffects.WEAKNESS);
+        slotContext.wearer().removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+        slotContext.wearer().removeEffect(MobEffects.BLINDNESS);
+        slotContext.wearer().removeEffect(MobEffects.DIG_SLOWDOWN);
+        slotContext.wearer().removeEffect(MobEffects.JUMP);
         slotContext.wearer().addEffect(
                 new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 2 * 20, 5, false, false, false));
     }
