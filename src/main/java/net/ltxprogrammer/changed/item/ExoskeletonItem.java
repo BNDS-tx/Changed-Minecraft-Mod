@@ -242,7 +242,7 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
 
         else if (slotContext.wearer().tickCount % 20 == 0) {
             if (!ignoreDamage)
-                if (TransfurVariant.getEntityVariant(slotContext.wearer()) != null
+                if (TransfurVariant.getEntityVariant(slotContext.wearer()) != null && canUse(slotContext.stack(), false)
                         && TransfurVariant.getEntityVariant(slotContext.wearer()).getEntityType() == ChangedEntities.AZUREBYSS_ENTITY.get()) {
                     if ((slotContext.wearer().tickCount / 20) % 4 == 0) degradeCharge(slotContext, -1);
                 } else degradeCharge(slotContext, 1);
@@ -262,8 +262,8 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
             if (slotContext.wearer() instanceof ServerPlayer wearer) {
                 wearer.setYHeadRot(targetYaw);
                 wearer.setYRot(targetYaw);
-                wearer.setXRot(30F);
-                wearer.connection.send(new ClientboundPlayerPositionPacket(wearer.getX(), wearer.getY(), wearer.getZ(), targetYaw, 30F, EnumSet.noneOf(ClientboundPlayerPositionPacket.RelativeArgument.class), 0, wearer.isOnGround()));
+                wearer.setXRot(50F);
+                wearer.connection.send(new ClientboundPlayerPositionPacket(wearer.getX(), wearer.getY(), wearer.getZ(), targetYaw, 50F, EnumSet.noneOf(ClientboundPlayerPositionPacket.RelativeArgument.class), 0, wearer.isOnGround()));
             }
 
             if (slotContext.wearer() instanceof ServerPlayer wearer) {
