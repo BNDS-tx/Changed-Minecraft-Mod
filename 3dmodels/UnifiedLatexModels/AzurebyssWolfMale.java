@@ -1,11 +1,11 @@
-// Made with Blockbench 5.0.6
+// Made with Blockbench 5.0.7
 // Exported for Minecraft version 1.17 or later with Mojang mappings
 // Paste this class into your mod and generate all required imports
 
 
-public class CustomizedLatexWolfMale<T extends Entity> extends EntityModel<T> {
+public class AzurebyssWolfMale<T extends Entity> extends EntityModel<T> {
 	// This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
-	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(new ResourceLocation("modid", "customizedlatexwolfmale"), "main");
+	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(new ResourceLocation("modid", "azurebysswolfmale"), "main");
 	private final ModelPart LeftLeg;
 	private final ModelPart LeftLowerLeg2;
 	private final ModelPart LeftFoot2;
@@ -44,7 +44,7 @@ public class CustomizedLatexWolfMale<T extends Entity> extends EntityModel<T> {
 	private final ModelPart LeftArmFurLower;
 	private final ModelPart LeftHandFur2;
 
-	public CustomizedLatexWolfMale(ModelPart root) {
+	public AzurebyssWolfMale(ModelPart root) {
 		this.LeftLeg = root.getChild("LeftLeg");
 		this.LeftLowerLeg2 = this.LeftLeg.getChild("LeftLowerLeg2");
 		this.LeftFoot2 = this.LeftLowerLeg2.getChild("LeftFoot2");
@@ -228,9 +228,9 @@ public class CustomizedLatexWolfMale<T extends Entity> extends EntityModel<T> {
 
 		PartDefinition Abs = Muscles.addOrReplaceChild("Abs", CubeListBuilder.create(), PartPose.offset(0.0F, 4.3F, 0.2F));
 
-		PartDefinition cube_r9 = Abs.addOrReplaceChild("cube_r9", CubeListBuilder.create().texOffs(32, 42).addBox(-1.25F, 1.0F, 0.2F, 1.0F, 1.0F, 2.0F, new CubeDeformation(0.175F)), PartPose.offsetAndRotation(-0.05F, 2.45F, -2.225F, 0.0F, 0.0087F, 0.0F));
+		PartDefinition cube_r9 = Abs.addOrReplaceChild("cube_r9", CubeListBuilder.create().texOffs(32, 41).addBox(-1.25F, 1.0F, 0.2F, 1.0F, 1.0F, 2.0F, new CubeDeformation(0.175F)), PartPose.offsetAndRotation(-0.05F, 2.45F, -2.225F, 0.0F, 0.0087F, 0.0F));
 
-		PartDefinition cube_r10 = Abs.addOrReplaceChild("cube_r10", CubeListBuilder.create().texOffs(33, 37).addBox(0.25F, 1.0F, 0.2F, 1.0F, 1.0F, 2.0F, new CubeDeformation(0.175F)), PartPose.offsetAndRotation(0.05F, 2.45F, -2.225F, 0.0F, -0.0087F, 0.0F));
+		PartDefinition cube_r10 = Abs.addOrReplaceChild("cube_r10", CubeListBuilder.create().texOffs(34, 41).addBox(0.25F, 1.0F, 0.2F, 1.0F, 1.0F, 2.0F, new CubeDeformation(0.175F)), PartPose.offsetAndRotation(0.05F, 2.45F, -2.225F, 0.0F, -0.0087F, 0.0F));
 
 		PartDefinition cube_r11 = Abs.addOrReplaceChild("cube_r11", CubeListBuilder.create().texOffs(60, 27).addBox(-2.25F, -0.5F, 0.2F, 2.0F, 1.0F, 2.0F, new CubeDeformation(0.2F)), PartPose.offsetAndRotation(-0.05F, 2.45F, -2.2F, 0.0F, 0.0087F, 0.0F));
 

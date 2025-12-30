@@ -252,9 +252,9 @@ public class AzurebyssWolfModel extends AdvancedHumanoidModel<AzurebyssEntity> i
 
 		PartDefinition Abs = Muscles.addOrReplaceChild("Abs", CubeListBuilder.create(), PartPose.offset(0.0F, 4.3F, 0.2F));
 
-		PartDefinition cube_r9 = Abs.addOrReplaceChild("cube_r9", CubeListBuilder.create().texOffs(32, 42).addBox(-1.25F, 1.0F, 0.2F, 1.0F, 1.0F, 2.0F, new CubeDeformation(0.175F)), PartPose.offsetAndRotation(-0.05F, 2.45F, -2.225F, 0.0F, 0.0087F, 0.0F));
+		PartDefinition cube_r9 = Abs.addOrReplaceChild("cube_r9", CubeListBuilder.create().texOffs(32, 41).addBox(-1.25F, 1.0F, 0.2F, 1.0F, 1.0F, 2.0F, new CubeDeformation(0.175F)), PartPose.offsetAndRotation(-0.05F, 2.45F, -2.225F, 0.0F, 0.0087F, 0.0F));
 
-		PartDefinition cube_r10 = Abs.addOrReplaceChild("cube_r10", CubeListBuilder.create().texOffs(33, 37).addBox(0.25F, 1.0F, 0.2F, 1.0F, 1.0F, 2.0F, new CubeDeformation(0.175F)), PartPose.offsetAndRotation(0.05F, 2.45F, -2.225F, 0.0F, -0.0087F, 0.0F));
+		PartDefinition cube_r10 = Abs.addOrReplaceChild("cube_r10", CubeListBuilder.create().texOffs(34, 41).addBox(0.25F, 1.0F, 0.2F, 1.0F, 1.0F, 2.0F, new CubeDeformation(0.175F)), PartPose.offsetAndRotation(0.05F, 2.45F, -2.225F, 0.0F, -0.0087F, 0.0F));
 
 		PartDefinition cube_r11 = Abs.addOrReplaceChild("cube_r11", CubeListBuilder.create().texOffs(60, 27).addBox(-2.25F, -0.5F, 0.2F, 2.0F, 1.0F, 2.0F, new CubeDeformation(0.2F)), PartPose.offsetAndRotation(-0.05F, 2.45F, -2.2F, 0.0F, 0.0087F, 0.0F));
 
