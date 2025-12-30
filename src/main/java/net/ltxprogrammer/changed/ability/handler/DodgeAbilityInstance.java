@@ -318,7 +318,7 @@ public class DodgeAbilityInstance extends AbstractAbilityInstance {
     public void setUltraInstinct(boolean ultraInstinct) {
         if (ultraInstinct) {
             if (this.entity.getEntity() instanceof Player player) {
-                player.displayClientMessage(new TranslatableComponent("changed_addon.ability.dodge.ultra_instinct.activated"), false);
+                player.displayClientMessage(new TranslatableComponent("changed.ability.dodge.ultra_instinct.activated"), false);
             }
         }
         this.ultraInstinct = ultraInstinct;
