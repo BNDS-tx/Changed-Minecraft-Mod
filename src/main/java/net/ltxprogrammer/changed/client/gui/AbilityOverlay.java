@@ -9,6 +9,7 @@ import net.ltxprogrammer.changed.ability.AbstractAbilityInstance;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.client.ChangedClient;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
+import net.ltxprogrammer.changed.init.ChangedEntities;
 import net.ltxprogrammer.changed.init.ChangedTags;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.EntityUtil;
@@ -31,7 +32,7 @@ public class AbilityOverlay {
      |   release      |               |
      ----------------------------------
      */
-    private static final ResourceLocation ABILITY_BACKGROUNDS = Changed.modResource("textures/gui/ability_backgrounds.png");
+    private static final ResourceLocation ABILITY_BACKGROUNDS = Changed.modResource("textures/gui/ability_all_backgrounds.png");
 
     public static void renderBackground(int x, int y, GuiGraphics graphics, AbstractRadialScreen.ColorScheme scheme, Player player, TransfurVariantInstance<?> variant, AbstractAbilityInstance selected) {
         RenderSystem.setShaderTexture(0, ABILITY_BACKGROUNDS);
@@ -45,13 +46,14 @@ public class AbilityOverlay {
         int cool = selected.canUse() ? (int)(controller.coolDownPercent() * 32) : 0;
         int active = cool >= 32 ? (int)(controller.getProgressActive() * 32) : 0;
 
-        int gooOrNot = variant.getParent().getEntityType().is(ChangedTags.EntityTypes.LATEX) ? 0 : 32;
-        graphics.blit(ABILITY_BACKGROUNDS, x, y, gooOrNot, 0, 32, 32, 64, 96); // back
+        int gooOrNot = variant.getParent().getEntityType().is(ChangedTags.EntityTypes.LATEX) ? 0
+                : (variant.getParent().getEntityType() == ChangedEntities.AZUREBYSS_ENTITY.get() ? 64 : 32);
+        graphics.blit(ABILITY_BACKGROUNDS, x, y, gooOrNot, 0, 32, 32, 96, 96); // back
         if (cool > 0)
-            graphics.blit(ABILITY_BACKGROUNDS, x, y + (32 - cool), gooOrNot, 32 + (32 - cool), 32, cool, 64, 96); // ready
+            graphics.blit(ABILITY_BACKGROUNDS, x, y + (32 - cool), gooOrNot, 32 + (32 - cool), 32, cool, 96, 96); // ready
         if (active > 0) {
             graphics.setColor(scheme.foreground().red(), scheme.foreground().green(), scheme.foreground().blue(), 1.0F);
-            graphics.blit(ABILITY_BACKGROUNDS, x, y + (32 - active), gooOrNot, 64 + (32 - active), 32, active, 64, 96); // active
+            graphics.blit(ABILITY_BACKGROUNDS, x, y + (32 - active), gooOrNot, 64 + (32 - active), 32, active, 96, 96); // active
         }
     }
 

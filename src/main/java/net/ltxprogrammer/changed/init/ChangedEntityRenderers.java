@@ -155,6 +155,8 @@ public class ChangedEntityRenderers {
 
         registerHumanoid(event, ChangedEntities.CUSTOM_LATEX.get(), CustomLatexRenderer::new);
 
+        registerHumanoid(event, ChangedEntities.AZUREBYSS_ENTITY.get(), AzurebyssEntityRenderer::new);
+
         event.registerEntityRenderer(ChangedEntities.MILK_PUDDING.get(), MilkPuddingRenderer::new);
         event.registerEntityRenderer(ChangedEntities.FERAL_LATEX_SHARK.get(), SharkRenderer::new);
 

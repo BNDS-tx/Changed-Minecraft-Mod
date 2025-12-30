@@ -327,7 +327,8 @@ public abstract class TransfurAnimator {
 
     private static EntityGeometry lerpModelPart(@NotNull EntityGeometry a, @NotNull EntityGeometry b, float lerp, boolean remapUV) {
         List<EntityGeometry.Cube> copiedCubes = new ArrayList<>();
-        for (int i = 0; i < a.cubes.size(); ++i)
+        int cubeCount = Math.min(a.cubes.size(), b.cubes.size());
+        for (int i = 0; i < cubeCount; ++i)
             copiedCubes.add(lerpCube(a.cubes.get(i), b.cubes.get(i), lerp, remapUV));
         Map<String, EntityGeometry> copiedChildren = new HashMap<>();
         for (var k : a.children.keySet())

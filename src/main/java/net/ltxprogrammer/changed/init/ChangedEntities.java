@@ -5,9 +5,7 @@ import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.entity.ChangedEntity;
 import net.ltxprogrammer.changed.entity.SeatEntity;
 import net.ltxprogrammer.changed.entity.beast.*;
-import net.ltxprogrammer.changed.entity.beast.boss.BehemothHandLeft;
-import net.ltxprogrammer.changed.entity.beast.boss.BehemothHandRight;
-import net.ltxprogrammer.changed.entity.beast.boss.BehemothHead;
+import net.ltxprogrammer.changed.entity.beast.boss.*;
 import net.ltxprogrammer.changed.entity.decoration.EmittedLaser;
 import net.ltxprogrammer.changed.entity.decoration.WallSign;
 import net.ltxprogrammer.changed.entity.projectile.GasParticle;
@@ -374,6 +372,10 @@ public class ChangedEntities {
             () -> EntityType.Builder.of(WallSign::new, MobCategory.MISC).sized(0.5F, 0.5F).clientTrackingRange(10).updateInterval(Integer.MAX_VALUE).build("wall_sign"));
     public static final RegistryObject<EntityType<EmittedLaser>> EMITTED_LASER = REGISTRY.register("emitted_laser",
             () -> EntityType.Builder.of(EmittedLaser::new, MobCategory.MISC).sized(0.5F, 0.5F).clientTrackingRange(10).updateInterval(Integer.MAX_VALUE).build("wall_sign"));
+
+    public static final RegistryObject<EntityType<AzurebyssEntity>> AZUREBYSS_ENTITY = registerSpawning("azurebyss", 0xf1afaf, 0xff5e5e,
+            EntityType.Builder.of(AzurebyssEntity::new, ChangedMobCategories.CHANGED).clientTrackingRange(10).sized(0.8F, 2.05F),
+            ChangedEntities::overworldOnly, SpawnPlacements.Type.ON_GROUND, AzurebyssEntity::checkEntitySpawnRules, AzurebyssEntity::createAttributes);
 
     // TODO make register function for non `ChangedEntity`
 

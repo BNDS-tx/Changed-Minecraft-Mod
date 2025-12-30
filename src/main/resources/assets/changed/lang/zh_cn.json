@@ -821,7 +821,7 @@
   "changed.stasis.modify.scale.tooltip": "配置：整体尺寸",
 
 
-    "changed.exoskeleton.prompt": "[%s]> %s",
+  "changed.exoskeleton.prompt": "[%s]> %s",
   "changed.exoskeleton.battery_low": "电池电量低",
   "changed.exoskeleton.battery_critical": "电池电量严重不足",
 
@@ -829,7 +829,7 @@
   "builtin_resources.changed:instant_transfur": "Changed迅速兽化",
   "builtin_resources.changed:changed_pbr": "Changed PBR",
 
-    "enum.changed.torso_type.generic": "通用",
+  "enum.changed.torso_type.generic": "通用",
   "enum.changed.torso_type.chiseled": "健壮",
   "enum.changed.torso_type.female": "雌性",
   "enum.changed.torso_type.heavy": "厚重",
@@ -858,6 +858,43 @@
 
   "enum.changed.scale_type.normal": "普通",
   "enum.changed.scale_type.buff": "健壮",
-  "enum.changed.scale_type.small": "娇小"
+  "enum.changed.scale_type.small": "娇小",
+
+  "death.attack.changed:electrocution": "%s 触电身亡",
+  "death.attack.changed:electrocution.player": "%1$s 在与 %2$s 的战斗中触电身亡",
+  "changed.stasis.slot.fluid.tooltip": "用于填充腔室的液体罐",
+  "changed.stasis.command.create_entity": "创建实体",
+  "changed.stasis.command.discard_entity": "弃用实体",
+  "changed.accessory.slot_disabled_by": "槽位因故被禁用：",
+
+  "entity.changed.azurebyss": "Azurebyss",
+
+  "item.changed.azurebyss_spawn_egg": "Azurebyss 生成蛋",
+
+  "changed.ability.thunder": "雷霆闪电",
+  "ability.changed.thunder.desc": "召唤一道闪电，劈向目标并造成较大伤害。",
+
+  "changed.ability.thunder_path": "闪电之路",
+  "ability.changed.thunder_path.desc": "沿着光标生成多道闪电，对大量目标造成伤害或对单个目标造成大量伤害。",
+
+  "changed.ability.shock_wave": "冲击波",
+  "ability.changed.shock_wave.desc": "释放一道冲击波，震慑周围的实体",
+
+  "changed.ability.dodge": "闪避能力",
+  "ability.changed.dodge.desc": "闪避来自外部的攻击，消耗闪避数量。",
+  "changed.ability.dodge.dodge_amount": "你的闪避数量为 %1$s",
+  "changed.ability.dodge.dodge_amount_left": "你的闪避数量为 %1$s",
+  "changed.ability.dodge.ultra_instinct": "§b§o 极限本能 §r",
+  "changed.ability.dodge.ultra_instinct.activated": "§b§o 你的直觉变得异常敏锐 — 你感觉自己快如神明。 §r",
+
+  "changed.ability.undeath": "\"超越死亡\"",
+  "changed.ability.undeath.activated": "我不会倒下！",
+  "changed.ability.undeath.point_remain": "（剩余回复点数： %d）",
+  "ability.changed.undeath.select": "当前状态：%s",
+  "ability.mode.changed.allow_undeath": "已激活免死特质（剩余回复点数： %d）",
+  "ability.mode.changed.not_allow_undeath": "已取消免死特质",
+  "ability.changed.undeath.desc": "特制的基因使你获得拥有对抗死亡的能力。",
+  "ability.changed.undeath_mode.not_allowed.desc": "你放弃了永存的能力，收到致命伤害时你将如同其他人一样死去。",
+  "ability.changed.undeath_mode.allowed.desc": "你不再畏惧死亡，但当你回复点数耗尽时，承受致命伤的你将陷入无尽的虚弱中。（击杀敌人以恢复并获得回复点数）。"
 }
 

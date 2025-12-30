@@ -122,6 +122,8 @@ public class ChangedLayerDefinitions {
 
         event.registerLayerDefinition(CustomLatexModel.LAYER_LOCATION, CustomLatexModel::createBodyLayer);
 
+        event.registerLayerDefinition(AzurebyssWolfModel.LAYER_LOCATION, AzurebyssWolfModel::createBodyLayer);
+
         ArmorNoneModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition);
         ArmorNoTailModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition);
         ArmorUpperBodyModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition);

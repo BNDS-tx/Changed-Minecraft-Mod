@@ -7,8 +7,9 @@ import net.ltxprogrammer.changed.entity.VisionType;
 import net.ltxprogrammer.changed.entity.beast.*;
 import net.ltxprogrammer.changed.entity.variant.GenderedPair;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
-import net.minecraft.world.entity.monster.AbstractSkeleton;
-import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.animal.AbstractGolem;
+import net.minecraft.world.entity.monster.*;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 
@@ -192,6 +193,32 @@ public class ChangedTransfurVariants {
 
     public static final RegistryObject<TransfurVariant<CustomLatexEntity>> CUSTOM_LATEX = register("form_custom_latex",
             TransfurVariant.Builder.of(ChangedEntities.CUSTOM_LATEX).stepSize(0.7f));
+
+    public static final RegistryObject<TransfurVariant<AzurebyssEntity>> AZUREBYSS_ENTITY = register("ztty_exp09_azurebyss_modified",
+            TransfurVariant.Builder.of(ChangedEntities.AZUREBYSS_ENTITY).scares(AbstractSkeleton.class)
+                    .reducedFall()
+                    .jumpStrength(1.5F)
+                    .abilities(List.of(
+                                    entityType -> ChangedAbilities.THUNDERBOLT.get(),
+                                    entityType -> ChangedAbilities.THUNDER_PATH.get(),
+                                    entityType -> ChangedAbilities.SHOCKWAVE.get(),
+                                    entityType -> ChangedAbilities.DODGE.get(),
+                                    entityType -> ChangedAbilities.UNDEATH.get()
+                            )
+                    )
+                    .transfurMode(TransfurMode.ABSORPTION)
+                    .scares(List.of(
+                                    Zombie.class,
+                                    WitherSkeleton.class,
+                                    AbstractVillager.class,
+                                    Skeleton.class,
+                                    AbstractGolem.class,
+                                    Spider.class,
+                                    Creeper.class
+                            )
+                    )
+                    .nightVision()
+                    .addAbility(ChangedAbilities.TOGGLE_NIGHT_VISION));
 
     public static final Supplier<? extends TransfurVariant<?>> FALLBACK_VARIANT = WHITE_LATEX_WOLF_MALE;
 

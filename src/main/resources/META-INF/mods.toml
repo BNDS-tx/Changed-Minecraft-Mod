@@ -1,18 +1,18 @@
 modLoader="javafml"
 loaderVersion="[40,)"
 license="MIT License"
-issueTrackerURL="https://github.com/LtxProgrammer/Changed-Minecraft-Mod/issues" #optional
+issueTrackerURL="https://github.com/BNDS-tx/Changed-Minecraft-Mod/issues" #optional
 
 [[mods]]
 modId="changed"
-version="0.15.0"
-displayName="Changed: Minecraft Mod"
-updateJSONURL="https://raw.githubusercontent.com/LtxProgrammer/Changed-Minecraft-Mod/master/update.json"
-displayURL="https://www.curseforge.com/minecraft/mc-mods/changed-minecraft-mod"
+version="0.15.0.t"
+displayName="Changed: Minecraft Mod Modified by Azurebyss"
+updateJSONURL="https://raw.githubusercontent.com/BNDS-tx/Changed-Minecraft-Mod/master/update.json"
+displayURL="https://github.com/BNDS-tx/Changed-Minecraft-Mod/blob/0.15-features/README.md"
 logoFile="icon@400.png"
-credits='''DragonSnow, bijimio, Valurio9683, KoBOLTA, poptartiguess, N1CO785, BaiTian6641, Foxyas, Kedr2806, xxXMinionXxx, Sel7D4, Candnhen, ABTOR, Twix#5803, dahotdogdesant'''
-authors="LtxProgrammer"
-description='''Gooey transfur mod inspired by Dragon Snow's Changed.'''
+credits='''DragonSnow, LtxProgrammer, bijimio, Valurio9683, KoBOLTA, poptartiguess, N1CO785, BaiTian6641, Foxyas, Kedr2806, xxXMinionXxx, Sel7D4, Candnhen, ABTOR, Twix#5803, dahotdogdesant'''
+authors="Azurebyss/BNDS-tx, LtxProgrammer"
+description='''Gooey transfur mod created by LtxProgrammer, inspired by Dragon Snow's Changed.'''
 [[dependencies.changed]]
     modId="forge"
     mandatory=true

@@ -15,4 +15,6 @@ public class ChangedGameRules {
 
     public static final GameRules.Key<GameRules.IntegerValue> RULE_LATEX_GROWTH_RATE = register("changed:latexGrowthRate", GameRules.Category.UPDATES, GameRules.IntegerValue.create(100));
     public static final GameRules.Key<GameRules.IntegerValue> RULE_FUSABILITY_DURATION_PLAYER = register("changed:fusabilityDurationPlayer", GameRules.Category.PLAYER, GameRules.IntegerValue.create(6000));
+
+    public static final GameRules.Key<GameRules.BooleanValue> RULE_AUTOMATIC_SPAWN_ENTITY = register("changed:automaticSpawnEntity", GameRules.Category.SPAWNING, GameRules.BooleanValue.create(true));
 }
