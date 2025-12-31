@@ -904,6 +904,7 @@
   "builtin_resources.changed:instant_transfur": "Changed Instant Transfur",
   "builtin_resources.changed:changed_pbr": "Changed PBR",
 
+
   "entity.changed.azurebyss": "Azurebyss",
 
   "item.changed.azurebyss_spawn_egg": "Azurebyss 生成蛋",
@@ -932,50 +933,5 @@
   "ability.mode.changed.not_allow_undeath": "已放弃不死特质",
   "ability.changed.undeath.desc": "特制的基因使你获得拥有跨越死亡的能力。",
   "ability.changed.undeath_mode.not_allowed.desc": "你放弃了永存的能力，收到致命伤害时你将如同其他人一样死去。",
-  "ability.changed.undeath_mode.allowed.desc": "你不再畏惧死亡，但当你回复点数耗尽时，承受致命伤的你将陷入无尽的虚弱中。（击杀敌人以恢复并获得回复点数）。",
-
-  "changed.stasis.run": "完成修改",
-  "changed.stasis.capture_next": "捕获下一个",
-  "changed.stasis.toggle_stasis": "冷冻状态：%s",
-  "changed.stasis.slot.fill.tooltip": "填充冷冻仓",
-  "item.changed.latex_hyena_taur_spawn_egg": "胶液鬣狗刷怪蛋",
-  "block.changed.tiles_white_connected": "白色可连接瓷砖",
-  "block.changed.tiles_greenhouse_connected": "温室可连接瓷砖",
-  "block.changed.tiles_grayblue_connected": "灰蓝色可连接瓷砖",
-  "block.changed.tiles_darkblue": "深蓝色瓷砖",
-
-  "subtitles.changed.exoskeleton_step": "外骨骼走步声",
-  "subtitles.changed.exoskeleton_chime": "数据化报告",
-  "subtitles.changed.exoskeleton_lock": "装备外骨骼",
-
-  "enum.changed.torso_type.generic": "通用",
-  "enum.changed.torso_type.chiseled": "健壮",
-  "enum.changed.torso_type.female": "雌性",
-  "enum.changed.torso_type.heavy": "厚重",
-
-  "enum.changed.hair_type.bald": "无发",
-  "enum.changed.hair_type.short": "短发",
-  "enum.changed.hair_type.long": "长发",
-
-  "enum.changed.ear_type.wolf": "狼",
-  "enum.changed.ear_type.cat": "猫",
-  "enum.changed.ear_type.dragon": "龙",
-  "enum.changed.ear_type.shark": "鲨",
-
-  "enum.changed.tail_type.wolf": "狼",
-  "enum.changed.tail_type.cat": "猫",
-  "enum.changed.tail_type.dragon": "龙",
-  "enum.changed.tail_type.shark": "鲨",
-
-  "enum.changed.leg_type.bipedal": "双足",
-  "enum.changed.leg_type.centaur": "半兽",
-  "enum.changed.leg_type.mermaid": "人鱼",
-
-  "enum.changed.arm_type.generic": "通用",
-  "enum.changed.arm_type.wyvern": "飞龙",
-  "enum.changed.arm_type.shark": "鲨",
-
-  "enum.changed.scale_type.normal": "普通",
-  "enum.changed.scale_type.buff": "健壮",
-  "enum.changed.scale_type.small": "娇小"
+  "ability.changed.undeath_mode.allowed.desc": "你不再畏惧死亡，但当你回复点数耗尽时，承受致命伤的你将陷入无尽的虚弱中。（击杀敌人以恢复并获得回复点数）。"
 }
