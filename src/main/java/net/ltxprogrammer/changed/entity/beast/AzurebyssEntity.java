@@ -2,6 +2,7 @@ package net.ltxprogrammer.changed.entity.beast;
 
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.ability.handler.DodgeAbilityInstance;
+import net.ltxprogrammer.changed.client.LocalPlayerAccessor;
 import net.ltxprogrammer.changed.entity.*;
 import net.ltxprogrammer.changed.entity.latex.LatexType;
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton;
@@ -9,7 +10,9 @@ import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.Color3;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -20,8 +23,8 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -35,14 +38,17 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ForgeMod;
+import net.minecraftforge.network.PlayMessages;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 import java.util.UUID;
 
-public class AzurebyssEntity extends ChangedEntity {
+import static net.ltxprogrammer.changed.entity.HairStyle.BALD;
+
+public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, PowderSnowWalkable, AzurebyssCreate{
     private static final EntityDataAccessor<Boolean> PHASE2 =
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> PHASE3 =
@@ -51,21 +57,22 @@ public class AzurebyssEntity extends ChangedEntity {
     private boolean setUndying = true;
     private int healingChance = 3;
 
+    public AzurebyssEntity(PlayMessages.SpawnEntity ignoredPacket, Level world) {
+        this(ChangedEntities.AZUREBYSS_ENTITY.get(), world);
+    }
+
     public AzurebyssEntity(EntityType<? extends AzurebyssEntity> type, Level level) {
         super(type, level);
         this.setAttributes(getAttributes());
         xpReward = 3000;
-        setNoAi(false);
-        setPersistenceRequired();
-    }
-
-    public static void init() {
+        this.setNoAi(true);
+        this.setPersistenceRequired();
     }
 
     public static AttributeSupplier.Builder createAttributes() {
         AttributeSupplier.Builder builder = Mob.createMobAttributes();
         builder = builder.add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 10D);
-        builder = builder.add(Attributes.MOVEMENT_SPEED, 1.5);
+        builder = builder.add(Attributes.MOVEMENT_SPEED, 0.4);
         builder = builder.add(Attributes.ARMOR, 20);
         builder = builder.add(Attributes.ARMOR_TOUGHNESS, 10);
         builder = builder.add(Attributes.MAX_HEALTH, 500);
@@ -78,7 +85,9 @@ public class AzurebyssEntity extends ChangedEntity {
     }
 
     public DamageSource getThunderDmg() {
-        return this.damageSources().lightningBolt();
+        DamageSource damageSource = this.getCommandSenderWorld().damageSources().lightningBolt();
+        Holder<DamageType> pType = damageSource.typeHolder();
+        return new DamageSource(pType, this);
     }
 
     @Override
@@ -106,6 +115,21 @@ public class AzurebyssEntity extends ChangedEntity {
         // 什么都不做 = 不被击退
     }
 
+    @Override
+    public Gender getGender() {
+        return Gender.MALE;
+    }
+
+    @Override
+    public HairStyle getDefaultHairStyle() {
+        return BALD.get();
+    }
+
+    @Override
+    public @Nullable List<HairStyle> getValidHairStyles() {
+        return HairStyle.Collection.MALE.getStyles();
+    }
+
     public boolean getAllowedUndeath() { return this.setUndying; }
 
     public void setAllowedUndeath(boolean value) { this.setUndying = value; }
@@ -124,33 +148,40 @@ public class AzurebyssEntity extends ChangedEntity {
     public void decreaseHealingChance() { if (this.healingChance >= 0) this.healingChance--; }
 
     private void setDisable(boolean isDisabled) {
-        boolean hasExo = Exoskeleton.getEntityExoskeleton(this.maybeGetUnderlying()).isPresent();
+        LivingEntity liveEntity = this.maybeGetUnderlying();
+        if (!(liveEntity instanceof Player playerInControl)) return;
+        boolean hasExo = Exoskeleton.getEntityExoskeleton(playerInControl).isPresent();
         if (hasExo) return;
-        var instance = IAbstractChangedEntity.forEitherSafe(this.maybeGetUnderlying()).map(IAbstractChangedEntity::getTransfurVariantInstance).orElse(null);
+        var instance = IAbstractChangedEntity.forEitherSafe(playerInControl).map(IAbstractChangedEntity::getTransfurVariantInstance).orElse(null);
         if (instance != null) {
             instance.itemUseMode = isDisabled ? UseItemMode.NONE : UseItemMode.NORMAL;
-            instance.miningStrength = isDisabled ? MiningStrength.WEAK : MiningStrength.NORMAL;
-            instance.refreshAttributes();
-            if (this.maybeGetUnderlying().getHealth() > 4F) {
-                if (this.maybeGetUnderlying().getEffect(MobEffects.WEAKNESS) != null
-                        && Objects.requireNonNull(this.maybeGetUnderlying().getEffect(MobEffects.WEAKNESS)).getAmplifier() == 10)
-                    this.maybeGetUnderlying().removeEffect(MobEffects.WEAKNESS);
-                if (this.maybeGetUnderlying().getEffect(MobEffects.MOVEMENT_SLOWDOWN) != null
-                        && Objects.requireNonNull(this.maybeGetUnderlying().getEffect(MobEffects.MOVEMENT_SLOWDOWN)).getAmplifier() == 10)
-                    this.maybeGetUnderlying().removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
-                if (this.maybeGetUnderlying().getEffect(MobEffects.JUMP) != null
-                        && Objects.requireNonNull(this.maybeGetUnderlying().getEffect(MobEffects.JUMP)).getAmplifier() == -50)
-                    this.maybeGetUnderlying().removeEffect(MobEffects.JUMP);
-            } else if (shouldDisable()) {
-                this.maybeGetUnderlying().addEffect(new MobEffectInstance(MobEffects.WEAKNESS, Integer.MAX_VALUE, 10));
-                this.maybeGetUnderlying().addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, Integer.MAX_VALUE, 10));
-                this.maybeGetUnderlying().addEffect(new MobEffectInstance(MobEffects.JUMP, Integer.MAX_VALUE, -50));
+            if (playerInControl instanceof LocalPlayer lp) ((LocalPlayerAccessor) lp).setHandsBusy(isDisabled);
+            if (!isDisabled) {
+                if (playerInControl.hasEffect(MobEffects.DIG_SLOWDOWN) && Objects.requireNonNull(playerInControl.getEffect(MobEffects.DIG_SLOWDOWN)).getAmplifier() == 10)
+                    playerInControl.removeEffect(MobEffects.DIG_SLOWDOWN);
+                if (playerInControl.hasEffect(MobEffects.WEAKNESS) && Objects.requireNonNull(playerInControl.getEffect(MobEffects.WEAKNESS)).getAmplifier() == 10)
+                    playerInControl.removeEffect(MobEffects.WEAKNESS);
+                if (playerInControl.hasEffect(MobEffects.MOVEMENT_SLOWDOWN) && Objects.requireNonNull(playerInControl.getEffect(MobEffects.MOVEMENT_SLOWDOWN)).getAmplifier() == 10)
+                    playerInControl.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+                if (playerInControl.hasEffect(MobEffects.JUMP) && Objects.requireNonNull(playerInControl.getEffect(MobEffects.JUMP)).getAmplifier() == -50)
+                    playerInControl.removeEffect(MobEffects.JUMP);
+            } else {
+                playerInControl.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, Integer.MAX_VALUE, 10));
+                playerInControl.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, Integer.MAX_VALUE, 10));
+                playerInControl.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, Integer.MAX_VALUE, 10));
+                playerInControl.addEffect(new MobEffectInstance(MobEffects.JUMP, Integer.MAX_VALUE, -50));
             }
+            instance.refreshAttributes();
         }
     }
 
     public Color3 getTransfurColor(TransfurCause cause) {
-        return Color3.getColor("#f1afaf");
+        if (this.getUnderlyingPlayer() == null) return Color3.WHITE;
+
+        TransfurVariantInstance<?> transfurVariantInstance = ProcessTransfur.getPlayerTransfurVariant(this.getUnderlyingPlayer());
+        if (transfurVariantInstance == null) return Color3.WHITE;
+
+        return Color3.WHITE.lerp(transfurVariantInstance.getTransfurProgression(1), Color3.getColor("#ffe6e6"));
     }
 
     @Override
@@ -174,7 +205,7 @@ public class AzurebyssEntity extends ChangedEntity {
         return 1000;
     }
 
-    public static <T extends ChangedEntity> boolean checkEntitySpawnRules(EntityType<T> entityType, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, Random random) {
+    public static <T extends ChangedEntity> boolean checkEntitySpawnRules(EntityType<T> entityType, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, RandomSource random) {
         return false;
     }
 
@@ -206,6 +237,11 @@ public class AzurebyssEntity extends ChangedEntity {
                     dodgeAbilityInstance.setDodgeAmount(10);
                 }
             }
+        } else {
+            if (this.getTarget() != null) this.setTarget(null);
+            this.setDeltaMovement(0, 0, 0);
+            this.setNoAi(true);
+            if (this.tickCount % 20 == 0) this.hurt(this.damageSources().generic(), 50);
         }
         setDisable(this.getHealth() <= 4F && shouldDisable());
     }
@@ -236,7 +272,7 @@ public class AzurebyssEntity extends ChangedEntity {
 
     @Override
     public boolean isDamageSourceBlocked(@NotNull DamageSource pDamageSource) {
-        if (pDamageSource == ChangedDamageSources.ELECTROCUTION.source(this.level().registryAccess())) {
+        if (pDamageSource == ChangedDamageSources.ELECTROCUTION.source(this.getCommandSenderWorld().registryAccess())) {
             return true;
         }
         return super.isDamageSourceBlocked(pDamageSource);
@@ -258,6 +294,7 @@ public class AzurebyssEntity extends ChangedEntity {
         this.entityData.set(PHASE2, set);
     }
 
+    @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         if (tag.contains("Phase2"))
@@ -266,6 +303,10 @@ public class AzurebyssEntity extends ChangedEntity {
             setPhase3(tag.getBoolean("Phase3"));
         if (tag.contains("Bleeding"))
             shouldBleed = tag.getBoolean("Bleeding");
+        if (tag.contains("Undying"))
+            setAllowedUndeath(tag.getBoolean("Undying"));
+        if (tag.contains("HealingChance"))
+            healingChance = tag.getInt("HealingChance");
     }
 
     @Override
@@ -274,6 +315,8 @@ public class AzurebyssEntity extends ChangedEntity {
         tag.putBoolean("Phase2", isPhase2());
         tag.putBoolean("Phase3", isPhase3());
         tag.putBoolean("Bleeding", this.shouldBleed);
+        tag.putBoolean("Undying", getAllowedUndeath());
+        tag.putInt("HealingChance", this.healingChance);
     }
 
     public boolean isBleeding() {
@@ -356,13 +399,15 @@ public class AzurebyssEntity extends ChangedEntity {
 
     public void setSpeed(AzurebyssEntity entity) {
         AttributeModifier speedModifier = new AttributeModifier(UUID.fromString("10-0-0-0-0"), "Speed", -0.4, AttributeModifier.Operation.MULTIPLY_BASE);
+        AttributeInstance speedAttribute = entity.getAttribute(Attributes.MOVEMENT_SPEED);
+        if (speedAttribute == null) return;
         if (entity.getPose() == Pose.SWIMMING) {
-            if (!entity.getAttribute(Attributes.MOVEMENT_SPEED).hasModifier(speedModifier)) {
-                entity.getAttribute(Attributes.MOVEMENT_SPEED).addTransientModifier(speedModifier);
+            if (!speedAttribute.hasModifier(speedModifier)) {
+                speedAttribute.addTransientModifier(speedModifier);
             }
         } else {
-            if (entity.getAttribute(Attributes.MOVEMENT_SPEED).hasModifier(speedModifier)) {
-                entity.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(speedModifier);
+            if (speedAttribute.hasModifier(speedModifier)) {
+                speedAttribute.removeModifier(speedModifier);
             }
         }
     }
@@ -373,7 +418,7 @@ public class AzurebyssEntity extends ChangedEntity {
             crawlToTarget(target);
         } else {
             BlockPos pPos = new BlockPos((int) this.getX(), (int) this.getEyeY(), (int) this.getZ());
-            BlockState blockState = this.level().getBlockState(pPos.above());
+            BlockState blockState = this.getCommandSenderWorld().getBlockState(pPos.above());
 
             Pose currentPose = this.getPose();
             Pose safePose = currentPose;
@@ -397,11 +442,11 @@ public class AzurebyssEntity extends ChangedEntity {
 
     public void setCrawlingPoseIfNeeded(LivingEntity target) {
         if (target.getPose() == Pose.SWIMMING && this.getPose() != Pose.SWIMMING) {
-            if (target.getY() < this.getEyeY() && !target.level().getBlockState(new BlockPos((int) target.getX(), (int) target.getEyeY(), (int) target.getZ()).above()).isAir()) {
+            if (target.getY() < this.getEyeY() && !target.getCommandSenderWorld().getBlockState(new BlockPos((int) target.getX(), (int) target.getEyeY(), (int) target.getZ()).above()).isAir()) {
                 this.setPose(Pose.SWIMMING);
             }
         } else {
-            if (!this.isSwimming() && this.level().getBlockState(new BlockPos((int) this.getX(), (int) this.getEyeY(), (int) this.getZ()).above()).isAir()) {
+            if (!this.isSwimming() && this.getCommandSenderWorld().getBlockState(new BlockPos((int) this.getX(), (int) this.getEyeY(), (int) this.getZ()).above()).isAir()) {
                 this.setPose(Pose.STANDING);
             }
         }
@@ -427,7 +472,7 @@ public class AzurebyssEntity extends ChangedEntity {
                 this.setPose(Pose.STANDING);
                 this.setSwimming(false);
             }
-        } else if (this.getPose() == Pose.SWIMMING && !this.isInWater() && (this.level().getBlockState(new BlockPos((int) this.getX(), (int) this.getEyeY(), (int) this.getZ()).above()).isAir() || this.canEnterPose(Pose.STANDING))) {
+        } else if (this.getPose() == Pose.SWIMMING && !this.isInWater() && (this.getCommandSenderWorld().getBlockState(new BlockPos((int) this.getX(), (int) this.getEyeY(), (int) this.getZ()).above()).isAir() || this.canEnterPose(Pose.STANDING))) {
             this.setPose(Pose.STANDING);
         }
     }

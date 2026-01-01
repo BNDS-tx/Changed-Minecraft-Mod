@@ -211,7 +211,7 @@ public class UndeathAbility extends SimpleAbility {
         );
     }
 
-    private static boolean getAllowedUndeath(IAbstractChangedEntity entity) {
+    public static boolean getAllowedUndeath(IAbstractChangedEntity entity) {
         if (entity.getChangedEntity() instanceof AzurebyssEntity azurebyss) return azurebyss.getAllowedUndeath();
         else return false;
     }

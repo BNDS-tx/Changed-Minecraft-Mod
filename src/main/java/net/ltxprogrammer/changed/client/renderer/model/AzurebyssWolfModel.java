@@ -8,6 +8,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.client.renderer.animate.AnimatorPresets;
 import net.ltxprogrammer.changed.client.renderer.animate.HumanoidAnimator;
+import net.ltxprogrammer.changed.entity.AzurebyssCreate;
 import net.ltxprogrammer.changed.entity.beast.AzurebyssEntity;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -18,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class AzurebyssWolfModel extends AdvancedHumanoidModel<AzurebyssEntity> implements AdvancedHumanoidModelInterface<AzurebyssEntity, AzurebyssWolfModel>{
+public class AzurebyssWolfModel extends AdvancedHumanoidModel<AzurebyssEntity> implements AdvancedHumanoidModelInterface<AzurebyssEntity, AzurebyssWolfModel>, AzurebyssCreate {
 	// This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Changed.modResource("textures/azurebyss_entity/customized_entity.png"), "main");
 	private final ModelPart LeftLeg;

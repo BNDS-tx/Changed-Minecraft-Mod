@@ -374,7 +374,12 @@ public class ChangedEntities {
             () -> EntityType.Builder.of(EmittedLaser::new, MobCategory.MISC).sized(0.5F, 0.5F).clientTrackingRange(10).updateInterval(Integer.MAX_VALUE).build("wall_sign"));
 
     public static final RegistryObject<EntityType<AzurebyssEntity>> AZUREBYSS_ENTITY = registerSpawning("azurebyss", 0xf1afaf, 0xff5e5e,
-            EntityType.Builder.of(AzurebyssEntity::new, ChangedMobCategories.CHANGED).clientTrackingRange(10).sized(0.8F, 2.05F),
+            EntityType.Builder.<AzurebyssEntity>of(AzurebyssEntity::new, ChangedMobCategories.CHANGED)
+                    .setShouldReceiveVelocityUpdates(true)
+                    .setTrackingRange(64)
+                    .setUpdateInterval(3)
+                    .setCustomClientFactory(AzurebyssEntity::new)
+                    .fireImmune().sized(0.8F, 2.05F),
             ChangedEntities::overworldOnly, SpawnPlacements.Type.ON_GROUND, AzurebyssEntity::checkEntitySpawnRules, AzurebyssEntity::createAttributes);
 
     // TODO make register function for non `ChangedEntity`
