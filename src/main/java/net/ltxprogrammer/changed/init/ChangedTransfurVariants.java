@@ -185,30 +185,31 @@ public class ChangedTransfurVariants {
             TransfurVariant.Builder.of(ChangedEntities.CUSTOM_LATEX).stepSize(0.7f));
 
     public static final RegistryObject<TransfurVariant<AzurebyssEntity>> AZUREBYSS_ENTITY = register("ztty_exp09_azurebyss_modified",
-            TransfurVariant.Builder.of(ChangedEntities.AZUREBYSS_ENTITY).scares(AbstractSkeleton.class)
-                .reducedFall()
-                .jumpStrength(1.5F)
-                .abilities(List.of(
-                                entityType -> ChangedAbilities.THUNDERBOLT.get(),
-                                entityType -> ChangedAbilities.THUNDER_PATH.get(),
-                                entityType -> ChangedAbilities.SHOCKWAVE.get(),
-                                entityType -> ChangedAbilities.DODGE.get(),
-                                entityType -> ChangedAbilities.UNDEATH.get()
-                        )
-                )
-                .transfurMode(TransfurMode.ABSORPTION)
-                .scares(List.of(
-                                Zombie.class,
-                                WitherSkeleton.class,
-                                AbstractVillager.class,
-                                Skeleton.class,
-                                AbstractGolem.class,
-                                Spider.class,
-                                Creeper.class
-                        )
-                )
-                .nightVision()
-                .addAbility(ChangedAbilities.TOGGLE_NIGHT_VISION));
+            TransfurVariant.Builder.of(ChangedEntities.AZUREBYSS_ENTITY)
+                    .reducedFall()
+                    .jumpStrength(1.5F)
+                    .abilities(List.of(
+                                    entityType -> ChangedAbilities.THUNDERBOLT.get(),
+                                    entityType -> ChangedAbilities.THUNDER_PATH.get(),
+                                    entityType -> ChangedAbilities.SHOCKWAVE.get(),
+                                    entityType -> ChangedAbilities.DODGE.get(),
+                                    entityType -> ChangedAbilities.UNDEATH.get()
+                            )
+                    )
+                    .transfurMode(TransfurMode.ABSORPTION)
+                    .scares(List.of(
+                                    Zombie.class,
+                                    WitherSkeleton.class,
+                                    AbstractVillager.class,
+                                    Skeleton.class,
+                                    AbstractGolem.class,
+                                    Spider.class,
+                                    Creeper.class
+                            )
+                    )
+                    .nightVision()
+                    .addAbility(ChangedAbilities.TOGGLE_NIGHT_VISION)
+                    .addAbility(ChangedAbilities.GRAB_ENTITY_ABILITY));
 
     public static final Supplier<? extends TransfurVariant<?>> FALLBACK_VARIANT = WHITE_LATEX_WOLF_MALE;
 

@@ -9,6 +9,7 @@ import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel;
 import net.ltxprogrammer.changed.client.renderer.model.AzurebyssWolfModel;
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorLatexMaleWolfModel;
 import net.ltxprogrammer.changed.entity.ChangedEntity;
+import net.ltxprogrammer.changed.entity.beast.AzurebyssCreate;
 import net.ltxprogrammer.changed.entity.beast.AzurebyssEntity;
 import net.ltxprogrammer.changed.util.Color3;
 import net.minecraft.client.Camera;
@@ -24,7 +25,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.HumanoidArm;
 import org.jetbrains.annotations.NotNull;
 
-public class AzurebyssEntityRenderer extends AdvancedHumanoidRenderer<AzurebyssEntity, AzurebyssWolfModel, ArmorLatexMaleWolfModel<AzurebyssEntity>> {
+public class AzurebyssEntityRenderer extends AdvancedHumanoidRenderer<AzurebyssEntity, AzurebyssWolfModel, ArmorLatexMaleWolfModel<AzurebyssEntity>> implements AzurebyssCreate {
     private static final ResourceLocation TEXTURE = Changed.modResource("textures/azurebyss_entity/customized_entity.png");
 
     public AzurebyssEntityRenderer(EntityRendererProvider.Context context) {
