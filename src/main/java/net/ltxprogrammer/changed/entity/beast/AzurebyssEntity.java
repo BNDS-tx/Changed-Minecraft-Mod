@@ -2,14 +2,12 @@ package net.ltxprogrammer.changed.entity.beast;
 
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.ability.handler.DodgeAbilityInstance;
-import net.ltxprogrammer.changed.client.LocalPlayerAccessor;
 import net.ltxprogrammer.changed.entity.*;
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.Color3;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
@@ -50,7 +48,14 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
     private boolean shouldBleed;
     private boolean setUndying = true;
+    private static final EntityDataAccessor<Boolean> setUndyingSynced =
+            SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
+    private boolean isDead = false;
+    private static final EntityDataAccessor<Boolean> isDeadSynced =
+            SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
     private int healingChance = 3;
+    private static final EntityDataAccessor<Integer> healingChanceSynced =
+            SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.INT);
 
     public AzurebyssEntity(EntityType<? extends AzurebyssEntity> type, Level level) {
         super(type, level);
@@ -58,6 +63,21 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         xpReward = 3000;
         this.setNoAi(true);
         this.setPersistenceRequired();
+        this.entityData.define(setUndyingSynced, true);
+        this.entityData.define(isDeadSynced, false);
+        this.entityData.define(healingChanceSynced, 3);
+    }
+
+    private void syncFromServer() {
+        setAllowedUndeath(this.entityData.get(setUndyingSynced));
+        this.isDead = this.entityData.get(isDeadSynced);
+        this.healingChance = this.entityData.get(healingChanceSynced);
+    }
+
+    private void syncToClient() {
+        this.entityData.set(setUndyingSynced, getAllowedUndeath());
+        this.entityData.set(isDeadSynced, this.isDead);
+        this.entityData.set(healingChanceSynced, this.healingChance);
     }
 
     public AzurebyssEntity(PlayMessages.SpawnEntity ignoredPacket, Level world) {
@@ -140,31 +160,29 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
 
     public void decreaseHealingChance() { if (this.healingChance >= 0) this.healingChance--; }
 
-    private void setDisable(boolean isDisabled) {
+    private void setDisable(boolean isDisabled, boolean isForced) {
         LivingEntity liveEntity = this.maybeGetUnderlying();
-        if (!(liveEntity instanceof Player playerInControl)) return;
-        boolean hasExo = Exoskeleton.getEntityExoskeleton(playerInControl).isPresent();
-        if (hasExo) return;
-        var instance = IAbstractChangedEntity.forEitherSafe(playerInControl).map(IAbstractChangedEntity::getTransfurVariantInstance).orElse(null);
-        if (instance != null) {
-            instance.itemUseMode = isDisabled ? UseItemMode.NONE : UseItemMode.NORMAL;
-            if (playerInControl instanceof LocalPlayer lp) ((LocalPlayerAccessor) lp).setHandsBusy(isDisabled);
+        if (!(liveEntity instanceof Player)) return;
+
+        if (this.isDead != isDisabled || isForced) {
+            var attributes = this.getAttributes();
+
             if (!isDisabled) {
-                if (playerInControl.hasEffect(MobEffects.DIG_SLOWDOWN) && Objects.requireNonNull(playerInControl.getEffect(MobEffects.DIG_SLOWDOWN)).getAmplifier() == 10)
-                    playerInControl.removeEffect(MobEffects.DIG_SLOWDOWN);
-                if (playerInControl.hasEffect(MobEffects.WEAKNESS) && Objects.requireNonNull(playerInControl.getEffect(MobEffects.WEAKNESS)).getAmplifier() == 10)
-                    playerInControl.removeEffect(MobEffects.WEAKNESS);
-                if (playerInControl.hasEffect(MobEffects.MOVEMENT_SLOWDOWN) && Objects.requireNonNull(playerInControl.getEffect(MobEffects.MOVEMENT_SLOWDOWN)).getAmplifier() == 10)
-                    playerInControl.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
-                if (playerInControl.hasEffect(MobEffects.JUMP) && Objects.requireNonNull(playerInControl.getEffect(MobEffects.JUMP)).getAmplifier() == -50)
-                    playerInControl.removeEffect(MobEffects.JUMP);
-            } else {
-                playerInControl.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, Integer.MAX_VALUE, 10));
-                playerInControl.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, Integer.MAX_VALUE, 10));
-                playerInControl.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, Integer.MAX_VALUE, 10));
-                playerInControl.addEffect(new MobEffectInstance(MobEffects.JUMP, Integer.MAX_VALUE, -50));
+                setAttributes(attributes);
+            } else {Objects.requireNonNull(attributes.getInstance(Attributes.MOVEMENT_SPEED)).setBaseValue(0);
+                Objects.requireNonNull(attributes.getInstance(ForgeMod.SWIM_SPEED.get())).setBaseValue(0);
+                Objects.requireNonNull(attributes.getInstance(Attributes.ATTACK_DAMAGE)).setBaseValue(1);
             }
-            instance.refreshAttributes();
+
+            this.isDead = isDisabled;
+
+            var instance = IAbstractChangedEntity.forEitherSafe(this.maybeGetUnderlying()).map(IAbstractChangedEntity::getTransfurVariantInstance).orElse(null);
+            if (instance != null) {
+                instance.itemUseMode = !isDisabled ? UseItemMode.NORMAL : UseItemMode.NONE;
+                instance.miningStrength = !isDisabled ? MiningStrength.NORMAL : MiningStrength.WEAK;
+
+                instance.refreshAttributes();
+            }
         }
     }
 
@@ -231,7 +249,24 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
             this.setNoAi(true);
             if (this.tickCount % 20 == 0) this.hurt(DamageSource.GENERIC, 50);
         }
-        setDisable(this.getHealth() <= 4F && shouldDisable());
+
+        if (this.getCommandSenderWorld().isClientSide()) syncFromServer();
+        else syncToClient();
+
+        if (this.tickCount <=1 ) setDisable(false, true);
+
+        boolean hasExo = Exoskeleton.getEntityExoskeleton(this.getUnderlyingPlayer()).isPresent();
+        if (hasExo) { setDisable(false, false); return; }
+        if (this.getHealth() <= 4F) { if (this.isDead != shouldDisable()) setDisable(shouldDisable(), false); }
+        else { if (this.isDead) setDisable(false, false); }
+
+        if (this.isDead) {
+            this.maybeGetUnderlying().addEffect(new MobEffectInstance(MobEffects.JUMP, 5 * 20, -50));
+        } else {
+            if (this.maybeGetUnderlying().hasEffect(MobEffects.JUMP)
+                    && Objects.requireNonNull(this.maybeGetUnderlying().getEffect(MobEffects.JUMP)).getAmplifier() == -50)
+                this.maybeGetUnderlying().removeEffect(MobEffects.JUMP);
+        }
     }
 
     public LivingEntity getSelf() {
