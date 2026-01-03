@@ -782,6 +782,6 @@
   "ability.mode.changed.not_allow_undeath": "已放弃不死特质",
   "ability.changed.undeath.desc": "特制的基因使你获得拥有对抗死亡的能力。",
   "ability.changed.undeath_mode.not_allowed.desc": "你放弃了永存的能力，收到致命伤害时你将如同其他人一样死去。",
-  "ability.changed.undeath_mode.allowed.desc": "你不再畏惧死亡，但当你回复点数耗尽时，承受致命伤的你将陷入无尽的虚弱中。（击杀敌人以恢复并获得回复点数）。",
+  "ability.changed.undeath_mode.allowed.desc": "你不再畏惧死亡，但当你回复点数耗尽时，承受致命伤的你将陷入无尽的虚弱中。（击杀敌人以恢复并获得回复点数）。"
 }
 

@@ -1,7 +1,7 @@
 package net.ltxprogrammer.changed.ability;
 
 import net.ltxprogrammer.changed.Changed;
-import net.ltxprogrammer.changed.entity.beast.AzurebyssEntity;
+import net.ltxprogrammer.changed.entity.UndeadEntity;
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -197,12 +197,11 @@ public class UndeathAbility extends SimpleAbility {
     }
 
     private static boolean canUse(IAbstractChangedEntity entity, boolean uselessIdentifier) {
-        return entity.getChangedEntity() instanceof AzurebyssEntity
-                ;
+        return entity.getChangedEntity() instanceof UndeadEntity;
     }
 
     private static void setAllowedUndeath(IAbstractChangedEntity entity, boolean allowedUndeath) {
-        if (entity.getChangedEntity() instanceof AzurebyssEntity azurebyss) azurebyss.setAllowedUndeath(allowedUndeath);
+        if (entity.getChangedEntity() instanceof UndeadEntity azurebyss) azurebyss.setAllowedUndeath(allowedUndeath);
         else return;
     }
 
@@ -213,7 +212,7 @@ public class UndeathAbility extends SimpleAbility {
     }
 
     public static boolean getAllowedUndeath(IAbstractChangedEntity entity) {
-        if (entity.getChangedEntity() instanceof AzurebyssEntity azurebyss) return azurebyss.getAllowedUndeath();
+        if (entity.getChangedEntity() instanceof UndeadEntity undeadEntity) return undeadEntity.getAllowedUndeath();
         else return false;
     }
 
@@ -224,7 +223,7 @@ public class UndeathAbility extends SimpleAbility {
     }
 
     private static int getHealingChance(IAbstractChangedEntity entity) {
-        if (entity.getChangedEntity() instanceof AzurebyssEntity azurebyss) return azurebyss.getHealingChance();
+        if (entity.getChangedEntity() instanceof UndeadEntity undeadEntity) return undeadEntity.getHealingChance();
         else return 0;
     }
 
@@ -235,7 +234,7 @@ public class UndeathAbility extends SimpleAbility {
     }
 
     private static boolean isAble2Healing(IAbstractChangedEntity entity) {
-        if (entity.getChangedEntity() instanceof AzurebyssEntity azurebyss) return azurebyss.isAble2Healing();
+        if (entity.getChangedEntity() instanceof UndeadEntity undeadEntity) return undeadEntity.isAble2Healing();
         else return false;
     }
 
@@ -245,7 +244,7 @@ public class UndeathAbility extends SimpleAbility {
     }
 
     private static void decreaseHealingChance(IAbstractChangedEntity entity) {
-        if (entity.getChangedEntity() instanceof AzurebyssEntity azurebyss) azurebyss.decreaseHealingChance();
+        if (entity.getChangedEntity() instanceof UndeadEntity undeadEntity) undeadEntity.decreaseHealingChance();
         else return;
     }
 
@@ -255,7 +254,7 @@ public class UndeathAbility extends SimpleAbility {
     }
 
     private static void increaseHealingChance(IAbstractChangedEntity entity) {
-        if (entity.getChangedEntity() instanceof AzurebyssEntity azurebyss) azurebyss.increaseHealingChance();
+        if (entity.getChangedEntity() instanceof UndeadEntity undeadEntity) undeadEntity.increaseHealingChance();
         else return;
     }
 }
