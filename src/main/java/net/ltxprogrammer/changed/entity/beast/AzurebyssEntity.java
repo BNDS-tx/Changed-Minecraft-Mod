@@ -1,10 +1,8 @@
 package net.ltxprogrammer.changed.entity.beast;
 
-import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.ability.handler.DodgeAbilityInstance;
 import net.ltxprogrammer.changed.entity.*;
 import net.ltxprogrammer.changed.entity.latex.LatexType;
-import net.ltxprogrammer.changed.entity.robot.Exoskeleton;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
@@ -46,12 +44,13 @@ import java.util.UUID;
 
 import static net.ltxprogrammer.changed.entity.HairStyle.BALD;
 
-public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, PowderSnowWalkable, AzurebyssCreate{
+public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, PowderSnowWalkable, UndeadEntity, AzurebyssCreate{
     private static final EntityDataAccessor<Boolean> PHASE2 =
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> PHASE3 =
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
     private boolean shouldBleed;
+
     private boolean setUndying = true;
     private static final EntityDataAccessor<Boolean> setUndyingSynced =
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
@@ -150,49 +149,29 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         return HairStyle.Collection.MALE.getStyles();
     }
 
+    @Override
     public boolean getAllowedUndeath() { return this.setUndying; }
 
+    @Override
     public void setAllowedUndeath(boolean value) { this.setUndying = value; }
 
+    @Override
     public boolean isAble2Healing() { return this.healingChance > 0; }
 
-    private boolean shouldDisable() { return this.healingChance < 0; }
+    @Override
+    public boolean shouldDisable() { return this.healingChance < 0; }
 
+    @Override
     public int getHealingChance() { return Math.max(this.healingChance, 0); }
 
+    @Override
     public void increaseHealingChance() {
         if (this.healingChance <= 0) this.healingChance = 1;
         else if (this.healingChance < 3) this.healingChance++;
     }
 
+    @Override
     public void decreaseHealingChance() { if (this.healingChance >= 0) this.healingChance--; }
-
-    private void setDisable(boolean isDisabled, boolean isForced) {
-        LivingEntity liveEntity = this.maybeGetUnderlying();
-        if (!(liveEntity instanceof Player)) return;
-
-        if (this.isDead != isDisabled || isForced) {
-            var attributes = this.getAttributes();
-
-            if (!isDisabled) {
-                setAttributes(attributes);
-            } else {
-                Objects.requireNonNull(attributes.getInstance(Attributes.MOVEMENT_SPEED)).setBaseValue(0);
-                Objects.requireNonNull(attributes.getInstance(ForgeMod.SWIM_SPEED.get())).setBaseValue(0);
-                Objects.requireNonNull(attributes.getInstance(Attributes.ATTACK_DAMAGE)).setBaseValue(1);
-            }
-
-            this.isDead = isDisabled;
-
-            var instance = IAbstractChangedEntity.forEitherSafe(this.maybeGetUnderlying()).map(IAbstractChangedEntity::getTransfurVariantInstance).orElse(null);
-            if (instance != null) {
-                instance.itemUseMode = !isDisabled ? UseItemMode.NORMAL : UseItemMode.NONE;
-                instance.miningStrength = !isDisabled ? MiningStrength.NORMAL : MiningStrength.WEAK;
-
-                instance.refreshAttributes();
-            }
-        }
-    }
 
     public Color3 getTransfurColor(TransfurCause cause) {
         if (this.getUnderlyingPlayer() == null) return Color3.WHITE;
@@ -266,20 +245,8 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         if (this.getCommandSenderWorld().isClientSide()) syncFromServer();
         else syncToClient();
 
-        if (this.tickCount <=1 ) setDisable(false, true);
-
-        boolean hasExo = Exoskeleton.getEntityExoskeleton(this.getUnderlyingPlayer()).isPresent();
-        if (hasExo) { setDisable(false, false); return; }
-        if (this.getHealth() <= 4F) { if (this.isDead != shouldDisable()) setDisable(shouldDisable(), false); }
-        else { if (this.isDead) setDisable(false, false); }
-
-        if (this.isDead) {
-            this.maybeGetUnderlying().addEffect(new MobEffectInstance(MobEffects.JUMP, 5 * 20, -50));
-        } else {
-            if (this.maybeGetUnderlying().hasEffect(MobEffects.JUMP)
-                    && Objects.requireNonNull(this.maybeGetUnderlying().getEffect(MobEffects.JUMP)).getAmplifier() == -50)
-                this.maybeGetUnderlying().removeEffect(MobEffects.JUMP);
-        }
+        var isDeadTemp = tickCheck(this, this.isDead);
+        this.isDead = isDeadTemp != null ? isDeadTemp : this.isDead;
     }
 
     public LivingEntity getSelf() {
