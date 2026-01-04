@@ -57,7 +57,7 @@ public interface WhiteLatexTransportInterface {
 
         entity.playSound(ChangedSounds.ENTITY_ENTER_LATEX.get(), 1.0f, 1.0f);
         if (!UniversalDist.isClientRemotePlayer(entity)) {
-            final Vec3 center = new Vec3(0.5D, 0.5D, 0.5D);
+            final Vec3 center = entity.position().subtract(Vec3.atLowerCornerOf(pos));
             Vec3 surface = LatexCoverState.getAt(entity.level(), pos).findClosestSurface(center, null);
             Vec3 delta = surface.subtract(center);
             final Direction closestDirection = center.equals(surface) ? null : Direction.getNearest(delta.x, delta.y, delta.z);
@@ -84,6 +84,15 @@ public interface WhiteLatexTransportInterface {
         });
     }
 
+    static boolean isStandingOnLatex(LivingEntity entity) {
+        BlockPos blockPos = BlockPos.containing(entity.getPosition(1.0F));
+
+        BlockState blockAtFoot = entity.getCommandSenderWorld().getBlockState(blockPos);
+
+        return blockAtFoot.getBlock() == ChangedBlocks.WHITE_LATEX_FLUID.get()
+                || blockAtFoot.getBlock() == ChangedBlocks.WHITE_LATEX_BLOCK.get();
+    }
+
     @Mod.EventBusSubscriber
     class EventSubscriber {
         @SubscribeEvent
@@ -91,7 +100,9 @@ public interface WhiteLatexTransportInterface {
             if (event.phase == TickEvent.Phase.END)
                 return;
 
-            if (!isEntityInWhiteLatex(event.player) && isBoundingBoxInWhiteLatex(event.player)) {
+            if (!isEntityInWhiteLatex(event.player) && isBoundingBoxInWhiteLatex(event.player) &&
+                    (LatexCoverState.getAt(event.player.level(), new BlockPos(event.player.getBlockX(), event.player.getBlockY(), event.player.getBlockZ()))
+                            .getType() == ChangedLatexTypes.WHITE_LATEX.get()) || isStandingOnLatex(event.player)) {
                 ProcessTransfur.ifPlayerTransfurred(event.player, variant -> {
                     if (variant.getLatexType() == ChangedLatexTypes.WHITE_LATEX.get())
                         entityEnterLatex(event.player, new BlockPos(event.player.getBlockX(), event.player.getBlockY(), event.player.getBlockZ()));
