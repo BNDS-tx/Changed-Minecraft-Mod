@@ -102,7 +102,7 @@ public interface WhiteLatexTransportInterface {
 
             if (!isEntityInWhiteLatex(event.player) && isBoundingBoxInWhiteLatex(event.player) &&
                     (LatexCoverState.getAt(event.player.level(), new BlockPos(event.player.getBlockX(), event.player.getBlockY(), event.player.getBlockZ()))
-                            .getType() == ChangedLatexTypes.WHITE_LATEX.get()) || isStandingOnLatex(event.player)) {
+                            .getType() == ChangedLatexTypes.WHITE_LATEX.get() || isStandingOnLatex(event.player))) {
                 ProcessTransfur.ifPlayerTransfurred(event.player, variant -> {
                     if (variant.getLatexType() == ChangedLatexTypes.WHITE_LATEX.get())
                         entityEnterLatex(event.player, new BlockPos(event.player.getBlockX(), event.player.getBlockY(), event.player.getBlockZ()));
