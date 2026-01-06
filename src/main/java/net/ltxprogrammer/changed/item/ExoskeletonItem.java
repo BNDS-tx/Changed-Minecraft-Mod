@@ -272,7 +272,7 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
                 wearer.addEffect(new MobEffectInstance(MobEffects.JUMP, Integer.MAX_VALUE, -50));
                 wearer.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, Integer.MAX_VALUE, 10));
                 wearer.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, Integer.MAX_VALUE, 10));
-                if (wearer.tickCount % 40 == 0 && wearer.getHealth() > 1) wearer.hurt(DamageSource.GENERIC, 1.0F);
+                if (wearer.tickCount % 30 == 0 && wearer.getHealth() > 1) wearer.hurt(DamageSource.IN_WALL, 1.0F);
             }
         } else {
             if (slotContext.wearer() instanceof ServerPlayer wearer) {
