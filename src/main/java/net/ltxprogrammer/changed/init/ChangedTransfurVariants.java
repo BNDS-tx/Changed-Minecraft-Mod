@@ -185,7 +185,7 @@ public class ChangedTransfurVariants {
             TransfurVariant.Builder.of(ChangedEntities.CUSTOM_LATEX).stepSize(0.7f));
 
     public static final RegistryObject<TransfurVariant<AzurebyssEntity>> AZUREBYSS_ENTITY = register("form_azurebyss_wolf",
-            TransfurVariant.Builder.of(ChangedEntities.AZUREBYSS_ENTITY)
+            TransfurVariant.Builder.of(ChangedEntities.AZUREBYSS_ENTITY).faction(LatexType.WHITE_LATEX)
                     .reducedFall()
                     .jumpStrength(1.5F)
                     .abilities(List.of(

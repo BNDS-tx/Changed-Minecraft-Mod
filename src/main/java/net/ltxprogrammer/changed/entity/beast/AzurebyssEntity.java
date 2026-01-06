@@ -1,9 +1,7 @@
 package net.ltxprogrammer.changed.entity.beast;
 
-import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.ability.handler.DodgeAbilityInstance;
 import net.ltxprogrammer.changed.entity.*;
-import net.ltxprogrammer.changed.entity.robot.Exoskeleton;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
@@ -70,9 +68,6 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         xpReward = 3000;
         this.setNoAi(true);
         this.setPersistenceRequired();
-        this.entityData.define(setUndyingSynced, true);
-        this.entityData.define(isDeadSynced, false);
-        this.entityData.define(healingChanceSynced, 3);
     }
 
     public AzurebyssEntity(PlayMessages.SpawnEntity ignoredPacket, Level world) {
@@ -103,6 +98,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         super.defineSynchedData();
         this.entityData.define(PHASE2, false);
         this.entityData.define(PHASE3, false);
+        defineUndeathData();
     }
 
     protected void setAttributes(AttributeMap attributes) {
