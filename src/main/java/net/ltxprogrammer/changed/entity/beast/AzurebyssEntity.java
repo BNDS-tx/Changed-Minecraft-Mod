@@ -57,6 +57,15 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> healingChanceSynced =
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.INT);
+    
+    @Override
+    public EntityDataAccessor<Boolean> setUndyingSynced() { return setUndyingSynced; };
+    @Override
+    public EntityDataAccessor<Boolean> isDeadSynced() { return isDeadSynced; }
+    @Override
+    public EntityDataAccessor<Integer> healingChanceSynced() { return healingChanceSynced; }
+    @Override
+    public SynchedEntityData getEntityUndeathData() { return this.entityData; }
 
     public AzurebyssEntity(PlayMessages.SpawnEntity ignoredPacket, Level world) {
         this(ChangedEntities.AZUREBYSS_ENTITY.get(), world);
@@ -96,9 +105,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         super.defineSynchedData();
         this.entityData.define(PHASE2, false);
         this.entityData.define(PHASE3, false);
-        this.entityData.define(setUndyingSynced, true);
-        this.entityData.define(isDeadSynced, false);
-        this.entityData.define(healingChanceSynced, 3);
+        defineUndeathData();
     }
 
     protected void setAttributes(AttributeMap attributes) {
@@ -133,30 +140,6 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
     public @Nullable List<HairStyle> getValidHairStyles() {
         return HairStyle.Collection.MALE.getStyles();
     }
-
-    @Override
-    public boolean getAllowedUndeath() { return this.entityData.get(setUndyingSynced); }
-
-    @Override
-    public void setAllowedUndeath(boolean value) { this.entityData.set(setUndyingSynced, value); }
-
-    @Override
-    public boolean isAble2Healing() { return this.entityData.get(healingChanceSynced) > 0; }
-
-    @Override
-    public boolean shouldDisable() { return this.entityData.get(healingChanceSynced) < 0; }
-
-    @Override
-    public int getHealingChance() { return Math.max(this.entityData.get(healingChanceSynced), 0); }
-
-    @Override
-    public void increaseHealingChance() {
-        if (this.entityData.get(healingChanceSynced) <= 0) this.entityData.set(healingChanceSynced, 1);
-        else if (this.entityData.get(healingChanceSynced) < 3) this.entityData.set(healingChanceSynced, this.entityData.get(healingChanceSynced) + 1);
-    }
-
-    @Override
-    public void decreaseHealingChance() { if (this.entityData.get(healingChanceSynced) >= 0) this.entityData.set(healingChanceSynced, this.entityData.get(healingChanceSynced) - 1); }
 
     public Color3 getTransfurColor(TransfurCause cause) {
         if (this.getUnderlyingPlayer() == null) return Color3.WHITE;
@@ -227,8 +210,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
             if (this.tickCount % 20 == 0) this.hurt(this.damageSources().generic(), 50);
         }
 
-        var isDeadTemp = tickCheck(this, this.entityData.get(isDeadSynced));
-        this.entityData.set(isDeadSynced, isDeadTemp != null ? isDeadTemp : this.entityData.get(isDeadSynced));
+        tickCheck(this);
     }
 
     public LivingEntity getSelf() {
@@ -288,10 +270,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
             setPhase3(tag.getBoolean("Phase3"));
         if (tag.contains("Bleeding"))
             shouldBleed = tag.getBoolean("Bleeding");
-        if (tag.contains("Undying"))
-            setAllowedUndeath(tag.getBoolean("Undying"));
-        if (tag.contains("HealingChance"))
-            this.entityData.set(healingChanceSynced, tag.getInt("HealingChance"));
+        readUndeathSaveData(tag);
     }
 
     @Override
@@ -300,8 +279,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         tag.putBoolean("Phase2", isPhase2());
         tag.putBoolean("Phase3", isPhase3());
         tag.putBoolean("Bleeding", this.shouldBleed);
-        tag.putBoolean("Undying", getAllowedUndeath());
-        tag.putInt("HealingChance", this.entityData.get(healingChanceSynced));
+        addUndeathSaveData(tag);
     }
 
     public boolean isBleeding() {

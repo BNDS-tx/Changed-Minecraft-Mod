@@ -1,7 +1,12 @@
 package net.ltxprogrammer.changed.entity;
 
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
+import net.ltxprogrammer.changed.entity.beast.AzurebyssEntity;
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -13,24 +18,55 @@ import java.util.Objects;
 
 public interface UndeadEntity {
 
-    boolean getAllowedUndeath();
-    void setAllowedUndeath(boolean value);
+    EntityDataAccessor<Boolean> setUndyingSynced();
+    EntityDataAccessor<Boolean> isDeadSynced();
+    EntityDataAccessor<Integer> healingChanceSynced();
+    SynchedEntityData getEntityUndeathData();
 
-    boolean isAble2Healing();
-    boolean shouldDisable();
-    int getHealingChance();
+    default boolean getAllowedUndeath() { return getEntityUndeathData().get(setUndyingSynced()); }
+    default void setAllowedUndeath(boolean value) { getEntityUndeathData().set(setUndyingSynced(), value); }
 
-    void increaseHealingChance();
-    void decreaseHealingChance();
+    default boolean isAble2Healing() { return getEntityUndeathData().get(healingChanceSynced()) > 0;}
+    default boolean shouldDisable() { return getEntityUndeathData().get(healingChanceSynced()) < 0; }
+    default int getHealingChance() { return Math.max(getEntityUndeathData().get(healingChanceSynced()), 0); }
 
-    default Boolean setDisable(ChangedEntity entity, boolean isDead, boolean isDisabled, boolean isForced) {
+    default void increaseHealingChance() {
+        if (getEntityUndeathData().get(healingChanceSynced()) <= 0)
+            getEntityUndeathData().set(healingChanceSynced(), 1);
+        else if (getEntityUndeathData().get(healingChanceSynced()) < 3)
+            getEntityUndeathData().set(healingChanceSynced(), getEntityUndeathData().get(healingChanceSynced()) + 1);
+
+    }
+    default void decreaseHealingChance() {
+        if (getEntityUndeathData().get(healingChanceSynced()) >= 0)
+            getEntityUndeathData().set(healingChanceSynced(), getEntityUndeathData().get(healingChanceSynced()) - 1);
+    }
+
+    default void defineUndeathData() {
+        getEntityUndeathData().define(setUndyingSynced(), true);
+        getEntityUndeathData().define(isDeadSynced(), false);
+        getEntityUndeathData().define(healingChanceSynced(), 3);
+    }
+
+    default void readUndeathSaveData(CompoundTag tag) {
+        if (tag.contains("Undying"))
+            setAllowedUndeath(tag.getBoolean("Undying"));
+        if (tag.contains("HealingChance"))
+            getEntityUndeathData().set(healingChanceSynced(), tag.getInt("HealingChance"));
+    }
+    default void addUndeathSaveData(CompoundTag tag) {
+        tag.putBoolean("Undying", getAllowedUndeath());
+        tag.putInt("HealingChance", getEntityUndeathData().get(healingChanceSynced()));
+    }
+
+    default boolean setDisable(ChangedEntity entity, boolean isDisabled, boolean shouldDisable, boolean isForced) {
         LivingEntity liveEntity = entity.maybeGetUnderlying();
-        if (!(liveEntity instanceof Player)) return null;
+        if (!(liveEntity instanceof Player)) return isDisabled;
 
-        if (isDead != isDisabled || isForced) {
+        if (isDisabled != shouldDisable || isForced) {
             var attributes = entity.getAttributes();
 
-            if (!isDisabled) {
+            if (!shouldDisable) {
                 entity.setAttributes(attributes);
             } else {
                 Objects.requireNonNull(attributes.getInstance(Attributes.MOVEMENT_SPEED)).setBaseValue(0);
@@ -38,25 +74,24 @@ public interface UndeadEntity {
                 Objects.requireNonNull(attributes.getInstance(Attributes.ATTACK_DAMAGE)).setBaseValue(1);
             }
 
-            isDead = isDisabled;
-
             var instance = IAbstractChangedEntity.forEitherSafe(entity.maybeGetUnderlying()).map(IAbstractChangedEntity::getTransfurVariantInstance).orElse(null);
             if (instance != null) {
-                instance.itemUseMode = !isDisabled ? UseItemMode.NORMAL : UseItemMode.NONE;
-                instance.miningStrength = !isDisabled ? MiningStrength.NORMAL : MiningStrength.WEAK;
+                instance.itemUseMode = !shouldDisable ? UseItemMode.NORMAL : UseItemMode.NONE;
+                instance.miningStrength = !shouldDisable ? MiningStrength.NORMAL : MiningStrength.WEAK;
 
                 instance.refreshAttributes();
             }
         }
 
-        return isDead;
+        return shouldDisable;
     }
 
-    default Boolean tickCheck(ChangedEntity entity, boolean isDead) {
+    default void tickCheck(ChangedEntity entity) {
+        boolean isDead = getEntityUndeathData().get(isDeadSynced());
         if (entity.tickCount <=1) isDead = setDisable(entity, isDead, false, true);
 
         boolean hasExo = Exoskeleton.getEntityExoskeleton(entity.getUnderlyingPlayer()).isPresent();
-        if (hasExo) { isDead = setDisable(entity, isDead, false, false); return isDead; }
+        if (hasExo) { isDead = setDisable(entity, isDead, false, false); return; }
 
         if (entity.getHealth() <= 4F) { if (isDead != shouldDisable()) isDead = setDisable(entity, isDead, shouldDisable(), false); }
         else { if (isDead) isDead = setDisable(entity, isDead, false, false); }
@@ -69,6 +104,6 @@ public interface UndeadEntity {
                 entity.maybeGetUnderlying().removeEffect(MobEffects.JUMP);
         }
 
-        return isDead;
+        getEntityUndeathData().set(isDeadSynced(), isDead);
     }
 }
