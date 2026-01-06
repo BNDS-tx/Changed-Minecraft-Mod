@@ -51,13 +51,10 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
     private boolean shouldBleed;
 
-    private boolean setUndying = true;
     private static final EntityDataAccessor<Boolean> setUndyingSynced =
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
-    private boolean isDead = false;
     private static final EntityDataAccessor<Boolean> isDeadSynced =
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
-    private int healingChance = 3;
     private static final EntityDataAccessor<Integer> healingChanceSynced =
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.INT);
 
@@ -104,18 +101,6 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         this.entityData.define(healingChanceSynced, 3);
     }
 
-    private void syncFromServer() {
-        setAllowedUndeath(this.entityData.get(setUndyingSynced));
-        this.isDead = this.entityData.get(isDeadSynced);
-        this.healingChance = this.entityData.get(healingChanceSynced);
-    }
-
-    private void syncToClient() {
-        this.entityData.set(setUndyingSynced, getAllowedUndeath());
-        this.entityData.set(isDeadSynced, this.isDead);
-        this.entityData.set(healingChanceSynced, this.healingChance);
-    }
-
     protected void setAttributes(AttributeMap attributes) {
         Objects.requireNonNull(attributes.getInstance(ChangedAttributes.TRANSFUR_DAMAGE.get())).setBaseValue((10));
         Objects.requireNonNull(attributes.getInstance(Attributes.MAX_HEALTH)).setBaseValue((500));
@@ -150,28 +135,28 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
     }
 
     @Override
-    public boolean getAllowedUndeath() { return this.setUndying; }
+    public boolean getAllowedUndeath() { return this.entityData.get(setUndyingSynced); }
 
     @Override
-    public void setAllowedUndeath(boolean value) { this.setUndying = value; }
+    public void setAllowedUndeath(boolean value) { this.entityData.set(setUndyingSynced, value); }
 
     @Override
-    public boolean isAble2Healing() { return this.healingChance > 0; }
+    public boolean isAble2Healing() { return this.entityData.get(healingChanceSynced) > 0; }
 
     @Override
-    public boolean shouldDisable() { return this.healingChance < 0; }
+    public boolean shouldDisable() { return this.entityData.get(healingChanceSynced) < 0; }
 
     @Override
-    public int getHealingChance() { return Math.max(this.healingChance, 0); }
+    public int getHealingChance() { return Math.max(this.entityData.get(healingChanceSynced), 0); }
 
     @Override
     public void increaseHealingChance() {
-        if (this.healingChance <= 0) this.healingChance = 1;
-        else if (this.healingChance < 3) this.healingChance++;
+        if (this.entityData.get(healingChanceSynced) <= 0) this.entityData.set(healingChanceSynced, 1);
+        else if (this.entityData.get(healingChanceSynced) < 3) this.entityData.set(healingChanceSynced, this.entityData.get(healingChanceSynced) + 1);
     }
 
     @Override
-    public void decreaseHealingChance() { if (this.healingChance >= 0) this.healingChance--; }
+    public void decreaseHealingChance() { if (this.entityData.get(healingChanceSynced) >= 0) this.entityData.set(healingChanceSynced, this.entityData.get(healingChanceSynced) - 1); }
 
     public Color3 getTransfurColor(TransfurCause cause) {
         if (this.getUnderlyingPlayer() == null) return Color3.WHITE;
@@ -242,11 +227,8 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
             if (this.tickCount % 20 == 0) this.hurt(this.damageSources().generic(), 50);
         }
 
-        if (this.getCommandSenderWorld().isClientSide()) syncFromServer();
-        else syncToClient();
-
-        var isDeadTemp = tickCheck(this, this.isDead);
-        this.isDead = isDeadTemp != null ? isDeadTemp : this.isDead;
+        var isDeadTemp = tickCheck(this, this.entityData.get(isDeadSynced));
+        this.entityData.set(isDeadSynced, isDeadTemp != null ? isDeadTemp : this.entityData.get(isDeadSynced));
     }
 
     public LivingEntity getSelf() {
@@ -309,7 +291,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         if (tag.contains("Undying"))
             setAllowedUndeath(tag.getBoolean("Undying"));
         if (tag.contains("HealingChance"))
-            healingChance = tag.getInt("HealingChance");
+            this.entityData.set(healingChanceSynced, tag.getInt("HealingChance"));
     }
 
     @Override
@@ -319,7 +301,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         tag.putBoolean("Phase3", isPhase3());
         tag.putBoolean("Bleeding", this.shouldBleed);
         tag.putBoolean("Undying", getAllowedUndeath());
-        tag.putInt("HealingChance", this.healingChance);
+        tag.putInt("HealingChance", this.entityData.get(healingChanceSynced));
     }
 
     public boolean isBleeding() {

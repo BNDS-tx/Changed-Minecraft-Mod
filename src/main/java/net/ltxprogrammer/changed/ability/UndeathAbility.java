@@ -196,12 +196,12 @@ public class UndeathAbility extends SimpleAbility {
     }
 
     private static boolean canUse(IAbstractChangedEntity entity, boolean uselessIdentifier) {
-        return entity.getChangedEntity() instanceof UndeadEntity;
+        return entity.getTransfurVariantInstance() != null && entity.getTransfurVariantInstance().getChangedEntity() instanceof UndeadEntity;
     }
 
     private static void setAllowedUndeath(IAbstractChangedEntity entity, boolean allowedUndeath) {
-        if (entity.getChangedEntity() instanceof UndeadEntity undeadEntity) undeadEntity.setAllowedUndeath(allowedUndeath);
-        else return;
+        if (entity.getTransfurVariantInstance() != null &&
+                entity.getTransfurVariantInstance().getChangedEntity() instanceof UndeadEntity undeadEntity) undeadEntity.setAllowedUndeath(allowedUndeath);
     }
 
     private static boolean getAllowedUndeath(Entity entity) {
@@ -211,7 +211,8 @@ public class UndeathAbility extends SimpleAbility {
     }
 
     public static boolean getAllowedUndeath(IAbstractChangedEntity entity) {
-        if (entity.getChangedEntity() instanceof UndeadEntity undeadEntity) return undeadEntity.getAllowedUndeath();
+        if (entity.getTransfurVariantInstance() != null &&
+                entity.getTransfurVariantInstance().getChangedEntity() instanceof UndeadEntity undeadEntity) return undeadEntity.getAllowedUndeath();
         else return false;
     }
 
@@ -222,7 +223,8 @@ public class UndeathAbility extends SimpleAbility {
     }
 
     private static int getHealingChance(IAbstractChangedEntity entity) {
-        if (entity.getChangedEntity() instanceof UndeadEntity undeadEntity) return undeadEntity.getHealingChance();
+        if (entity.getTransfurVariantInstance() != null &&
+                entity.getTransfurVariantInstance().getChangedEntity() instanceof UndeadEntity undeadEntity) return undeadEntity.getHealingChance();
         else return 0;
     }
 
@@ -233,7 +235,8 @@ public class UndeathAbility extends SimpleAbility {
     }
 
     private static boolean isAble2Healing(IAbstractChangedEntity entity) {
-        if (entity.getChangedEntity() instanceof UndeadEntity undeadEntity) return undeadEntity.isAble2Healing();
+        if (entity.getTransfurVariantInstance() != null &&
+                entity.getTransfurVariantInstance().getChangedEntity() instanceof UndeadEntity undeadEntity) return undeadEntity.isAble2Healing();
         else return false;
     }
 
@@ -243,8 +246,8 @@ public class UndeathAbility extends SimpleAbility {
     }
 
     private static void decreaseHealingChance(IAbstractChangedEntity entity) {
-        if (entity.getChangedEntity() instanceof UndeadEntity undeadEntity) undeadEntity.decreaseHealingChance();
-        else return;
+        if (entity.getTransfurVariantInstance() != null &&
+                entity.getTransfurVariantInstance().getChangedEntity() instanceof UndeadEntity undeadEntity) undeadEntity.decreaseHealingChance();
     }
 
     private static void increaseHealingChance(Entity entity) {
@@ -253,7 +256,7 @@ public class UndeathAbility extends SimpleAbility {
     }
 
     private static void increaseHealingChance(IAbstractChangedEntity entity) {
-        if (entity.getChangedEntity() instanceof UndeadEntity undeadEntity) undeadEntity.increaseHealingChance();
-        else return;
+        if (entity.getTransfurVariantInstance() != null &&
+                entity.getTransfurVariantInstance().getChangedEntity() instanceof UndeadEntity undeadEntity) undeadEntity.increaseHealingChance();
     }
 }
