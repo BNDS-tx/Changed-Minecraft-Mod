@@ -91,7 +91,11 @@ public interface UndeadEntity {
         if (entity.tickCount <=1) isDead = setDisable(entity, isDead, false, true);
 
         boolean hasExo = Exoskeleton.getEntityExoskeleton(entity.getUnderlyingPlayer()).isPresent();
-        if (hasExo) { isDead = setDisable(entity, isDead, false, false); return; }
+        if (hasExo) {
+            isDead = setDisable(entity, isDead, false, false);
+            getEntityUndeathData().set(isDeadSynced(), isDead);
+            return;
+        }
 
         if (entity.getHealth() <= 4F) { if (isDead != shouldDisable()) isDead = setDisable(entity, isDead, shouldDisable(), false); }
         else { if (isDead) isDead = setDisable(entity, isDead, false, false); }
