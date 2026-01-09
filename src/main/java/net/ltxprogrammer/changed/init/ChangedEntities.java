@@ -377,6 +377,15 @@ public class ChangedEntities {
     public static final RegistryObject<EntityType<LeglessArmorStand>> LEGLESS_ARMOR_STAND = REGISTRY.register("legless_armor_stand",
             () -> EntityType.Builder.<LeglessArmorStand>of(LeglessArmorStand::new, MobCategory.MISC).sized(0.7F, 1.93F).clientTrackingRange(10).build("legless_armor_stand"));
 
+    public static final RegistryObject<EntityType<AzurebyssEntity>> AZUREBYSS_ENTITY = registerSpawning("azurebyss", 0xf1afaf, 0xff5e5e,
+            EntityType.Builder.<AzurebyssEntity>of(AzurebyssEntity::new, ChangedMobCategories.CHANGED)
+                    .setShouldReceiveVelocityUpdates(true)
+                    .setTrackingRange(64)
+                    .setUpdateInterval(3)
+                    .setCustomClientFactory(AzurebyssEntity::new)
+                    .fireImmune().sized(0.8F, 2.05F),
+            ChangedEntities::overworldOnly, SpawnPlacements.Type.ON_GROUND, AzurebyssEntity::checkEntitySpawnRules, AzurebyssEntity::createAttributes);
+
     // TODO make register function for non `ChangedEntity`
 
     private static <T extends ChangedEntity> RegistryObject<EntityType<T>> registerNoEgg(
