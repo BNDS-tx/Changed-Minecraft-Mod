@@ -9,3 +9,4 @@ src/test
 
 # Ignore Intellij IDEA files
 /.idea/
+.DS_Store
