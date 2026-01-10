@@ -938,6 +938,7 @@
 
   "changed.ability.undeath": "\"超越死亡\"",
   "changed.ability.undeath.activated": "我不会倒下！",
+  "changed.ability.undeath.activated_dead": "我……不会倒下……",
   "changed.ability.undeath.point_remain": "（剩余回复点数： %d）",
   "ability.changed.undeath.select": "当前状态：%s",
   "ability.mode.changed.allow_undeath": "已激活不死特质（剩余回复点数： %d）",

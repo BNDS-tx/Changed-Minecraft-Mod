@@ -162,6 +162,7 @@ public class UndeathAbility extends SimpleAbility {
 
         if (!canUse(entity)) return;
         boolean isAble2Healing = isAble2Healing(entity);
+        boolean isNotDisable = !shouldDisable(entity);
         entity.removeAllEffects();
         if (isAble2Healing) {
             entity.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 5 * 20, 2));
@@ -171,7 +172,11 @@ public class UndeathAbility extends SimpleAbility {
         entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 5 * 20, 5));
         entity.addEffect(new MobEffectInstance(MobEffects.JUMP, 5 * 20, -50));
         decreaseHealingChance(entity);
-        ((ServerPlayer)entity).connection.send(new ClientboundSetTitleTextPacket(Component.translatable("changed.ability.undeath.activated")));
+        if (isNotDisable) ((ServerPlayer)entity).connection.send(new ClientboundSetTitleTextPacket(Component.translatable(
+                isAble2Healing
+                        ? "changed.ability.undeath.activated"
+                        : "changed.ability.undeath.activated_dead"
+        )));
         IAbstractChangedEntity.forEitherSafe(entity).get().displayClientMessage(
                 Component.translatable("changed.ability.undeath.point_remain", getHealingChance(entity)), true);
     }
@@ -237,6 +242,18 @@ public class UndeathAbility extends SimpleAbility {
     private static boolean isAble2Healing(IAbstractChangedEntity entity) {
         if (entity.getTransfurVariantInstance() != null &&
                 entity.getTransfurVariantInstance().getChangedEntity() instanceof UndeadEntity undeadEntity) return undeadEntity.isAble2Healing();
+        else return false;
+    }
+
+    private static boolean shouldDisable(Entity entity) {
+        return canUse(entity) && IAbstractChangedEntity.forEitherSafe(entity).isPresent() && (
+                shouldDisable(IAbstractChangedEntity.forEitherSafe(entity).get())
+        );
+    }
+
+    private static boolean shouldDisable(IAbstractChangedEntity entity) {
+        if (entity.getTransfurVariantInstance() != null &&
+                entity.getTransfurVariantInstance().getChangedEntity() instanceof UndeadEntity undeadEntity) return undeadEntity.shouldDisable();
         else return false;
     }
 

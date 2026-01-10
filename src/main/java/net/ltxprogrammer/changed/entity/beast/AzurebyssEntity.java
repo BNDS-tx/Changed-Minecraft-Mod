@@ -34,6 +34,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ForgeMod;
+import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.network.PlayMessages;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -187,7 +188,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
 
     @Override
     public @NotNull Packet<ClientGamePacketListener> getAddEntityPacket() {
-        return super.getAddEntityPacket();
+        return NetworkHooks.getEntitySpawningPacket(this);
     }
 
     @Override
