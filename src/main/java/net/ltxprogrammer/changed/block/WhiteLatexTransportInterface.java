@@ -22,6 +22,8 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+import java.util.Optional;
+
 public interface WhiteLatexTransportInterface {
     static boolean isEntityInWhiteLatex(LivingEntity entity) {
         if (entity instanceof PlayerDataExtension ext)
@@ -57,7 +59,7 @@ public interface WhiteLatexTransportInterface {
 
         entity.playSound(ChangedSounds.ENTITY_ENTER_LATEX.get(), 1.0f, 1.0f);
         if (!UniversalDist.isClientRemotePlayer(entity)) {
-            final Vec3 center = entity.position().subtract(Vec3.atLowerCornerOf(pos));
+            final Vec3 center = new Vec3(0.5D, 0.5D, 0.5D);
             Vec3 surface = LatexCoverState.getAt(entity.level(), pos).findClosestSurface(center, null);
             Vec3 delta = surface.subtract(center);
             final Direction closestDirection = center.equals(surface) ? null : Direction.getNearest(delta.x, delta.y, delta.z);
@@ -73,46 +75,38 @@ public interface WhiteLatexTransportInterface {
         }
     }
 
-    static boolean isBoundingBoxInWhiteLatex(LivingEntity entity) {
+    static Optional<BlockPos> isBoundingBoxInWhiteLatex(LivingEntity entity) {
         AABB testHitbox = entity.getBoundingBox().inflate(-0.05);
-        return BlockPos.betweenClosedStream(testHitbox).anyMatch(blockPos -> {
+        return BlockPos.betweenClosedStream(testHitbox).filter(blockPos -> {
             final BlockState blockState = entity.level().getBlockState(blockPos);
             if (blockState.getBlock() instanceof WhiteLatexTransportInterface transportInterface)
                 return transportInterface.allowTransport(blockState);
 
             return false;
-        });
-    }
-
-    static boolean isStandingOnLatex(LivingEntity entity) {
-        BlockPos blockPos = BlockPos.containing(entity.getPosition(1.0F));
-
-        BlockState blockAtFoot = entity.getCommandSenderWorld().getBlockState(blockPos);
-
-        return blockAtFoot.getBlock() == ChangedBlocks.WHITE_LATEX_FLUID.get()
-                || blockAtFoot.getBlock() == ChangedBlocks.WHITE_LATEX_BLOCK.get();
+        }).findFirst();
     }
 
     @Mod.EventBusSubscriber
     class EventSubscriber {
         @SubscribeEvent
         static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-            if (event.phase == TickEvent.Phase.END)
+            if (event.phase != TickEvent.Phase.END)
                 return;
 
-            if (!isEntityInWhiteLatex(event.player) && isBoundingBoxInWhiteLatex(event.player) &&
-                    (LatexCoverState.getAt(event.player.level(), new BlockPos(event.player.getBlockX(), event.player.getBlockY(), event.player.getBlockZ()))
-                            .getType() == ChangedLatexTypes.WHITE_LATEX.get() || isStandingOnLatex(event.player))) {
+            if (isEntityInWhiteLatex(event.player))
+                return;
+
+            isBoundingBoxInWhiteLatex(event.player).ifPresent(latexPosition -> {
                 ProcessTransfur.ifPlayerTransfurred(event.player, variant -> {
                     if (variant.getLatexType() == ChangedLatexTypes.WHITE_LATEX.get())
-                        entityEnterLatex(event.player, new BlockPos(event.player.getBlockX(), event.player.getBlockY(), event.player.getBlockZ()));
+                        entityEnterLatex(event.player, latexPosition);
                     else if (ChangedLatexTypes.WHITE_LATEX.get().isHostileTo(variant.getLatexType()))
                         event.player.hurt(ChangedDamageSources.WHITE_LATEX.source(event.player.level().registryAccess()), 2.0f);
                 }, () -> {
                     if (ProcessTransfur.progressTransfur(event.player, 4.8f, ChangedTransfurVariants.PURE_WHITE_LATEX_WOLF.get(), TransfurContext.hazard(TransfurCause.WHITE_LATEX)))
-                        entityEnterLatex(event.player, new BlockPos(event.player.getBlockX(), event.player.getBlockY(), event.player.getBlockZ()));
+                        entityEnterLatex(event.player, latexPosition);
                 });
-            }
+            });
         }
     }
 }
