@@ -21,6 +21,8 @@ public interface UndeadEntity {
     EntityDataAccessor<Integer> healingChanceSynced();
     SynchedEntityData getEntityUndeathData();
 
+    default boolean getIsDead() { return getEntityUndeathData().get(isDeadSynced()); }
+
     default boolean getAllowedUndeath() { return getEntityUndeathData().get(setUndyingSynced()); }
     default void setAllowedUndeath(boolean value) { getEntityUndeathData().set(setUndyingSynced(), value); }
 

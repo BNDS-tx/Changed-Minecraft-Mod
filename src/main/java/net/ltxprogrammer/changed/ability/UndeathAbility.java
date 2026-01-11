@@ -164,6 +164,7 @@ public class UndeathAbility extends SimpleAbility {
         if (!canUse(entity)) return;
         boolean isAble2Healing = isAble2Healing(entity);
         boolean isNotDisable = !shouldDisable(entity);
+        boolean isDead = isDead(entity);
         entity.removeAllEffects();
         if (isAble2Healing) {
             entity.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 5 * 20, 2));
@@ -173,7 +174,7 @@ public class UndeathAbility extends SimpleAbility {
         entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 5 * 20, 5));
         entity.addEffect(new MobEffectInstance(MobEffects.JUMP, 5 * 20, -50));
         decreaseHealingChance(entity);
-        if (isNotDisable) ((ServerPlayer)entity).connection.send(new ClientboundSetTitleTextPacket(new TranslatableComponent(
+        if (isNotDisable || !isDead) ((ServerPlayer)entity).connection.send(new ClientboundSetTitleTextPacket(new TranslatableComponent(
                 isAble2Healing
                         ? "changed.ability.undeath.activated"
                         : "changed.ability.undeath.activated_dead"
@@ -255,6 +256,18 @@ public class UndeathAbility extends SimpleAbility {
     private static boolean shouldDisable(IAbstractChangedEntity entity) {
         if (entity.getTransfurVariantInstance() != null &&
                 entity.getTransfurVariantInstance().getChangedEntity() instanceof UndeadEntity undeadEntity) return undeadEntity.shouldDisable();
+        else return false;
+    }
+
+    private static boolean isDead(Entity entity) {
+        return canUse(entity) && IAbstractChangedEntity.forEitherSafe(entity).isPresent() && (
+                isDead(IAbstractChangedEntity.forEitherSafe(entity).get())
+        );
+    }
+
+    private static boolean isDead(IAbstractChangedEntity entity) {
+        if (entity.getTransfurVariantInstance() != null &&
+                entity.getTransfurVariantInstance().getChangedEntity() instanceof UndeadEntity undeadEntity) return undeadEntity.getIsDead();
         else return false;
     }
 
