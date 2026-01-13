@@ -4,13 +4,13 @@ import net.ltxprogrammer.changed.entity.ChangedEntity;
 import net.ltxprogrammer.changed.entity.LatexTypeOld;
 import net.ltxprogrammer.changed.entity.TransfurMode;
 import net.ltxprogrammer.changed.entity.latex.LatexType;
-import net.ltxprogrammer.changed.init.ChangedGameRules;
 import net.ltxprogrammer.changed.init.ChangedLatexTypes;
 import net.ltxprogrammer.changed.util.EntityUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.tags.BiomeTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -47,9 +47,7 @@ public abstract class AbstractAquaticEntity extends ChangedEntity implements Aqu
         return p_32368_.getY() < p_32367_.getSeaLevel() - 5;
     }
 
-    public static <T extends ChangedEntity> boolean checkEntitySpawnRules(EntityType<T> entityType, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, Random random) {
-        if (!world.getLevel().getGameRules().getBoolean(ChangedGameRules.RULE_AUTOMATIC_SPAWN_ENTITY))
-            return false;
+    public static <T extends ChangedEntity> boolean checkEntitySpawnRules(EntityType<T> entityType, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, RandomSource random) {
         if (!world.canSeeSkyFromBelowWater(pos))
             return false;
         if (random.nextFloat() > 0.5f)
@@ -59,7 +57,8 @@ public abstract class AbstractAquaticEntity extends ChangedEntity implements Aqu
             return false;
         } else {
             Holder<Biome> holder = world.getBiome(pos);
-            boolean flag = world.getDifficulty() != Difficulty.PEACEFUL && (reason == MobSpawnType.SPAWNER || world.getFluidState(pos).is(FluidTags.WATER));
+            boolean flag = world.getDifficulty() != Difficulty.PEACEFUL && isDarkEnoughToSpawn(world, pos, random)
+                    && (reason == MobSpawnType.SPAWNER || world.getFluidState(pos).is(FluidTags.WATER));
             if (!holder.is(Biomes.RIVER) && !holder.is(Biomes.FROZEN_RIVER)) {
                 return random.nextInt(40) == 0 && isDeepEnoughToSpawn(world, pos) && flag;
             } else {
