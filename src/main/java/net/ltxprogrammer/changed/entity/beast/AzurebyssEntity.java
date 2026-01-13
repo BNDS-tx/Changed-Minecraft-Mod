@@ -188,13 +188,16 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
 
     @Override
     public @NotNull Packet<ClientGamePacketListener> getAddEntityPacket() {
-        return NetworkHooks.getEntitySpawningPacket(this);
+        return super.getAddEntityPacket();
     }
 
     @Override
     public void variantTick(Level level) {
         super.variantTick(level);
         if (this.getUnderlyingPlayer() != null) {
+            if (firstTick) {
+                this.getBasicPlayerInfo().setEyeStyle(EyeStyle.TALL);
+            }
             Player playerInControl = this.getUnderlyingPlayer();
             TransfurVariantInstance<?> transfurVariantInstance = ProcessTransfur.getPlayerTransfurVariant(playerInControl);
             if (transfurVariantInstance != null) {
