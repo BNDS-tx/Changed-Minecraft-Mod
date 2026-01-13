@@ -182,6 +182,9 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
     public void variantTick(Level level) {
         super.variantTick(level);
         if (this.getUnderlyingPlayer() != null) {
+            if (firstTick) {
+                this.getBasicPlayerInfo().setEyeStyle(EyeStyle.TALL);
+            }
             Player playerInControl = this.getUnderlyingPlayer();
             TransfurVariantInstance<?> transfurVariantInstance = ProcessTransfur.getPlayerTransfurVariant(playerInControl);
             if (transfurVariantInstance != null) {
