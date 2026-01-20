@@ -14,8 +14,10 @@ import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -25,6 +27,7 @@ import net.minecraftforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -125,6 +128,7 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
         this.suitTransition = 0.0f;
         this.ticksGrabbed = 0;
         this.currentEscapeKey = null;
+        this.escapeKeyRandom = null;
         this.lastEscapeKey = null;
 
         ESCAPE_KEYS.forEach((key, value) -> {
@@ -280,6 +284,7 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
     public int ticksUnpressed = 0;
     public KeyReference lastEscapeKey = null;
     public KeyReference currentEscapeKey = null;
+    public RandomSource escapeKeyRandom = null;
     public int ticksGrabbed = 0;
     private final Map<KeyReference, Pair<
             Pair<Supplier<Boolean>, Consumer<Boolean>>,
@@ -302,12 +307,38 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
                         Pair.of(() -> escapeKeyRightO, (v) -> escapeKeyRightO = v)
                 ));
     });
+    private static final List<KeyReference> ORDERED_KEYS = List.of(KeyReference.MOVE_FORWARD, KeyReference.MOVE_BACKWARD, KeyReference.MOVE_LEFT, KeyReference.MOVE_RIGHT);
+
+    protected KeyReference getNextEscapeKey() {
+        return Util.getRandom(ORDERED_KEYS, escapeKeyRandom);
+    }
+
+    public void initializeEscape(long seed) {
+        this.escapeKeyRandom = RandomSource.create(seed);
+        this.currentEscapeKey = this.getNextEscapeKey();
+        this.lastEscapeKey = null;
+    }
 
     public void handleEscape() {
         ticksGrabbed++;
 
+        float entityGrabStrengthDecay = this.suited ? GRAB_STRENGTH_DECAY_SUITED : GRAB_STRENGTH_DECAY;
+
+        if (grabbedEntity != null) {
+            AttributeInstance grabbedEntityAttribute = grabbedEntity.getAttribute(ChangedAttributes.GRAB_STRUGGLE_STRENGTH.get());
+            if (grabbedEntityAttribute != null) {
+                if (grabbedEntity instanceof Player) {
+                    // Suited reduces grab strength decay by ~43% for players (100% - 43% = 57.14%)
+                    entityGrabStrengthDecay = ((float) grabbedEntityAttribute.getValue()) * (this.suited ? 0.5714f : 1);
+                } else {
+                    // Suited reduces grab strength decay by 90% for entities (100% - 90% = 10%)
+                    entityGrabStrengthDecay = ((float) grabbedEntityAttribute.getValue()) * (this.suited ? 0.1f : 1);
+                }
+            }
+        }
+
         if (!(this.grabbedEntity instanceof Player player)) {
-            this.grabStrength -= this.suited ? GRAB_STRENGTH_DECAY_SUITED : GRAB_STRENGTH_DECAY;
+            this.grabStrength -= entityGrabStrengthDecay;
         }
 
         else {
@@ -327,13 +358,14 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
 
                 if (stateChanged.getAcquire()) {
                     Changed.PACKET_HANDLER.sendToServer(new GrabEntityPacket.EscapeKeyState(player,
-                            escapeKeyForward, escapeKeyBackward, escapeKeyLeft, escapeKeyRight));
+                            escapeKeyForward, escapeKeyBackward, escapeKeyLeft, escapeKeyRight, ticksUnpressed));
                 }
             }
 
             if (currentEscapeKey == null && !player.level().isClientSide) {
-                currentEscapeKey = Util.getRandom(ESCAPE_KEYS.keySet().toArray(new KeyReference[0]), this.entity.getEntity().getRandom());
-                Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player), new GrabEntityPacket.AnnounceEscapeKey(player, currentEscapeKey));
+                long seed = this.entity.getEntity().getRandom().nextLong();
+                this.initializeEscape(seed);
+                Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player), new GrabEntityPacket.AnnounceEscapeSeed(player, seed));
             }
 
             if (currentEscapeKey != null) {
@@ -341,11 +373,11 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
                 if (keyRef.getFirst().getFirst().get() && !keyRef.getSecond().getFirst().get()) { // Key was just pressed
                     // This is to reduce the strength of cheating (pressing the key too fast)
                     float trustStrength = Mth.clamp((float)ticksUnpressed / (float)GRAB_ESCAPE_TRUST, 0.0f, 1.0f);
-                    float keyStrength = (this.suited ? GRAB_STRENGTH_DECAY_PLAYER_SUITED : GRAB_STRENGTH_DECAY_PLAYER) * trustStrength;
+                    float keyStrength = entityGrabStrengthDecay * trustStrength;
                     this.grabStrength -= keyStrength;
                     this.suitTransition = Mth.clamp(this.suitTransition - (keyStrength * 0.5f), 0.0f, SUIT_TRANSITION_MAX);
                     lastEscapeKey = currentEscapeKey;
-                    currentEscapeKey = null;
+                    currentEscapeKey = this.getNextEscapeKey();
                     ticksUnpressed = 0;
                 } else {
                     ticksUnpressed++;
@@ -357,7 +389,7 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
                     if (badKey) {
                         this.grabStrength = Mth.clamp(this.grabStrength + GRAB_STRENGTH_DECAY_PENALTY, 0.0f, 1.0f);
                         lastEscapeKey = currentEscapeKey;
-                        currentEscapeKey = null;
+                        currentEscapeKey = this.getNextEscapeKey();
                         ticksUnpressed = 0;
                     }
                 }

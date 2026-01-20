@@ -69,17 +69,25 @@ public class SyncTransfurPacket implements ChangedPacket {
     public CompletableFuture<Void> handle(NetworkEvent.Context context, CompletableFuture<Level> levelFuture, Executor sidedExecutor) {
         if (context.getDirection().getReceptionSide() == LogicalSide.CLIENT) {
             context.setPacketHandled(true);
+            Changed.LOGGER.info("Received SyncTransfurPacket on client with {} entries", changedForms.size());
             return levelFuture.thenAccept(level -> {
                 changedForms.forEach((uuid, listing) -> {
                     Player player = level.getPlayerByUUID(uuid);
                     if (player != null) {
+                        final var listingVariant = ChangedRegistry.TRANSFUR_VARIANT.getValue(listing.form);
                         final var variant = ProcessTransfur.setPlayerTransfurVariant(player,
-                                ChangedRegistry.TRANSFUR_VARIANT.getValue(listing.form),
+                                listingVariant,
                                 TransfurContext.hazard(listing.cause),
                                 listing.progress,
                                 listing.temporaryFromSuit);
+
+                        Changed.LOGGER.info("Attempted to set transfur variant for {} to {} (id: {}), result is {}",
+                                player.getScoreboardName(), listingVariant == null ? "null" : listingVariant.getFormId(),
+                                listing.form, variant == null ? "null" : variant.getFormId());
                         if (variant != null)
                             variant.load(listing.data);
+                    } else {
+                        Changed.LOGGER.warn("Failed to find player specified in SyncTransfurPacket, {}", uuid);
                     }
                 });
             });
