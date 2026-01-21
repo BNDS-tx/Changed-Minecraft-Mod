@@ -7,6 +7,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.ltxprogrammer.changed.Changed;
+import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.entity.ChangedEntity;
 import net.ltxprogrammer.changed.entity.TransfurCause;
 import net.ltxprogrammer.changed.entity.TransfurContext;
@@ -139,6 +140,18 @@ public class CommandTransfur {
                             })
                     ));
         }
+
+        var retransfurNode = event.getDispatcher().register(Commands.literal("retransfur").requires(p -> p.hasPermission(2))
+                .executes(context -> retransfurPlsyers(context.getSource(), null, null))
+                .then(Commands.argument("players", EntityArgument.players())
+                        .executes(context ->  retransfurPlsyers(context.getSource(),
+                                EntityArgument.getPlayers(context, "players"), null))
+                        .then(Commands.argument("form", ResourceLocationArgument.id()).suggests(SUGGEST_TRANSFUR_VARIANT)
+                                .executes(context -> retransfurPlsyers(context.getSource(),
+                                        EntityArgument.getPlayers(context, "players"), ResourceLocationArgument.getId(context, "form"))))
+                ));
+        event.getDispatcher().register(Commands.literal("retf").requires(p -> p.hasPermission(2)).redirect(retransfurNode)
+                .executes(context -> retransfurPlsyers(context.getSource(), null, null)));
 
         event.getDispatcher().register(Commands.literal("gettf").requires(p -> p.hasPermission(1))
                 .executes(context -> getTransfur(context.getSource(), context.getSource().getPlayerOrException()))
@@ -317,6 +330,24 @@ public class CommandTransfur {
             return success;
         } else
             return 0;
+    }
+
+    private static int retransfurPlsyers(CommandSourceStack source, @Nullable Collection<ServerPlayer> players, @Nullable ResourceLocation form) throws CommandSyntaxException {
+        if (players == null || players.isEmpty()) players = Collections.singleton(source.getPlayerOrException());
+        int result = 0;
+        for (ServerPlayer player : players) {
+            if (IAbstractChangedEntity.forEitherSafe(player).isEmpty() ||
+                    IAbstractChangedEntity.forEitherSafe(player).get().getTransfurVariantInstance() == null)
+                continue;
+            if (form == null) {
+                var tv = Objects.requireNonNull(IAbstractChangedEntity.forEitherSafe(player).get().getTransfurVariantInstance()).getParent();
+                form = ChangedRegistry.TRANSFUR_VARIANT.get().getKey(tv);
+            }
+            int untf = untransfurPlayers(source, Collections.singleton(player));
+            if (untf == 0) continue;
+            result += transfurPlayers(source, Collections.singleton(player), form, TransfurCause.GRAB_REPLICATE.getSerializedName(), null);
+        }
+        return result > 0 ? Command.SINGLE_SUCCESS : 0;
     }
 
     private static int getTransfur(CommandSourceStack source, ServerPlayer player, Predicate<TransfurVariantInstance<?>> test) {

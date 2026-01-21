@@ -195,8 +195,7 @@ public class ChangedTransfurVariants {
             TransfurVariant.Builder.of(ChangedEntities.CUSTOM_LATEX));
 
     public static final RegistryObject<TransfurVariant<AzurebyssEntity>> AZUREBYSS_ENTITY = register("form_azurebyss_wolf",
-            TransfurVariant.Builder.of(ChangedEntities.AZUREBYSS_ENTITY)
-                    .reducedFall().jumpStrength(1.5F)
+            TransfurVariant.Builder.of(ChangedEntities.AZUREBYSS_ENTITY).absorbing()
                     .abilities(List.of(
                                     entityType -> ChangedAbilities.THUNDERBOLT.get(),
                                     entityType -> ChangedAbilities.THUNDER_PATH.get(),
