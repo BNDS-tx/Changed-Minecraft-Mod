@@ -53,8 +53,6 @@ public abstract class AbstractAquaticEntity extends ChangedEntity implements Aqu
             return false;
         if (!world.canSeeSkyFromBelowWater(pos))
             return false;
-        if (random.nextFloat() > 0.5f)
-            return false;
 
         if (!world.getFluidState(pos.below()).is(FluidTags.WATER)) {
             return false;
