@@ -71,6 +71,12 @@ minecraft {
             }
         }
 
+        client2 {
+            parent minecraft.runs.client
+            taskName 'runClient2'
+            args '--username', 'Azurebyss'
+        }
+
         server {
             workingDirectory project.file('run')
 

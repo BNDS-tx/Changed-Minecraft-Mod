@@ -14,7 +14,7 @@ import net.minecraftforge.common.ForgeMod;
 
 import java.util.Objects;
 
-public interface UndeadEntity {
+public interface UndeadEntity extends AzurebyssCreate {
 
     EntityDataAccessor<Boolean> setUndyingSynced();
     EntityDataAccessor<Boolean> isDeadSynced();

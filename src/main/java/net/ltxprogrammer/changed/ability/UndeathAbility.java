@@ -1,6 +1,7 @@
 package net.ltxprogrammer.changed.ability;
 
 import net.ltxprogrammer.changed.Changed;
+import net.ltxprogrammer.changed.entity.AzurebyssCreate;
 import net.ltxprogrammer.changed.entity.UndeadEntity;
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
@@ -22,7 +23,7 @@ import net.minecraftforge.fml.common.Mod;
 import java.util.*;
 
 @Mod.EventBusSubscriber(modid = Changed.MODID)
-public class UndeathAbility extends SimpleAbility {
+public class UndeathAbility extends SimpleAbility implements AzurebyssCreate {
 
     @Override
     public TranslatableComponent getAbilityName(IAbstractChangedEntity entity) {

@@ -1,0 +1,101 @@
+package net.ltxprogrammer.changed.entity;
+
+import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
+import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
+import net.ltxprogrammer.changed.init.ChangedTransfurVariants;
+import net.ltxprogrammer.changed.process.ProcessTransfur;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
+@Mod.EventBusSubscriber
+public class EntityDamageImmuneNTransfurEvent implements AzurebyssCreate {
+    @SubscribeEvent
+    public static void onEntityDamage(LivingAttackEvent event) {
+        LivingEntity entity = event.getEntityLiving();
+//        if (entity.getCommandSenderWorld().isClientSide) return;
+        if (!(entity instanceof Player player)) return;
+
+        if (inFireImmune.isEmpty() && onFireImmune.isEmpty() && thunderImmune.isEmpty())
+            initialImmuneEntity();
+
+        if (event.getSource() == DamageSource.LIGHTNING_BOLT) {
+            if (isThunderImmune(player)) event.setCanceled(true);
+        } else if (event.getSource() == DamageSource.ON_FIRE) {
+            if (isOnFireImmune(player)) event.setCanceled(true); player.clearFire();
+        } else if (event.getSource() == DamageSource.IN_FIRE) {
+            if (isInFireImmune(player)) event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void SendTransfurTexts(ProcessTransfur.EntityVariantAssigned.ChangedVariant changedVariantEvent) {
+        if (changedVariantEvent.newVariant == null) {
+            return;
+        }
+        if (changedVariantEvent.newVariant == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()) {
+            if (changedVariantEvent.livingEntity instanceof Player player) {
+                if (player.getUUID() == UUID.fromString("71afaef1-7ece-4718-bccb-1b12fa1e37cc") ||
+                        Objects.equals(player.getGameProfile().getName(), "Azurebyss")) {
+                    if (player.getCommandSenderWorld().isClientSide()) {
+                        player.displayClientMessage(new TranslatableComponent("entity_dialogues.azurebyss_create.transfur.text.wb"), false);
+                    }
+                } else if (azurebyssPlayers.contains(player.getUUID())) {
+                    if (player.getCommandSenderWorld().isClientSide()) {
+                        player.displayClientMessage(new TranslatableComponent("entity_dialogues.azurebyss_create.transfur.text"), false);
+                    }
+                }
+            }
+        }
+    }
+
+    private static final List<TransfurVariant<?>> onFireImmune = new ArrayList<>();
+
+    private static final List<TransfurVariant<?>> inFireImmune = new ArrayList<>();
+
+    private static final List<TransfurVariant<?>> thunderImmune = new ArrayList<>();
+
+    private static final List<UUID> azurebyssPlayers = List.of(
+            UUID.fromString("00000000-0000-0000-0000-000000000000"),
+            UUID.fromString("380df991-f603-344c-a090-369bad2a924a")
+    );
+
+    private static void initialImmuneEntity() {
+        onFireImmune.add(ChangedTransfurVariants.AZUREBYSS_ENTITY.get());
+        thunderImmune.add(ChangedTransfurVariants.AZUREBYSS_ENTITY.get());
+    }
+
+    public static boolean isOnFireImmune(Player player) {
+        if (IAbstractChangedEntity.forEitherSafe(player).isPresent()) {
+            var Variant = IAbstractChangedEntity.forEitherSafe(player).get().getSelfVariant();
+            return onFireImmune.contains(Variant);
+        }
+        return false;
+    }
+
+    public static boolean isInFireImmune(Player player) {
+        if (IAbstractChangedEntity.forEitherSafe(player).isPresent()) {
+            var Variant = IAbstractChangedEntity.forEitherSafe(player).get().getSelfVariant();
+            return inFireImmune.contains(Variant);
+        }
+        return false;
+    }
+
+    public static boolean isThunderImmune(Player player) {
+        if (IAbstractChangedEntity.forEitherSafe(player).isPresent()) {
+            var Variant = IAbstractChangedEntity.forEitherSafe(player).get().getSelfVariant();
+            return thunderImmune.contains(Variant);
+        }
+        return false;
+    }
+}

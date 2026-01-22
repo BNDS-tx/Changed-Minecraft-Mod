@@ -120,6 +120,21 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
     }
 
     @Override
+    public void push(@NotNull Entity entity) {
+        // 什么都不做 = 不被挤开
+    }
+
+    @Override
+    public boolean isPushable() {
+        return false;
+    }
+
+    @Override
+    public boolean canBeCollidedWith() {
+        return true;
+    }
+
+    @Override
     public Gender getGender() {
         return Gender.MALE;
     }

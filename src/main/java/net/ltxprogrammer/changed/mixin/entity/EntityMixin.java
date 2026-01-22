@@ -13,6 +13,7 @@ import net.ltxprogrammer.changed.entity.variant.EntityShape;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.init.ChangedAbilities;
 import net.ltxprogrammer.changed.init.ChangedTags;
+import net.ltxprogrammer.changed.init.ChangedTransfurVariants;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.EntityUtil;
 import net.minecraft.commands.CommandSource;
@@ -36,6 +37,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Optional;
@@ -217,5 +219,56 @@ public abstract class EntityMixin extends net.minecraftforge.common.capabilities
                         if (ability.suited)
                             cir.setReturnValue(false);
                     });
+    }
+
+    @Inject(method = "push(Lnet/minecraft/world/entity/Entity;)V", at = @At("HEAD"), cancellable = true)
+    private void onPush(Entity otherEntity, CallbackInfo ci) {
+        // 1. 将 this 转换为 Entity 视角
+        Entity self = (Entity) (Object) this;
+
+        // 2. 判断当前实体是否是玩家
+        if (self instanceof Player player) {
+            // 3. 这里调用你自己的逻辑，检查玩家是否处于“变身且不可推挤”的状态
+            if (IAbstractChangedEntity.forEitherSafe(player).isPresent() &&
+                    IAbstractChangedEntity.forEitherSafe(player).get().getSelfVariant() == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()) {
+
+                // 3. 手动计算推力方向 (仿照原版 Entity.push 逻辑)
+                double dx = otherEntity.getX() - self.getX();
+                double dz = otherEntity.getZ() - self.getZ();
+
+                // 计算距离平方中最大的那一个，防止重叠时除以0
+                double dist = Mth.absMax(dx, dz);
+
+                if (dist >= 0.009999999776482582D) {
+                    dist = Math.sqrt(dist);
+                    dx /= dist;
+                    dz /= dist;
+
+                    double knockbackStrength = 1.0D / dist;
+
+                    if (knockbackStrength > 1.0D) {
+                        knockbackStrength = 1.0D;
+                    }
+
+                    // 4. 关键点：只推对方 (otherEntity)，不推自己
+                    // 根据双方的碰撞力度调整 velocity
+                    dx *= knockbackStrength;
+                    dz *= knockbackStrength;
+
+                    // 施加给对方一个“被挡住”的反向推力
+                    // 0.05D 是原版推挤力度系数，你可以调大让玩家感觉“更硬”
+                    dx *= 0.05000000074505806D;
+                    dz *= 0.05000000074505806D;
+
+                    // 注意：这里需要考虑对方的推挤抗性 (entityPushFactor)
+                    // 如果你想让玩家绝对无法穿透，可以忽略对方的抗性，直接施加推力
+                    otherEntity.push(dx, 0.0D, dz);
+                }
+
+                // 4. 核心：直接取消该方法的执行
+                // 这意味着物理推挤的计算完全不会发生
+                ci.cancel();
+            }
+        }
     }
 }
