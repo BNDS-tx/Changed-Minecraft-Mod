@@ -927,6 +927,9 @@
 
   "item.changed.azurebyss_spawn_egg": "Azurebyss 生成蛋",
 
+  "entity_dialogues.azurebyss_create.transfur.text.wb": "§c欢迎，首席研究员。§o好久不见，父亲。§r",
+  "entity_dialogues.azurebyss_create.transfur.text": "§c你好，研究员。很高兴和你共事。§r",
+
   "changed.ability.thunder": "雷霆闪电",
   "ability.changed.thunder.desc": "召唤一道闪电，劈向目标并造成较大伤害。",
 

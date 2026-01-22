@@ -34,7 +34,6 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ForgeMod;
-import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.network.PlayMessages;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -129,6 +128,21 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
     @Override
     public void knockback(double strength, double x, double z) {
         // 什么都不做 = 不被击退
+    }
+
+    @Override
+    public void push(@NotNull Entity entity) {
+        // 什么都不做 = 不被挤开
+    }
+
+    @Override
+    public boolean isPushable() {
+        return false;
+    }
+
+    @Override
+    public boolean canBeCollidedWith() {
+        return true;
     }
 
     @Override
