@@ -337,10 +337,10 @@ public class CommandTransfur {
         int result = 0;
         for (ServerPlayer player : players) {
             if (IAbstractChangedEntity.forEitherSafe(player).isEmpty() ||
-                    IAbstractChangedEntity.forEitherSafe(player).get().getTransfurVariantInstance() == null)
+                    IAbstractChangedEntity.forEitherSafe(player).get().getSelfVariant() == null)
                 continue;
             if (form == null) {
-                var tv = Objects.requireNonNull(IAbstractChangedEntity.forEitherSafe(player).get().getTransfurVariantInstance()).getParent();
+                var tv = IAbstractChangedEntity.forEitherSafe(player).get().getSelfVariant();
                 form = ChangedRegistry.TRANSFUR_VARIANT.get().getKey(tv);
             }
             int untf = untransfurPlayers(source, Collections.singleton(player));
