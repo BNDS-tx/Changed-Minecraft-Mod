@@ -378,7 +378,7 @@ public class ChangedEntities {
             () -> EntityType.Builder.<LeglessArmorStand>of(LeglessArmorStand::new, MobCategory.MISC).sized(0.7F, 1.93F).clientTrackingRange(10).build("legless_armor_stand"));
 
     public static final RegistryObject<EntityType<AzurebyssEntity>> AZUREBYSS_ENTITY = registerSpawning("azurebyss", 0xf1afaf, 0xff5e5e,
-            EntityType.Builder.<AzurebyssEntity>of(AzurebyssEntity::new, ChangedMobCategories.CHANGED)
+            EntityType.Builder.<AzurebyssEntity>of(AzurebyssEntity::new, MobCategory.MONSTER)
                     .setShouldReceiveVelocityUpdates(true)
                     .setTrackingRange(64)
                     .setUpdateInterval(3)
