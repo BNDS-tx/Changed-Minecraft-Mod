@@ -38,7 +38,6 @@ import java.util.function.BiConsumer;
 public abstract class FacilitySinglePiece extends FacilityPiece {
     public final ResourceLocation templateName;
     public final Optional<ResourceLocation> lootTable;
-    private StructureTemplate template = null;
 
     protected FacilitySinglePiece(PieceType<?> type, ResourceLocation templateName) {
         super(type);
@@ -46,10 +45,10 @@ public abstract class FacilitySinglePiece extends FacilityPiece {
         this.lootTable = Optional.empty();
     }
 
-    protected FacilitySinglePiece(PieceType<?> type, ResourceLocation templateName, @Nullable ResourceLocation lootTable) {
+    protected FacilitySinglePiece(PieceType<?> type, ResourceLocation templateName, Optional<ResourceLocation> lootTable) {
         super(type);
         this.templateName = templateName;
-        this.lootTable = Optional.ofNullable(lootTable);
+        this.lootTable = lootTable;
     }
 
     public static class StructureInstance extends FacilityPieceInstance {
@@ -150,7 +149,7 @@ public abstract class FacilitySinglePiece extends FacilityPiece {
         }
 
         @Override
-        public void addSteps(FacilityGenerationStack stack, List<GenStep> steps) {
+        public void addSteps(@Nullable FacilityGenerationStack stack, List<GenStep> steps) {
             var settings = new StructurePlaceSettings()
                     .setMirror(this.getMirror())
                     .setRotation(this.getRotation())
@@ -160,7 +159,7 @@ public abstract class FacilitySinglePiece extends FacilityPiece {
             if (gluBlocks.isEmpty())
                 Changed.LOGGER.error("Facility structure is missing placement blocks {}", templateName);
             gluBlocks.forEach(blockInfo -> {
-                steps.add(new GenStep(blockInfo, stack.getParent().facilityPiece().getValidNeighbors(stack)));
+                steps.add(new GenStep(blockInfo, stack == null ? NO_NEIGHBORS : stack.getParent().getFacilityPiece().getValidNeighbors(stack)));
             });
         }
 
