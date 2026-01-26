@@ -6,11 +6,8 @@ import net.ltxprogrammer.changed.block.*;
 import net.ltxprogrammer.changed.entity.ChangedEntity;
 import net.ltxprogrammer.changed.entity.TransfurCause;
 import net.ltxprogrammer.changed.entity.animation.StunAnimationParameters;
-import net.ltxprogrammer.changed.entity.beast.PureWhiteLatexWolf;
 import net.ltxprogrammer.changed.entity.beast.WhiteLatexEntity;
-import net.ltxprogrammer.changed.entity.beast.boss.Behemoth;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
-import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.item.AbstractLatexBucket;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
@@ -38,10 +35,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.*;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.SupportType;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -156,6 +150,41 @@ public abstract class SpreadingLatexType extends LatexType {
             event.setPlannedState(Blocks.DEAD_BUSH.defaultBlockState());
         else if (event.originalState.is(Blocks.FERN))
             event.setPlannedState(Blocks.DEAD_BUSH.defaultBlockState());
+    }
+
+    @Override
+    public LatexCoverState mirror(LatexCoverState state, Mirror mirror) {
+        return switch (mirror) {
+            case FRONT_BACK -> state
+                    .setValue(NORTH, state.getValue(SOUTH))
+                    .setValue(SOUTH, state.getValue(NORTH));
+            case LEFT_RIGHT -> state
+                    .setValue(EAST, state.getValue(WEST))
+                    .setValue(WEST, state.getValue(EAST));
+            default -> state;
+        };
+    }
+
+    @Override
+    public LatexCoverState rotate(LatexCoverState state, Rotation rotation) {
+        return switch (rotation) {
+            case CLOCKWISE_90 -> state
+                    .setValue(EAST, state.getValue(NORTH))
+                    .setValue(SOUTH, state.getValue(EAST))
+                    .setValue(WEST, state.getValue(SOUTH))
+                    .setValue(NORTH, state.getValue(WEST));
+            case CLOCKWISE_180 -> state
+                    .setValue(SOUTH, state.getValue(NORTH))
+                    .setValue(WEST, state.getValue(EAST))
+                    .setValue(NORTH, state.getValue(SOUTH))
+                    .setValue(EAST, state.getValue(WEST));
+            case COUNTERCLOCKWISE_90 -> state
+                    .setValue(WEST, state.getValue(NORTH))
+                    .setValue(NORTH, state.getValue(EAST))
+                    .setValue(EAST, state.getValue(SOUTH))
+                    .setValue(SOUTH, state.getValue(WEST));
+            default -> state;
+        };
     }
 
     public boolean canSpread(LatexCoverState state) {
@@ -497,7 +526,7 @@ public abstract class SpreadingLatexType extends LatexType {
 
             if (event.originalState.getProperties().contains(BlockStateProperties.DOUBLE_BLOCK_HALF) &&
                     (event.originalState.is(Blocks.TALL_GRASS) || event.originalState.is(Blocks.LARGE_FERN) || event.originalState.is(BlockTags.TALL_FLOWERS))) {
-                var crystal = Util.getRandom(DarkLatexBlock.CRYSTALS, event.level.getRandom()).get().defaultBlockState();
+                var crystal = Util.getRandom(DarkLatexBlock.LARGE_CRYSTALS, event.level.getRandom()).get().defaultBlockState();
                 switch (event.originalState.getValue(BlockStateProperties.DOUBLE_BLOCK_HALF)) {
                     case UPPER -> {
                         event.setPlannedState(crystal.setValue(BlockStateProperties.DOUBLE_BLOCK_HALF, DoubleBlockHalf.UPPER), (level, where) -> {
@@ -538,7 +567,7 @@ public abstract class SpreadingLatexType extends LatexType {
                 if (random.nextFloat() < 0.75f || !isAboveAir) {
                     level.setBlockAndUpdate(blockPos, Util.getRandom(DarkLatexBlock.SMALL_CRYSTALS, random).get().defaultBlockState());
                 } else {
-                    final var newBlockState = Util.getRandom(DarkLatexBlock.CRYSTALS, random).get().defaultBlockState();
+                    final var newBlockState = Util.getRandom(DarkLatexBlock.LARGE_CRYSTALS, random).get().defaultBlockState();
                     level.setBlockAndUpdate(blockPos, newBlockState.setValue(AbstractDoubleTransfurCrystal.HALF, DoubleBlockHalf.LOWER));
                     level.setBlockAndUpdate(above, newBlockState.setValue(AbstractDoubleTransfurCrystal.HALF, DoubleBlockHalf.UPPER));
                 }
@@ -656,10 +685,12 @@ public abstract class SpreadingLatexType extends LatexType {
         public void randomTick(@NotNull LatexCoverState state, @NotNull ServerLevel level, @NotNull BlockPos position, @NotNull RandomSource random) {
             super.randomTick(state, level, position, random);
 
-            if (level.getGameRules().getInt(ChangedGameRules.RULE_LATEX_GROWTH_RATE) == 0 ||
-                    random.nextInt(1000) > level.getGameRules().getInt(ChangedGameRules.RULE_LATEX_GROWTH_RATE))
+            if (!level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING))
                 return;
             if (level.getDifficulty() == Difficulty.PEACEFUL)
+                return;
+            if (level.getGameRules().getInt(ChangedGameRules.RULE_LATEX_GROWTH_RATE) == 0 ||
+                    random.nextInt(1000) > level.getGameRules().getInt(ChangedGameRules.RULE_LATEX_GROWTH_RATE))
                 return;
             if (!WhiteLatexBlock.targetNearby(level, position))
                 return;
