@@ -13,6 +13,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.ForgeMod;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,7 +22,7 @@ public class LatexSiren extends AbstractAquaticGenderedEntity {
 
     public LatexSiren(EntityType<? extends LatexSiren> type, Level level) {
         super(type, level);
-        sing = registerAbility(ability -> this.wantToSing(), new SirenSingAbilityInstance(ChangedAbilities.SIREN_SING.get(), IAbstractChangedEntity.forEntity(this)));
+        sing = registerAbility(ability -> this.wantsToSing(), new SirenSingAbilityInstance(ChangedAbilities.SIREN_SING.get(), IAbstractChangedEntity.forEntity(this)));
     }
 
     @Override
@@ -42,8 +43,16 @@ public class LatexSiren extends AbstractAquaticGenderedEntity {
         return TransfurMode.ABSORPTION;
     }
 
-    public boolean wantToSing() {
-        return getTarget() != null;
+    public boolean wantsToSing() {
+        if (getTarget() == null)
+            return false;
+        var target = getTarget();
+        return !target.isEyeInFluidType(Fluids.WATER.getFluidType());
+    }
+
+    @Override
+    public boolean wantsToSurface() {
+        return this.wantsToSing();
     }
 
     @Override

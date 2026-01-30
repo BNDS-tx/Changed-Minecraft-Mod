@@ -9,6 +9,7 @@ import net.ltxprogrammer.changed.block.WhiteLatexTransportInterface;
 import net.ltxprogrammer.changed.entity.ai.LookAtPlayerButNotHostGoal;
 import net.ltxprogrammer.changed.entity.ai.UseAbilityGoal;
 import net.ltxprogrammer.changed.entity.beast.*;
+import net.ltxprogrammer.changed.entity.latex.LatexType;
 import net.ltxprogrammer.changed.entity.variant.EntityShape;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
@@ -25,6 +26,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -46,7 +48,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -68,7 +69,7 @@ import java.util.function.Predicate;
 
 import static net.ltxprogrammer.changed.entity.variant.TransfurVariant.findEntityTransfurVariant;
 
-public abstract class ChangedEntity extends Monster {
+public abstract class ChangedEntity extends Monster implements EntityShape.Provider {
     @Nullable private Player underlyingPlayer;
     private HairStyle hairStyle;
     private EyeStyle eyeStyle;
@@ -195,7 +196,7 @@ public abstract class ChangedEntity extends Monster {
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(DATA_TARGET_ID, OptionalInt.empty());
-        this.entityData.define(DATA_LOCAL_VARIANT_INFO, BasicPlayerInfo.random(this.random));
+        this.entityData.define(DATA_LOCAL_VARIANT_INFO, BasicPlayerInfo.random(this.random, this));
         this.entityData.define(DATA_CHANGED_ENTITY_FLAGS, (byte)0);
     }
 
@@ -385,10 +386,13 @@ public abstract class ChangedEntity extends Monster {
             case CROUCHING -> EntityDimensions.scalable(core.width, core.height - 0.3f);
             case DYING -> EntityDimensions.fixed(0.2f, 0.2f);
             default -> core;
-        }).scale(getBasicPlayerInfo().getSize() * this.getScale());
+        }).scale(getBasicPlayerInfo().getSize(this) * this.getScale());
     }
 
-    public abstract LatexType getLatexType();
+    public LatexType getLatexType() {
+        return ChangedLatexTypes.NONE.get();
+    }
+
     public abstract TransfurMode getTransfurMode();
 
     public boolean isPreventingPlayerRest(Player player) {
@@ -400,16 +404,6 @@ public abstract class ChangedEntity extends Monster {
             return 0.83F;
         else
             return 0.93F;
-    }
-
-    public static boolean isDarkEnoughToSpawn(ServerLevelAccessor world, BlockPos pos, Random random) {
-        if (world.getBrightness(LightLayer.SKY, pos) > random.nextInt(50)) {
-            return false;
-        } else if (world.getBrightness(LightLayer.BLOCK, pos) > 0) {
-            return false;
-        } else {
-            return getLevelBrightnessAt(world.getLevel(), pos) <= random.nextInt(10);
-        }
     }
 
     protected static boolean checkSpawnBlock(ServerLevelAccessor world, MobSpawnType reason, BlockPos pos) {
@@ -434,8 +428,6 @@ public abstract class ChangedEntity extends Monster {
         if (!world.getLevel().getGameRules().getBoolean(ChangedGameRules.RULE_AUTOMATIC_SPAWN_ENTITY))
             return false;
         if (pos.getY() < world.getLevel().getSeaLevel() - 10)
-            return false;
-        if (random.nextFloat() > 0.5f)
             return false;
         if (!checkSpawnBlock(world, reason, pos))
             return false;
@@ -481,8 +473,17 @@ public abstract class ChangedEntity extends Monster {
         }
     }
 
+    protected static double computeStepHeightOffset(double intendedStepHeight) {
+        return intendedStepHeight - 0.6;
+    }
+
     public static AttributeSupplier.Builder createLatexAttributes() {
-        return Monster.createMonsterAttributes().add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 3.0D);
+        return Monster.createMonsterAttributes().add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 3.0D)
+                .add(ChangedAttributes.SPRINT_SPEED.get(), 1.0D)
+                .add(ChangedAttributes.SNEAK_SPEED.get(), 1.0D)
+                .add(ChangedAttributes.AIR_CAPACITY.get(), 15.0)
+                .add(ChangedAttributes.JUMP_STRENGTH.get(), 1.0D)
+                .add(ChangedAttributes.FALL_RESISTANCE.get(), 1.0D);
     }
 
     protected void setAttributes(AttributeMap attributes) {
@@ -492,11 +493,17 @@ public abstract class ChangedEntity extends Monster {
         attributes.getInstance(ForgeMod.SWIM_SPEED.get()).setBaseValue(1.0);
         attributes.getInstance(Attributes.ATTACK_DAMAGE).setBaseValue(3.0);
         attributes.getInstance(Attributes.ARMOR).setBaseValue(4.0);
+        attributes.getInstance(ForgeMod.STEP_HEIGHT_ADDITION.get()).setBaseValue(computeStepHeightOffset(0.7));
+        attributes.getInstance(ChangedAttributes.SPRINT_SPEED.get()).setBaseValue(1.0D);
+        attributes.getInstance(ChangedAttributes.SNEAK_SPEED.get()).setBaseValue(1.0D);
+        attributes.getInstance(ChangedAttributes.AIR_CAPACITY.get()).setBaseValue(15.0);
+        attributes.getInstance(ChangedAttributes.JUMP_STRENGTH.get()).setBaseValue(1.0);
+        attributes.getInstance(ChangedAttributes.FALL_RESISTANCE.get()).setBaseValue(1.0);
     }
 
     @Override
-    public @NotNull Packet<?> getAddEntityPacket() {
-        return NetworkHooks.getEntitySpawningPacket(this);
+    public @NotNull Packet<ClientGamePacketListener> getAddEntityPacket() {
+        return (Packet<ClientGamePacketListener>) NetworkHooks.getEntitySpawningPacket(this);
     }
 
     protected static int getLevelBrightnessAt(Level level, BlockPos pos) {
@@ -520,28 +527,25 @@ public abstract class ChangedEntity extends Monster {
                 return false;
         }
 
-        TransfurVariant<?> playerVariant = TransfurVariant.getEntityVariant(livingEntity);
+        TransfurVariant<?> targetVariant = TransfurVariant.getEntityVariant(livingEntity);
         TransfurVariant<?> selfVariant = getSelfVariant();
-        if (TransfurVariant.getPublicTransfurVariants().anyMatch(possibleFusion ->
-                possibleFusion.isFusionOf(selfVariant, livingEntity.getClass()) ||
-                possibleFusion.isFusionOf(playerVariant, this.getClass())
-        ))
-            return true;
+        if (ChangedFusions.INSTANCE.getFusionDefinitions().anyMatch(fusionDefinition ->
+                fusionDefinition.matches(selfVariant, livingEntity.getClass()) ||
+                fusionDefinition.matches(targetVariant, this.getClass()) ||
+                fusionDefinition.matches(selfVariant, targetVariant))) { // Fusion definition exists for target and this entity
+            if (!(livingEntity instanceof Player player))
+                return true; // Always fuse with NPCs
+            if (livingEntity.level.getGameRules().getBoolean(ChangedGameRules.RULE_NPC_WANT_FUSE_PLAYER)) {
+                var instance = ProcessTransfur.getPlayerTransfurVariant(player);
+                if (instance == null || instance.ageAsVariant < livingEntity.level.getGameRules().getInt(ChangedGameRules.RULE_FUSABILITY_DURATION_PLAYER))
+                    return true;
+            }
+        }
+
         if (!livingEntity.getType().is(ChangedTags.EntityTypes.HUMANOIDS) && !(livingEntity instanceof ChangedEntity))
             return false;
-        if (getLatexType().isHostileTo(LatexType.getEntityLatexType(livingEntity)))
-            return true;
-        if (livingEntity instanceof Player player) {
-            if (!livingEntity.level.getGameRules().getBoolean(ChangedGameRules.RULE_NPC_WANT_FUSE_PLAYER))
-                return false;
-            var instance = ProcessTransfur.getPlayerTransfurVariant(player);
-            if (instance != null && instance.ageAsVariant > livingEntity.level.getGameRules().getInt(ChangedGameRules.RULE_FUSABILITY_DURATION_PLAYER))
-                return false;
-        }
-        if (TransfurVariant.getPublicTransfurVariants().anyMatch(possibleFusion -> possibleFusion.isFusionOf(selfVariant, playerVariant)))
-            return true;
 
-        return false;
+        return getLatexType().isHostileTo(LatexType.getEntityLatexType(livingEntity));
     }
 
     public TransfurContext getReplicateContext() {
@@ -647,21 +651,26 @@ public abstract class ChangedEntity extends Monster {
                     possibleFusion = List.of();
             }
 
+            if (entity instanceof Player && !source.isPlayer()) {
+                if (!level.getGameRules().getBoolean(ChangedGameRules.RULE_NPC_WANT_FUSE_PLAYER))
+                    possibleFusion = List.of();
+            }
+
             if (!possibleFusion.isEmpty()) {
                 TransfurVariant<?> fusionVariant = Util.getRandom(possibleFusion, random);
 
                 if (underlyingPlayer != null) {
                     if (entity instanceof Player pvpLoser) {
                         ProcessTransfur.changeTransfur(underlyingPlayer, fusionVariant);
-                        ChangedSounds.broadcastSound(underlyingPlayer, ChangedSounds.POISON, 1f, 1f);
+                        ChangedSounds.broadcastSound(underlyingPlayer, ChangedSounds.LATEX_FUSE_ENTITY, 1f, 1f);
                         ProcessTransfur.killPlayerByAbsorption(pvpLoser, underlyingPlayer);
                     } else {
                         ProcessTransfur.changeTransfur(underlyingPlayer, fusionVariant);
-                        ChangedSounds.broadcastSound(underlyingPlayer, ChangedSounds.POISON, 1f, 1f);
+                        ChangedSounds.broadcastSound(underlyingPlayer, ChangedSounds.LATEX_FUSE_ENTITY, 1f, 1f);
                         entity.discard();
                     }
                 } else {
-                    ChangedSounds.broadcastSound(ProcessTransfur.changeTransfur(entity, fusionVariant), ChangedSounds.POISON, 1f, 1f);
+                    ChangedSounds.broadcastSound(ProcessTransfur.changeTransfur(entity, fusionVariant), ChangedSounds.LATEX_FUSE_ENTITY, 1f, 1f);
                     this.discard();
                 }
 
@@ -682,6 +691,11 @@ public abstract class ChangedEntity extends Monster {
             { // Check if attacker can't fuse
                 var instance = ProcessTransfur.getPlayerTransfurVariant(underlyingPlayer);
                 if (instance != null && instance.ageAsVariant > level.getGameRules().getInt(ChangedGameRules.RULE_FUSABILITY_DURATION_PLAYER))
+                    possibleMobFusions.clear();
+            }
+
+            if (entity instanceof Player && !source.isPlayer()) {
+                if (!level.getGameRules().getBoolean(ChangedGameRules.RULE_NPC_WANT_FUSE_PLAYER))
                     possibleMobFusions.clear();
             }
         }
@@ -742,9 +756,9 @@ public abstract class ChangedEntity extends Monster {
         entity.knockback((double)0.4F, d1, d0);
 
         if(entity instanceof Player)
-            ChangedSounds.broadcastSound(entity, ChangedSounds.BLOW1, 1, entity.level.random.nextFloat() * 0.1F + 0.9F);
+            ChangedSounds.broadcastSound(entity, ChangedSounds.TRANSFUR_HURT, 1, entity.level.random.nextFloat() * 0.1F + 0.9F);
 
-        entity.hurt(ChangedDamageSources.entityTransfur(source), 0.0F);
+        entity.hurt(ChangedDamageSources.entityTransfur(entity.level.registryAccess(), source), 0.0F);
         boolean doesAbsorption = source.wantAbsorption();
         if (!possibleMobFusions.isEmpty())
             doesAbsorption = true;
@@ -768,7 +782,7 @@ public abstract class ChangedEntity extends Monster {
             return false;
 
         float damage = (float)maybeGetUnderlying().getAttributeValue(ChangedAttributes.TRANSFUR_DAMAGE.get());
-        damage = ProcessTransfur.difficultyAdjustTransfurAmount(entity.level.getDifficulty(), damage);
+        damage = ProcessTransfur.difficultyAdjustTransfurAmount(entity.level.getDifficulty(), damage, abstractChangedEntity);
         TransfurVariant<?> variant = this.getTransfurVariant();
 
         if (entity instanceof LivingEntity livingEntity) {
@@ -852,6 +866,9 @@ public abstract class ChangedEntity extends Monster {
     }
     
     public void mirrorLiving(LivingEntity player) {
+        if (player.level != this.level)
+            this.level = player.level;
+
         TransfurVariantInstance.syncEntityPosRotWithEntity(this, player);
         
         this.swingingArm = player.swingingArm;
@@ -1113,7 +1130,7 @@ public abstract class ChangedEntity extends Monster {
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         if (tag.contains("HairStyle"))
-            hairStyle = ChangedRegistry.HAIR_STYLE.get().getValue(tag.getInt("HairStyle"));
+            hairStyle = ChangedRegistry.HAIR_STYLE.getValue(tag.getInt("HairStyle"));
         if (tag.contains("LocalVariantInfo")) {
             BasicPlayerInfo info = new BasicPlayerInfo();
             info.load(tag.getCompound("LocalVariantInfo"));
@@ -1126,7 +1143,7 @@ public abstract class ChangedEntity extends Monster {
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.putInt("HairStyle", ChangedRegistry.HAIR_STYLE.get().getID(hairStyle));
+        tag.putInt("HairStyle", ChangedRegistry.HAIR_STYLE.getID(hairStyle));
         {
             var bpi = new CompoundTag();
             this.entityData.get(DATA_LOCAL_VARIANT_INFO).save(bpi);
@@ -1157,7 +1174,15 @@ public abstract class ChangedEntity extends Monster {
 
     }
 
-    public void onReplicateOther(IAbstractChangedEntity other, TransfurVariant<?> variant) {
+    public void onReplicateOther(IAbstractChangedEntity other) {
+
+    }
+
+    public void onSuitOther(IAbstractChangedEntity other) {
+
+    }
+
+    public void copyTraitsFrom(IAbstractChangedEntity entity) {
 
     }
 
@@ -1170,7 +1195,8 @@ public abstract class ChangedEntity extends Monster {
     }
 
     public UseItemMode getItemUseMode() {
-        var instance = IAbstractChangedEntity.forEither(this.maybeGetUnderlying()).getTransfurVariantInstance();
+        var instance = IAbstractChangedEntity.forEitherSafe(this.maybeGetUnderlying())
+                .map(IAbstractChangedEntity::getTransfurVariantInstance).orElse(null);
         if (instance != null)
             return instance.getItemUseMode();
         var grabAbility = getAbilityInstance(ChangedAbilities.GRAB_ENTITY_ABILITY.get());
@@ -1190,5 +1216,11 @@ public abstract class ChangedEntity extends Monster {
 
     public boolean isItemAllowedInSlot(ItemStack stack, EquipmentSlot slot) {
         return true;
+    }
+
+    @Override
+    public int getMaxAirSupply() {
+        // This function is called in the ctor of Entity, so attributes aren't ready yet.
+        return this.getAttributes() == null ? 300 : Math.round(20f * (float) this.getAttributes().getValue(ChangedAttributes.AIR_CAPACITY.get()));
     }
 }

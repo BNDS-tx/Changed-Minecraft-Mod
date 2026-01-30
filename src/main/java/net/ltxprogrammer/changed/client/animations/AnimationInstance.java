@@ -1,6 +1,5 @@
 package net.ltxprogrammer.changed.client.animations;
 
-import com.mojang.math.Vector3f;
 import net.ltxprogrammer.changed.client.ClientLivingEntityExtender;
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel;
 import net.ltxprogrammer.changed.client.tfanimations.TransfurAnimator;
@@ -18,11 +17,13 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class AnimationInstance {
     private final AnimationDefinition animation;
@@ -137,6 +138,32 @@ public class AnimationInstance {
         part.loadPose(TransfurAnimator.lerpPartPose(part.storePose(), base, transition));
     }
 
+    private PartPose animateLimb(List<AnimationChannel> channelList, PartPose part, PartPose base, float time, float transition) {
+        AtomicReference<PartPose> partPoseRef = new AtomicReference<>(part);
+
+        channelList.forEach(channel -> {
+            if (channel.isDone(time))
+                return;
+
+            PartPose preStore = channel.animate(animation, partPoseRef.get(), time);
+            if (channel.getTarget() == AnimationChannel.Target.POSITION) {
+                partPoseRef.set(PartPose.offsetAndRotation(
+                        preStore.x + base.x,
+                        preStore.y + base.y,
+                        preStore.z + base.z,
+                        preStore.xRot,
+                        preStore.yRot,
+                        preStore.zRot));
+            }
+
+            else {
+                partPoseRef.set(preStore);
+            }
+        });
+
+        return TransfurAnimator.lerpPartPose(partPoseRef.getAcquire(), base, transition);
+    }
+
     public float computeTransition(float partialTicks) {
         float time = Mth.lerp(partialTicks, this.timeO, this.time);
 
@@ -181,6 +208,28 @@ public class AnimationInstance {
         animation.channels.forEach((limb, either) -> {
             animateLimb(animation.channels.get(limb), limb.getModelPart(model, entity), baselineAH.get(limb), time, transition);
         });
+    }
+
+    public PartPose animatePartAs(Limb limb, PartPose modelPart, float partialTicks) {
+        final float time = computeTime(partialTicks);
+        final float transition = computeTransition(partialTicks);
+
+        var channels = animation.channels.get(ModelPartIdentifier.forLimb(limb));
+        if (channels == null)
+            return modelPart;
+
+        return animateLimb(channels, modelPart, modelPart, time, transition);
+    }
+
+    public PartPose animatePartAs(ModelPartIdentifier limb, PartPose modelPart, float partialTicks) {
+        final float time = computeTime(partialTicks);
+        final float transition = computeTransition(partialTicks);
+
+        var channels = animation.channels.get(limb);
+        if (channels == null)
+            return modelPart;
+
+        return animateLimb(channels, modelPart, modelPart, time, transition);
     }
 
     private void playSounds(float timeO, float time) {

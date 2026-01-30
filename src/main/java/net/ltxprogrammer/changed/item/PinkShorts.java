@@ -5,8 +5,10 @@ import net.ltxprogrammer.changed.entity.TransfurCause;
 import net.ltxprogrammer.changed.entity.TransfurContext;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.init.ChangedEntities;
+import net.ltxprogrammer.changed.init.ChangedSounds;
 import net.ltxprogrammer.changed.init.ChangedTransfurVariants;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -23,7 +25,7 @@ public class PinkShorts extends ClothingItem implements LatexFusingItem {
 
     @Override
     public TransfurVariant<?> getFusionVariant(TransfurVariant<?> currentVariant, LivingEntity livingEntity, ItemStack itemStack) {
-        if (livingEntity.level.isClientSide)
+        if (livingEntity.level().isClientSide)
             return currentVariant;
 
         if (currentVariant.is(ChangedTransfurVariants.LATEX_DEER))
@@ -32,14 +34,14 @@ public class PinkShorts extends ClothingItem implements LatexFusingItem {
             return ChangedTransfurVariants.LATEX_PINK_YUIN_DRAGON.get();
         else {
             if (livingEntity.getRandom().nextBoolean()) {
-                var newEntity = currentVariant.getEntityType().create(livingEntity.level);
+                var newEntity = currentVariant.getEntityType().create(livingEntity.level());
                 newEntity.moveTo(livingEntity.position());
-                livingEntity.level.addFreshEntity(newEntity);
+                livingEntity.level().addFreshEntity(newEntity);
                 return ChangedTransfurVariants.LATEX_PINK_WYVERN.get();
             } else {
-                var wyvern = ChangedEntities.LATEX_PINK_WYVERN.get().create(livingEntity.level);
+                var wyvern = ChangedEntities.LATEX_PINK_WYVERN.get().create(livingEntity.level());
                 wyvern.moveTo(livingEntity.position());
-                livingEntity.level.addFreshEntity(wyvern);
+                livingEntity.level().addFreshEntity(wyvern);
                 return currentVariant; // Return current to consume pants (Yummy)
             }
         }
@@ -54,5 +56,15 @@ public class PinkShorts extends ClothingItem implements LatexFusingItem {
             return;
         if (ProcessTransfur.progressTransfur(wearer, 3.0f, ChangedTransfurVariants.LATEX_PINK_WYVERN.get(), TransfurContext.hazard(TransfurCause.PINK_SHORTS)))
             itemStack.shrink(1);
+    }
+
+    @Override
+    public SoundEvent getEquipSound(ItemStack itemStack) {
+        return ChangedSounds.SHORTS_EQUIP.get();
+    }
+
+    @Override
+    public SoundEvent getBreakSound(ItemStack itemStack) {
+        return ChangedSounds.SHORTS_BREAK.get();
     }
 }

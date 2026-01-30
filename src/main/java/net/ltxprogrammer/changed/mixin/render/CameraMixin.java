@@ -3,7 +3,6 @@ package net.ltxprogrammer.changed.mixin.render;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.mojang.math.Vector3f;
 import net.ltxprogrammer.changed.ability.GrabEntityAbility;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.block.SeatableBlock;
@@ -27,6 +26,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -55,7 +55,7 @@ public abstract class CameraMixin implements CameraExtender {
 
     @Unique
     private <T extends ChangedEntity> void adjustAnimForEntity(T changedEntity, float partialTicks) {
-        if (Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(changedEntity) instanceof AdvancedHumanoidRenderer<?,?,?> latexHumanoid &&
+        if (Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(changedEntity) instanceof AdvancedHumanoidRenderer<?,?> latexHumanoid &&
                 latexHumanoid.getModel(changedEntity) instanceof AdvancedHumanoidModelInterface AdvancedHumanoidModel) {
             boolean shouldSit = changedEntity.isPassenger() && (changedEntity.getVehicle() != null && changedEntity.getVehicle().shouldRiderSit());
             float f = Mth.rotLerp(partialTicks, changedEntity.yBodyRotO, changedEntity.yBodyRot);
@@ -90,8 +90,8 @@ public abstract class CameraMixin implements CameraExtender {
             float limbSwingAmount = 0.0F;
             float limbSwing = 0.0F;
             if (!shouldSit && changedEntity.isAlive()) {
-                limbSwingAmount = Mth.lerp(partialTicks, changedEntity.animationSpeedOld, changedEntity.animationSpeed);
-                limbSwing = changedEntity.animationPosition - changedEntity.animationSpeed * (1.0F - partialTicks);
+                limbSwingAmount = changedEntity.walkAnimation.speed(partialTicks);
+                limbSwing = changedEntity.walkAnimation.position(partialTicks);
                 if (changedEntity.isBaby()) {
                     limbSwing *= 3.0F;
                 }

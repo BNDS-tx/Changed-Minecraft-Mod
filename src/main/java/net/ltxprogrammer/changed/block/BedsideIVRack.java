@@ -27,7 +27,6 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -46,7 +45,7 @@ public class BedsideIVRack extends AbstractCustomShapeTallBlock implements Simpl
     public static final VoxelShape SHAPE_WHOLE = Shapes.or(SHAPE_BASE, SHAPE_STEM, SHAPE_TOP);
 
     public BedsideIVRack() {
-        super(BlockBehaviour.Properties.of(Material.METAL).sound(SoundType.METAL).dynamicShape().strength(3.0F, 5.0F).isSuffocating(ChangedBlocks::never).isViewBlocking(ChangedBlocks::never));
+        super(BlockBehaviour.Properties.of().sound(SoundType.METAL).dynamicShape().strength(3.0F, 5.0F).isSuffocating(ChangedBlocks::never).isViewBlocking(ChangedBlocks::never));
         this.registerDefaultState(this.stateDefinition.any().setValue(HALF, DoubleBlockHalf.LOWER).setValue(WATERLOGGED, false).setValue(FULL, false));
     }
 
@@ -68,16 +67,6 @@ public class BedsideIVRack extends AbstractCustomShapeTallBlock implements Simpl
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity entity, ItemStack itemStack) {
         BlockPos blockpos = pos.above();
         level.setBlock(blockpos, this.defaultBlockState().setValue(HALF, DoubleBlockHalf.UPPER).setValue(FACING, state.getValue(FACING)), 3);
-    }
-
-    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-        if (state.getValue(HALF) != DoubleBlockHalf.UPPER) {
-            return super.canSurvive(state, level, pos);
-        } else {
-            BlockState blockstate = level.getBlockState(pos.below());
-            if (state.getBlock() != this) return super.canSurvive(state, level, pos); //Forge: This function is called during world gen and placement, before this block is set, so if we are not 'here' then assume it's the pre-check.
-            return blockstate.is(this) && blockstate.getValue(HALF) == DoubleBlockHalf.LOWER;
-        }
     }
 
     public PushReaction getPistonPushReaction(BlockState p_52814_) {
@@ -115,27 +104,6 @@ public class BedsideIVRack extends AbstractCustomShapeTallBlock implements Simpl
     @Override
     public FluidState getFluidState(BlockState state) {
         return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(state);
-    }
-
-    public void playerWillDestroy(Level p_52878_, BlockPos p_52879_, BlockState p_52880_, Player p_52881_) {
-        if (!p_52878_.isClientSide) {
-            if (p_52881_.isCreative()) {
-                preventCreativeDropFromBottomPart(p_52878_, p_52879_, p_52880_, p_52881_);
-            } else {
-                dropResources(p_52880_, p_52878_, p_52879_, (BlockEntity)null, p_52881_, p_52881_.getMainHandItem());
-            }
-        }
-
-        switch (p_52880_.getValue(HALF)) {
-            case LOWER -> p_52878_.setBlock(p_52879_.above(), Blocks.AIR.defaultBlockState(), 3);
-            case UPPER -> p_52878_.setBlock(p_52879_.below(), Blocks.AIR.defaultBlockState(), 3);
-        }
-
-        super.playerWillDestroy(p_52878_, p_52879_, p_52880_, p_52881_);
-    }
-
-    public void playerDestroy(Level p_52865_, Player p_52866_, BlockPos p_52867_, BlockState p_52868_, @Nullable BlockEntity p_52869_, ItemStack p_52870_) {
-        super.playerDestroy(p_52865_, p_52866_, p_52867_, Blocks.AIR.defaultBlockState(), p_52869_, p_52870_);
     }
 
     @Override

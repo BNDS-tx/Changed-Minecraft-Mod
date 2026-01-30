@@ -468,7 +468,6 @@ public class ExoskeletonModel extends EntityModel<Exoskeleton> implements Headed
         public ResourceLocation getTexture(LivingEntity wearer, ItemStack itemStack) {
             if (itemStack.getDamageValue() >= itemStack.getMaxDamage() - 1)
                 return VISOR_BLANK;
-
             if (EntityUtil.maybeGetOverlaying(wearer).getType().is(ChangedTags.EntityTypes.BENIGN_LATEXES)) {
                 return wearer.tickCount % 12 < 6 ? VISOR_HYPNO.get(0) : VISOR_HYPNO.get(1);
             }

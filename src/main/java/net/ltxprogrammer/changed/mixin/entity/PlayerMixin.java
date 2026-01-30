@@ -1,15 +1,16 @@
 package net.ltxprogrammer.changed.mixin.entity;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.ability.AbstractAbility;
+import net.ltxprogrammer.changed.ability.GrabEntityAbilityInstance;
+import net.ltxprogrammer.changed.ability.tree.AbilityTreeInstance;
 import net.ltxprogrammer.changed.block.WhiteLatexTransportInterface;
 import net.ltxprogrammer.changed.data.AccessorySlots;
 import net.ltxprogrammer.changed.entity.*;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
-import net.ltxprogrammer.changed.init.ChangedAbilities;
-import net.ltxprogrammer.changed.init.ChangedAttributes;
-import net.ltxprogrammer.changed.init.ChangedDamageSources;
-import net.ltxprogrammer.changed.init.ChangedSounds;
+import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.network.packet.SyncMoversPacket;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.CameraUtil;
@@ -25,13 +26,17 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.ForgeMod;
+import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
@@ -67,7 +72,7 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
     protected void tryToStartFallFlying(CallbackInfoReturnable<Boolean> ci) {
         Player player = (Player)(Object)this;
         if (latexVariant != null && latexVariant.getParent().canGlide) {
-            if (!player.isOnGround() && !player.isFallFlying() && !player.isInWater() && !player.hasEffect(MobEffects.LEVITATION)) {
+            if (!player.onGround() && !player.isFallFlying() && !player.isInWater() && !player.hasEffect(MobEffects.LEVITATION)) {
                 player.startFallFlying();
                 ci.setReturnValue(true);
                 ci.cancel();
@@ -97,21 +102,27 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
 
     @Inject(method = "getHurtSound", at = @At("HEAD"), cancellable = true)
     protected void getHurtSound(DamageSource source, CallbackInfoReturnable<SoundEvent> ci) {
-        if (source instanceof ChangedDamageSources.TransfurDamageSource)
-            ci.setReturnValue(ChangedSounds.BLOW1);
+        if (source.is(ChangedTags.DamageTypes.IS_TRANSFUR))
+            ci.setReturnValue(ChangedSounds.TRANSFUR_HURT.get());
     }
 
     @Inject(method = "getSwimSound", at = @At("HEAD"), cancellable = true)
     protected void getSwimSound(CallbackInfoReturnable<SoundEvent> ci) {
         if (WhiteLatexTransportInterface.isEntityInWhiteLatex(this)) {
-            ci.setReturnValue(ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("block.slime_block.step")));
+            ci.setReturnValue(ForgeRegistries.SOUND_EVENTS.getValue(ResourceLocation.parse("block.slime_block.step")));
             ci.cancel();
         }
     }
 
     @Inject(method = "createAttributes", at = @At("RETURN"))
     private static void addChangedAttributes(CallbackInfoReturnable<AttributeSupplier.Builder> cir) {
-        cir.getReturnValue().add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 3.0D);
+        cir.getReturnValue().add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 3.0D)
+                .add(ChangedAttributes.GRAB_STRUGGLE_STRENGTH.get(), GrabEntityAbilityInstance.GRAB_STRENGTH_DECAY_PLAYER)
+                .add(ChangedAttributes.SPRINT_SPEED.get(), 1.0D)
+                .add(ChangedAttributes.SNEAK_SPEED.get(), 1.0D)
+                .add(ChangedAttributes.AIR_CAPACITY.get(), 15.0)
+                .add(ChangedAttributes.JUMP_STRENGTH.get(), 1.0D)
+                .add(ChangedAttributes.FALL_RESISTANCE.get(), 1.0D);
     }
 
     @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
@@ -136,7 +147,7 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
 
     @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;doPostDamageEffects(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/Entity;)V"))
     public void accessoryAttack(Entity target, CallbackInfo ci) {
-        if (!level.isClientSide)
+        if (!level().isClientSide)
             AccessorySlots.getForEntity((LivingEntity)(Object)this).ifPresent(slots -> slots.onEntityAttack(InteractionHand.MAIN_HAND, target));
     }
 
@@ -163,6 +174,8 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
     public int paleExposure;
     @Unique
     public BasicPlayerInfo basicPlayerInfo = new BasicPlayerInfo();
+    @Unique
+    public AbilityTreeInstance abilityTree = new AbilityTreeInstance();
 
     @Override
     public TransfurVariantInstance<?> getTransfurVariant() {
@@ -260,7 +273,7 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
         var ability = AbstractAbility.getAbilityInstance(grabbedBy, ChangedAbilities.GRAB_ENTITY_ABILITY.get());
         if (ability != null && !ability.grabbedHasControl) {
             this.noPhysics = true;
-            this.onGround = false;
+            this.setOnGround(false);
         }
     }
 
@@ -282,8 +295,10 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
             this.playerMover.onRemove((Player)(Object)this);
 
         this.playerMover = playerMover;
-        if (!level.isClientSide)
-            Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> this), SyncMoversPacket.Builder.of((Player)(Object)this));
+        if (this.playerMover != null)
+            this.playerMover.onAdd((Player)(Object)this);
+        if (!level().isClientSide)
+            Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> this), SyncMoversPacket.Builder.of((Player)(Object)this, false));
     }
 
     @Override
@@ -294,5 +309,26 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
     @Override
     public void setBasicPlayerInfo(BasicPlayerInfo basicPlayerInfo) {
         this.basicPlayerInfo = basicPlayerInfo;
+    }
+
+    @Override
+    public AbilityTreeInstance getAbilityTree() {
+        return abilityTree;
+    }
+
+    @WrapOperation(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;isEmpty()Z"))
+    public boolean canSwimInAir(FluidState instance, Operation<Boolean> original) {
+        return !(this.getTransfurVariant() != null && this.getTransfurVariant().getChangedEntity().canSwimInFluidType(instance.getFluidType())) &&
+                original.call(instance);
+    }
+
+    @Override
+    public boolean canStartSwimming() {
+        return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().canStartSwimming() : super.canStartSwimming();
+    }
+
+    @Override
+    public boolean canSwimInFluidType(FluidType type) {
+        return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().canSwimInFluidType(type) : super.canSwimInFluidType(type);
     }
 }

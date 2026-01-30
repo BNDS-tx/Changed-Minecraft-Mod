@@ -1,10 +1,17 @@
 package net.ltxprogrammer.changed.mixin.item;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.item.SpecializedItemRendering;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.ItemModelShaper;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -14,11 +21,14 @@ import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.model.ItemLayerModel;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -30,77 +40,40 @@ import java.util.Map;
 
 @Mixin(ItemRenderer.class)
 public abstract class ItemRendererMixin implements ResourceManagerReloadListener {
-    @Unique private static final String TAGGED_SPECIAL_RENDER = "__tagged_special_render";
-    @Unique private static final Map<ItemStack, LivingEntity> ENTITY_CACHE = new HashMap<>();
-    @Unique private static final Map<ItemStack, ItemStack> ORIGINAL_STACK_CACHE = new HashMap<>();
+    @Shadow public abstract ItemModelShaper getItemModelShaper();
 
-    @Inject(method = "renderStatic(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/client/renderer/block/model/ItemTransforms$TransformType;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/world/level/Level;III)V",
-            at = @At("HEAD"))
-    public void renderStaticPre(@Nullable LivingEntity entity, ItemStack itemStack, ItemTransforms.TransformType type, boolean p_174246_, PoseStack pose, MultiBufferSource buffers, @Nullable Level level, int p_174250_, int p_174251_, int p_174252_, CallbackInfo callback) {
-        if (entity == null) return;
-        if (ENTITY_CACHE.size() > 32) {
-            ENTITY_CACHE.clear();
-            Changed.LOGGER.error("Memory leak detected in ItemRendererMixin");
-        }
-        ENTITY_CACHE.put(itemStack, entity); // Cache entity for item holder to catch overrides later
+    @Shadow @Final private Minecraft minecraft;
+
+    @Unique private ItemStack cachedStack;
+    @Unique private Level cachedLevel;
+    @Unique private LivingEntity cachedEntity;
+    @Unique private int cachedSeed;
+
+    @WrapMethod(method = "getModel")
+    public BakedModel cacheOverrideParams(ItemStack stack, Level level, LivingEntity entity, int seed, Operation<BakedModel> original) {
+        cachedStack = stack;
+        cachedLevel = level;
+        cachedEntity = entity;
+        cachedSeed = seed;
+        return original.call(stack, level, entity, seed);
     }
 
-    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    public void renderPre(ItemStack itemStack, ItemTransforms.TransformType type, boolean leftHand, PoseStack pose,
-                       MultiBufferSource buffers, int packedLight, int packedOverlay, BakedModel model, CallbackInfo callback) {
-        if (itemStack.getTag() != null && itemStack.getTag().contains(TAGGED_SPECIAL_RENDER))
-            return;
-        if (!(itemStack.getItem() instanceof SpecializedItemRendering special))
-            return; // Don't override
-        ItemRenderer self = (ItemRenderer)(Object)this;
-        model = self.getItemModelShaper().getModelManager().getModel(special.getModelLocation(itemStack, type));
+    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/ForgeHooksClient;handleCameraTransforms(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/resources/model/BakedModel;Lnet/minecraft/world/item/ItemDisplayContext;Z)Lnet/minecraft/client/resources/model/BakedModel;"))
+    public BakedModel getOverriddenModel(PoseStack poseStack, BakedModel model, ItemDisplayContext cameraTransformType, boolean applyLeftHandTransform, Operation<BakedModel> original,
+                                        @Local(argsOnly = true) ItemStack stack) {
+        if (stack.getItem() instanceof SpecializedItemRendering special) {
+            var modelName = special.getModelLocation(stack, cameraTransformType);
+            if (modelName != null) {
+                var newModel = this.getItemModelShaper().getModelManager().getModel(modelName);
+                if (newModel != model && cachedStack == stack) {
+                    ClientLevel clientlevel = cachedLevel instanceof ClientLevel ? (ClientLevel) cachedLevel : null;
+                    newModel = newModel.getOverrides().resolve(newModel, stack, clientlevel, cachedEntity, cachedSeed);
+                }
 
-        // Fetch model overrides
-        LivingEntity holder = ENTITY_CACHE.remove(itemStack);
-        model = model.getOverrides().resolve(model, itemStack, Minecraft.getInstance().level, holder, 0);
-
-        // Recursion lock
-        ItemStack nStack = itemStack.copy();
-        nStack.getOrCreateTag().putBoolean(TAGGED_SPECIAL_RENDER, true);
-        ENTITY_CACHE.put(nStack, holder);
-        if (ORIGINAL_STACK_CACHE.size() > 32) {
-            ORIGINAL_STACK_CACHE.clear();
-            Changed.LOGGER.error("Memory leak detected in ItemRendererMixin");
+                model = newModel;
+            }
         }
-        ORIGINAL_STACK_CACHE.put(nStack, itemStack);
-        if (model != null)
-            self.render(nStack, type, leftHand, pose, buffers, packedLight, packedOverlay, model);
-        callback.cancel();
-    }
 
-    @Inject(method = "render", at = @At("RETURN"))
-    public void renderPost(ItemStack itemStack, ItemTransforms.TransformType type, boolean leftHand, PoseStack pose,
-                       MultiBufferSource buffers, int packedLight, int packedOverlay, BakedModel model, CallbackInfo callback) {
-        LivingEntity holder = ENTITY_CACHE.remove(itemStack);
-        ItemStack original = ORIGINAL_STACK_CACHE.remove(itemStack);
-        if (itemStack.getTag() == null || !itemStack.getTag().contains(TAGGED_SPECIAL_RENDER))
-            return;
-        if (!(itemStack.getItem() instanceof SpecializedItemRendering special))
-            return;
-        ModelResourceLocation location = special.getEmissiveModelLocation(itemStack, type);
-        if (location == null)
-            return;
-        ItemRenderer self = (ItemRenderer)(Object)this;
-        model = self.getItemModelShaper().getModelManager().getModel(location);
-        if (original != null)
-            model = model.getOverrides().resolve(model, original, Minecraft.getInstance().level, holder, 0);
-
-        pose.pushPose();
-        model = net.minecraftforge.client.ForgeHooksClient.handleCameraTransforms(pose, model, type, leftHand);
-
-        pose.translate(-0.5D, -0.5D, -0.5D);
-
-        RenderType renderType = ItemLayerModel.getLayerRenderType(true);
-        ForgeHooksClient.setRenderType(renderType); // needed for compatibility with MultiLayerModels
-        VertexConsumer vertexBuilder = ItemRenderer.getFoilBufferDirect(buffers, renderType, true, itemStack.hasFoil());
-        self.renderModelLists(model, itemStack, LightTexture.FULL_BRIGHT, packedOverlay, pose, vertexBuilder);
-        ForgeHooksClient.setRenderType(null);
-
-        pose.popPose();
+        return original.call(poseStack, model, cameraTransformType, applyLeftHandTransform);
     }
 }

@@ -39,11 +39,11 @@ public class UseAbilityGoal extends Goal {
         var selected = getSelectedAbility();
         if (selected != null && (selected.getController().isCoolingDown() || !abilities.get(selectedAbility).getFirst().test(selected))) {
             selectedAbility = null;
-            selected.getUseType().check(false, selected.getController().exchangeKeyState(false), selected.getController());
+            selected.getUseType().check(false, selected.getController().exchangeKeyState(false), true, selected.getController());
         }
 
         if (selectedAbility == null) {
-            CollectionUtil.shuffle(abilities.entrySet().stream(), latex.level.random).forEach(entry -> {
+            CollectionUtil.shuffle(abilities.entrySet().stream(), latex.level().random).forEach(entry -> {
                 if (selectedAbility == null && entry.getValue().getFirst().test(entry.getValue().getSecond()) &&
                     !entry.getValue().getSecond().getController().isCoolingDown()) {
                     selectedAbility = entry.getKey();
@@ -65,7 +65,7 @@ public class UseAbilityGoal extends Goal {
 
         if (selected != null) {
             var controller = selected.getController();
-            selected.getUseType().check(true, controller.exchangeKeyState(true), controller);
+            selected.getUseType().check(true, controller.exchangeKeyState(true), true, controller);
         }
     }
 }

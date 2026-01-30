@@ -1,20 +1,20 @@
 package net.ltxprogrammer.changed;
 
-import net.ltxprogrammer.changed.client.ChangedClient;
-import net.ltxprogrammer.changed.client.EventHandlerClient;
-import net.ltxprogrammer.changed.client.RecipeCategories;
+import net.ltxprogrammer.changed.ability.tree.AbilityTrees;
+import net.ltxprogrammer.changed.client.*;
 import net.ltxprogrammer.changed.client.latexparticles.LatexParticleType;
 import net.ltxprogrammer.changed.data.BuiltinRepositorySource;
+import net.ltxprogrammer.changed.entity.AccessoryEntities;
 import net.ltxprogrammer.changed.entity.HairStyle;
 import net.ltxprogrammer.changed.entity.PlayerMover;
 import net.ltxprogrammer.changed.extension.ChangedCompatibility;
-import net.ltxprogrammer.changed.entity.AccessoryEntities;
 import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.network.ChangedPackets;
 import net.ltxprogrammer.changed.network.packet.ChangedPacket;
 import net.ltxprogrammer.changed.util.PatreonBenefits;
 import net.ltxprogrammer.changed.world.ChangedDataFixer;
 import net.ltxprogrammer.changed.world.features.structures.FacilityPieces;
+import net.ltxprogrammer.changed.world.features.structures.facility.FacilityZoneEntities;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.ComposterBlock;
@@ -27,7 +27,7 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.IEventBusInvokeDispatcher;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoader;
-import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.IModBusEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -55,12 +55,12 @@ public class Changed {
     public static EventHandlerClient eventHandlerClient;
     public static ChangedConfig config;
     public static ChangedDataFixer dataFixer;
+    //private static IEventBus modEventBus;
 
     private static final String PROTOCOL_VERSION = "1";
-    public static final SimpleChannel PACKET_HANDLER = NetworkRegistry.newSimpleChannel(modResource(MODID), () -> PROTOCOL_VERSION,
+    public static final SimpleChannel PACKET_HANDLER = NetworkRegistry.newSimpleChannel(modResource("network"), () -> PROTOCOL_VERSION,
             PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
     private static final ChangedPackets PACKETS = new ChangedPackets(PACKET_HANDLER);
-    private static int messageID = 0;
 
     /**
      * This function is split out of the main function as a request by mod extension devs
@@ -71,36 +71,45 @@ public class Changed {
         eventBus.addListener(this::customPacks);
     }
 
-    public Changed() {
-        config = new ChangedConfig(ModLoadingContext.get());
+    public Changed(FMLJavaModLoadingContext context) {
+        //modEventBus = context.getModEventBus();
+        config = new ChangedConfig(context);
 
-        registerLoadingEventListeners(FMLJavaModLoadingContext.get().getModEventBus());
+        registerLoadingEventListeners(context.getModEventBus());
 
         addEventListener(this::dataListeners);
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> this::registerClientEventListeners);
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> registerClientEventListeners(context.getModEventBus()));
 
         PACKETS.registerPackets();
 
         instance = this;
 
-        final IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        final IEventBus modEventBus = context.getModEventBus();
 
         HairStyle.REGISTRY.register(modEventBus);
         ChangedAbilities.REGISTRY.register(modEventBus);
         PlayerMover.REGISTRY.register(modEventBus);
         LatexParticleType.REGISTRY.register(modEventBus);
+        ChangedLatexTypes.REGISTRY.register(modEventBus);
 
         ChangedAttributes.REGISTRY.register(modEventBus);
         ChangedEnchantments.REGISTRY.register(modEventBus);
         ChangedRecipeSerializers.REGISTRY.register(modEventBus);
-        ChangedStructureSets.REGISTRY.register(modEventBus);
-        ChangedStructures.CONFIGURED_REGISTRY.register(modEventBus);
-        ChangedStructures.REGISTRY.register(modEventBus);
+        ChangedStructureTypes.REGISTRY.register(modEventBus);
         ChangedStructurePieceTypes.REGISTRY.register(modEventBus);
-        ChangedFeatures.REGISTRY.register(modEventBus);
-        ChangedBiomes.REGISTRY.register(modEventBus);
+        ChangedLootItemFunctions.REGISTRY.register(modEventBus);
+        ChangedRecipeTypes.REGISTRY.register(modEventBus);
+        ChangedTabs.REGISTRY.register(modEventBus);
+        ChangedSounds.REGISTRY.register(modEventBus);
+        ChangedPaintings.REGISTRY.register(modEventBus);
+        ChangedParticles.REGISTRY.register(modEventBus);
+        ChangedFeatures.REGISTRY_FEATURE.register(modEventBus);
+        ChangedFeatures.REGISTRY_PROCESSOR.register(modEventBus);
+        ChangedMenus.REGISTRY.register(modEventBus);
+        ChangedEffects.REGISTRY.register(modEventBus);
         ChangedBlockEntities.REGISTRY.register(modEventBus);
-        ChangedFluids.REGISTRY.register(modEventBus);
+        ChangedFluids.REGISTRY_TYPES.register(modEventBus);
+        ChangedFluids.REGISTRY_FLUIDS.register(modEventBus);
         ChangedItems.REGISTRY.register(modEventBus);
         ChangedBlockStateProviders.REGISTRY.register(modEventBus);
         ChangedBlocks.REGISTRY.register(modEventBus);
@@ -108,6 +117,11 @@ public class Changed {
         ChangedEntities.REGISTRY.register(modEventBus);
         ChangedAnimationEvents.REGISTRY.register(modEventBus);
         ChangedAccessorySlots.REGISTRY.register(modEventBus);
+        ChangedWallSigns.REGISTRY.register(modEventBus);
+        ChangedFacilityPieceTypes.REGISTRY.register(modEventBus);
+        ChangedFacilityZones.REGISTRY.register(modEventBus);
+        ChangedAbilityTreeCodecs.NODE_EFFECT_REGISTRY.register(modEventBus);
+        ChangedAbilityTreeCodecs.EFFECT_CONDITION_REGISTRY.register(modEventBus);
 
         // Our DFU references the above registries, so they need to be initialized before the DFU is created
         dataFixer = new ChangedDataFixer();
@@ -122,7 +136,6 @@ public class Changed {
 
             try {
                 PatreonBenefits.loadBenefits();
-                PatreonBenefits.UPDATE_CHECKER.start();
             } catch (Exception ex) {
                 Changed.LOGGER.error("Failed to load Patreon Benefits. Patrons will not receive benefits visible to this client.", ex);
             }
@@ -132,21 +145,28 @@ public class Changed {
             ComposterBlock.COMPOSTABLES.put(ChangedBlocks.ORANGE_TREE_SAPLING.get().asItem(), 0.3F);
             ComposterBlock.COMPOSTABLES.put(ChangedItems.ORANGE.get(), 0.65F);
         });
-        event.enqueueWork(FacilityPieces::gatherFacilityPieces);
     }
 
-    private void registerClientEventListeners() {
+    private void registerClientEventListeners(IEventBus eventBus) {
         MinecraftForge.EVENT_BUS.register(eventHandlerClient = new EventHandlerClient());
+        eventBus.addListener(RecipeCategories::registerCategories);
+        eventBus.addListener(ChangedOverlays::registerOverlays);
+        eventBus.addListener(ChangedClient::onBlockColorsInit);
+        eventBus.addListener(ChangedClient::onItemColorsInit);
+        eventBus.addListener(ChangedClient::onClientFinishSetup);
+        eventBus.addListener(AbilityRenderer::onRegisterModels);
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {
-        event.enqueueWork(RecipeCategories::registerCategories);
         ChangedClient.registerEventListeners();
     }
 
     private void dataListeners(final AddReloadListenerEvent event) {
         event.addListener(ChangedFusions.INSTANCE);
         event.addListener(AccessoryEntities.INSTANCE);
+        event.addListener(FacilityPieces.INSTANCE);
+        event.addListener(FacilityZoneEntities.INSTANCE);
+        event.addListener(AbilityTrees.INSTANCE);
         ChangedCompatibility.addDataListeners(event);
     }
 
@@ -162,17 +182,8 @@ public class Changed {
         }
     }
 
-    private static <T> void addNetworkMessage(Class<T> messageType, BiConsumer<T, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, T> decoder,
-                                             BiConsumer<T, Supplier<NetworkEvent.Context>> messageConsumer) {
-        PACKET_HANDLER.registerMessage(messageID++, messageType, encoder, decoder, messageConsumer);
-    }
-
-    private static <T extends ChangedPacket> void addNetworkMessage(Class<T> messageType, Function<FriendlyByteBuf, T> ctor) {
-        addNetworkMessage(messageType, T::write, ctor, T::handle);
-    }
-
     public static ResourceLocation modResource(String path) {
-        return new ResourceLocation(MODID, path);
+        return ResourceLocation.fromNamespaceAndPath(MODID, path);
     }
     public static String modResourceStr(String path) {
         return MODID + ":" + path;

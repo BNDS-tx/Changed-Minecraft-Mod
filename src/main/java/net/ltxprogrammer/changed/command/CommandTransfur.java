@@ -23,10 +23,12 @@ import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.CompoundTagArgument;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.commands.arguments.UuidArgument;
 import net.minecraft.commands.synchronization.SuggestionProviders;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -52,7 +54,7 @@ public class CommandTransfur {
     private static final ResourceLocation RANDOM_VARIANT = Changed.modResource("random");
 
     public static final SuggestionProvider<CommandSourceStack> SUGGEST_TRANSFUR_VARIANT = SuggestionProviders.register(Changed.modResource("transfur_variant"), (p_121667_, p_121668_) -> {
-        var list = TransfurVariant.getPublicTransfurVariants().map(TransfurVariant::getRegistryName).collect(Collectors.toCollection(ArrayList::new));
+        var list = TransfurVariant.getPublicTransfurVariants().map(ChangedRegistry.TRANSFUR_VARIANT::getKey).collect(Collectors.toCollection(ArrayList::new));
         list.add(TransfurVariant.SPECIAL_LATEX);
         list.add(RANDOM_VARIANT);
         return SharedSuggestionProvider.suggestResource(list, p_121668_);
@@ -71,12 +73,20 @@ public class CommandTransfur {
                                 .executes(context -> transfurPlayers(context.getSource(),
                                         EntityArgument.getPlayers(context, "players"),
                                         ResourceLocationArgument.getId(context, "form"),
-                                        TransfurCause.GRAB_REPLICATE.getSerializedName()))
+                                        TransfurCause.GRAB_REPLICATE.getSerializedName(),
+                                        null))
                                 .then(Commands.argument("cause", StringArgumentType.string()).suggests(SUGGEST_TRANSFUR_CAUSE)
                                         .executes(context -> transfurPlayers(context.getSource(),
                                                 EntityArgument.getPlayers(context, "players"),
                                                 ResourceLocationArgument.getId(context, "form"),
-                                                StringArgumentType.getString(context, "cause"))))
+                                                StringArgumentType.getString(context, "cause"),
+                                                null))
+                                        .then(Commands.argument("nbt", CompoundTagArgument.compoundTag())
+                                                .executes(context -> transfurPlayers(context.getSource(),
+                                                        EntityArgument.getPlayers(context, "players"),
+                                                        ResourceLocationArgument.getId(context, "form"),
+                                                        StringArgumentType.getString(context, "cause"),
+                                                        CompoundTagArgument.getCompoundTag(context, "nbt")))))
                         )));
         event.getDispatcher().register(Commands.literal("tf").requires(p -> p.hasPermission(2)).redirect(transfurNode));
         var progressTransfurNode = event.getDispatcher().register(Commands.literal("progresstransfur").requires(p -> p.hasPermission(2))
@@ -151,16 +161,23 @@ public class CommandTransfur {
                 ));
     }
 
-    private static int transfurPlayer(CommandSourceStack source, ServerPlayer player, ResourceLocation form, TransfurCause cause) throws CommandSyntaxException {
+    private static int transfurPlayer(CommandSourceStack source, ServerPlayer player, ResourceLocation form, TransfurCause cause, @Nullable CompoundTag tag) throws CommandSyntaxException {
         if (ChangedCompatibility.isPlayerUsedByOtherMod(player))
             throw USED_BY_OTHER_MOD.create();
 
         if (form.equals(RANDOM_VARIANT))
             form = Util.getRandom(TransfurVariant.getPublicTransfurVariants().collect(Collectors.toList()), player.getRandom()).getFormId();
 
-        if (TransfurVariant.getPublicTransfurVariants().map(TransfurVariant::getRegistryName).anyMatch(form::equals)) {
-            ProcessTransfur.transfur(player, source.getLevel(), ChangedRegistry.TRANSFUR_VARIANT.get().getValue(form), true,
+        if (TransfurVariant.getPublicTransfurVariants().map(ChangedRegistry.TRANSFUR_VARIANT::getKey).anyMatch(form::equals)) {
+            TransfurVariant<?> transfurVariant = ChangedRegistry.TRANSFUR_VARIANT.get().getValue(form);
+            ProcessTransfur.transfur(player, source.getLevel(), transfurVariant, true,
                     TransfurContext.hazard(cause));
+            if (tag != null) {
+                ProcessTransfur.getPlayerTransfurVariantSafe(player).filter(instance -> instance.getParent() == transfurVariant)
+                        .ifPresent(instance -> {
+                            instance.getChangedEntity().readPlayerVariantData(tag);
+                        });
+            }
         }
         else if (form.equals(TransfurVariant.SPECIAL_LATEX)) {
             ResourceLocation key = Changed.modResource("special/form_" + player.getUUID());
@@ -175,21 +192,21 @@ public class CommandTransfur {
         return Command.SINGLE_SUCCESS;
     }
 
-    private static int transfurPlayers(CommandSourceStack source, Collection<ServerPlayer> players, ResourceLocation form, String cause) throws CommandSyntaxException {
+    private static int transfurPlayers(CommandSourceStack source, Collection<ServerPlayer> players, ResourceLocation form, String cause, @Nullable CompoundTag tag) throws CommandSyntaxException {
         final TransfurCause transfurCause = TransfurCause.fromSerial(cause).result().orElse(null);
         if (transfurCause == null)
             throw NOT_CAUSE.create();
 
         if (players.size() == 1) {
             final ServerPlayer player = players.stream().findFirst().get();
-            int success = transfurPlayer(source, player, form, transfurCause);
+            int success = transfurPlayer(source, player, form, transfurCause, tag);
             if (success > 0)
                 source.sendSuccess(new TranslatableComponent("command.changed.success.transfurred.one", player.getScoreboardName(), form), false);
             return success;
         } else if (players.size() > 1) {
             int success = players.stream().map(player -> {
                 try {
-                    return transfurPlayer(source, player, form, transfurCause);
+                    return transfurPlayer(source, player, form, transfurCause, tag);
                 } catch (CommandSyntaxException e) {
                     return 0;
                 }
@@ -222,7 +239,7 @@ public class CommandTransfur {
         if (form.equals(RANDOM_VARIANT))
             form = Util.getRandom(TransfurVariant.getPublicTransfurVariants().collect(Collectors.toList()), player.getRandom()).getFormId();
 
-        if (TransfurVariant.getPublicTransfurVariants().map(TransfurVariant::getRegistryName).anyMatch(form::equals)) {
+        if (TransfurVariant.getPublicTransfurVariants().map(ChangedRegistry.TRANSFUR_VARIANT::getKey).anyMatch(form::equals)) {
             ProcessTransfur.progressTransfur(player, progression, ChangedRegistry.TRANSFUR_VARIANT.get().getValue(form), context);
         }
         else if (form.equals(TransfurVariant.SPECIAL_LATEX)) {
@@ -329,7 +346,7 @@ public class CommandTransfur {
             }
             int untf = untransfurPlayers(source, Collections.singleton(player));
             if (untf == 0) continue;
-            result += transfurPlayers(source, Collections.singleton(player), form, TransfurCause.GRAB_REPLICATE.getSerializedName());
+            result += transfurPlayers(source, Collections.singleton(player), form, TransfurCause.GRAB_REPLICATE.getSerializedName(), null);
         }
         return result > 0 ? Command.SINGLE_SUCCESS : 0;
     }

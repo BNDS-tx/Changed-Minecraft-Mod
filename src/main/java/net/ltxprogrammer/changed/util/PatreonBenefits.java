@@ -16,17 +16,17 @@ import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.init.ChangedAbilities;
 import net.ltxprogrammer.changed.init.ChangedRegistry;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.common.util.LogicalSidedProvider;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
@@ -219,77 +219,6 @@ public class PatreonBenefits {
         }
     }
 
-    public record SpecialForm(
-            UUID playerUUID,
-
-            String defaultState,
-            Map<String, EntityData> entityData,
-            Map<String, ModelData> modelData,
-            TransfurVariant<?> variant
-    ) {
-        public EntityData getDefaultEntity() {
-            return entityData.get(defaultState);
-        }
-
-        public ModelData getDefaultModel() {
-            return modelData.get(defaultState);
-        }
-
-        public void registerLayerDefinitions(BiConsumer<DeferredModelLayerLocation, Supplier<LayerDefinition>> registrar) {
-            modelData.forEach((key, model) -> model.registerLayerDefinitions(registrar));
-        }
-
-        public void registerTextures(Consumer<ResourceLocation> registrar) {
-            modelData.forEach((id, model) -> model.registerTextures(registrar));
-        }
-
-        public static SpecialForm fromJSON(Function<String, JsonObject> jsonGetter, JsonObject object) {
-            Map<String, ModelData> models = new HashMap<>();
-            Map<String, EntityData> entities = new HashMap<>();
-            String dState = "default";
-            UUID uuid = UUID.fromString(GsonHelper.getAsString(object, "location"));
-            List<AbstractAbility<?>> injectedAbilities = new ArrayList<>();
-            if (object.has("entities")) {
-                GsonHelper.getAsJsonArray(object, "entities").forEach(element -> {
-                    JsonObject entityObject = element.getAsJsonObject();
-                    String id = GsonHelper.getAsString(entityObject, "id");
-                    entities.put(id, EntityData.fromJSON(uuid, entityObject));
-                });
-                dState = GsonHelper.getAsString(object, "defaultState", dState);
-            } else {
-                entities.put(dState, EntityData.fromJSON(uuid, object));
-            }
-            if (entities.size() > 1)
-                injectedAbilities.add(ChangedAbilities.SELECT_SPECIAL_STATE.get());
-            for (var entry : entities.values())
-                if (entry.hairStyles.size() > 1) {
-                    injectedAbilities.add(ChangedAbilities.SELECT_HAIRSTYLE.get());
-                    break;
-                }
-
-            final String lockedDefault = dState;
-            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-                if (object.has("models")) {
-                    GsonHelper.getAsJsonArray(object, "models").forEach(element -> {
-                        JsonObject modelObject = element.getAsJsonObject();
-                        String id = GsonHelper.getAsString(modelObject, "id");
-                        models.put(id, ModelData.fromJSON(jsonGetter, uuid + "/" + id, modelObject));
-                    });
-                } else {
-                    models.put(lockedDefault, ModelData.fromJSON(jsonGetter, uuid.toString(), object));
-                }
-            });
-
-            return new SpecialForm(
-                    uuid,
-                    dState,
-                    entities,
-                    models,
-                    TransfurVariant.fromJson(Changed.modResource("special/form_" + uuid), object.get("variant").getAsJsonObject(), injectedAbilities)
-            );
-        }
-    }
-
     private static String REPO_BASE = "https://raw.githubusercontent.com/LtxProgrammer/patreon-benefits/main/";
     private static String LINKS_DOCUMENT = REPO_BASE + "listing.json";
     private static String VERSION_DOCUMENT = REPO_BASE + "version.txt";
@@ -305,138 +234,9 @@ public class PatreonBenefits {
     }
 
     private static final Map<UUID, Tier> CACHED_LEVELS = new HashMap<>();
-    private static final Map<UUID, SpecialForm> CACHED_SPECIAL_FORMS = new HashMap<>();
-    public static final List<Resource> ONLINE_TEXTURES = new ArrayList<>();
-    public static final Map<UUID, DeferredModelLayerLocation> LAYER_LOCATIONS = new HashMap<>();
     public static int currentVersion;
 
     private static final Logger LOGGER = LogManager.getLogger(Changed.class);
-    private static final Map<Dist, AtomicBoolean> UPDATE_FLAG = new HashMap<>();
-    private static final AtomicBoolean UPDATE_PLAYER_JOIN_FLAG = new AtomicBoolean(false);
-    public static final Thread UPDATE_CHECKER = new Thread(() -> {
-        if (!Changed.config.common.downloadPatreonContent.get()) return;
-
-        LOGGER.info("Update checker started");
-
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder(URI.create(VERSION_DOCUMENT)).GET().build();
-
-        while (true) {
-            try {
-                Thread.sleep(60000 * 3);
-                synchronized (UPDATE_PLAYER_JOIN_FLAG) {
-                    UPDATE_PLAYER_JOIN_FLAG.wait();
-                }
-                UPDATE_PLAYER_JOIN_FLAG.set(false); // Consume
-                LOGGER.info("Checking for updates");
-                int version = Integer.parseInt(client.send(request, HttpResponse.BodyHandlers.ofString()).body().replace("\n", ""));
-
-                if (version != currentVersion) {
-                    LOGGER.info("Update found!");
-                    UPDATE_FLAG.computeIfAbsent(Dist.CLIENT, dist -> new AtomicBoolean(true)).set(true);
-                    UPDATE_FLAG.computeIfAbsent(Dist.DEDICATED_SERVER, dist -> new AtomicBoolean(true)).set(true);
-                    currentVersion = version;
-                }
-            }
-
-            catch (InterruptedException | IOException ex) {
-                ex.printStackTrace();
-            }
-        }
-    });
-
-    @Mod.EventBusSubscriber
-    private static class EventSub {
-        @SubscribeEvent
-        public static void onPlayerJoin(EntityJoinWorldEvent playerJoin) {
-            if (playerJoin.getEntity() instanceof Player player) {
-                LOGGER.info("Player joined, setting enabling update checker flag");
-                synchronized (UPDATE_PLAYER_JOIN_FLAG) {
-                    UPDATE_PLAYER_JOIN_FLAG.notify();
-                }
-            }
-        }
-    }
-
-    public static void registerOnlineTexture(ResourceLocation location) {
-        DynamicClient.lateRegisterOnlineTexture(OnlineResource.of(
-                location.getPath(),
-                location,
-                URI.create(FORMS_BASE + location.getPath())
-        ));
-    }
-
-    public static void loadSpecialForms(HttpClient client) throws IOException, InterruptedException {
-        if (!Changed.config.common.downloadPatreonContent.get()) return;
-
-        HttpRequest request = HttpRequest.newBuilder(URI.create(FORMS_DOCUMENT)).GET().build();
-        JsonElement json = JsonParser.parseString(client.send(request, HttpResponse.BodyHandlers.ofString()).body());
-        JsonArray formLocations = json.getAsJsonObject().get("forms").getAsJsonArray();
-
-        AtomicInteger count = new AtomicInteger(0);
-
-        ChangedRegistry.TRANSFUR_VARIANT.get().unfreeze();
-        formLocations.forEach((element) -> {
-            JsonObject object = element.getAsJsonObject();
-            if (GsonHelper.getAsInt(object, "version", 1) > COMPATIBLE_VERSION)
-                return;
-
-            SpecialForm form = SpecialForm.fromJSON(
-                    str -> {
-                        try {
-                            return JsonParser.parseString(client.send(HttpRequest.newBuilder(URI.create(FORMS_BASE + str)).GET().build(), HttpResponse.BodyHandlers.ofString()).body()).getAsJsonObject();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            return new JsonObject();
-                        }
-                    },
-                    object
-            );
-
-            /*DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-                form.registerTextures(PatreonBenefits::registerOnlineTexture);
-
-                form.registerLayerDefinitions(DynamicClient::lateRegisterLayerDefinition);
-            });*/
-
-            CACHED_SPECIAL_FORMS.put(form.playerUUID, form);
-            TransfurVariant.registerSpecial(form.variant);
-            ChangedRegistry.TRANSFUR_VARIANT.get().register(form.variant);
-            count.getAndIncrement();
-        });
-
-        ChangedRegistry.TRANSFUR_VARIANT.get().freeze();
-        LOGGER.info("Updated {} patreon special forms", count.get());
-    }
-
-    public static boolean checkForUpdates() throws IOException, InterruptedException {
-        if (!Changed.config.common.downloadPatreonContent.get()) return false;
-
-        if (UPDATE_FLAG.computeIfAbsent(FMLEnvironment.dist, dist -> new AtomicBoolean(false)).get()) {
-            UPDATE_FLAG.get(FMLEnvironment.dist).set(false); // Consume update flag
-            updatePathStrings();
-            HttpClient client = HttpClient.newHttpClient();
-
-            {
-                HttpRequest request = HttpRequest.newBuilder(URI.create(LINKS_DOCUMENT)).GET().build();
-                JsonElement json = JsonParser.parseString(client.send(request, HttpResponse.BodyHandlers.ofString()).body());
-                JsonArray links = json.getAsJsonObject().get("players").getAsJsonArray();
-
-                CACHED_LEVELS.clear();
-                links.forEach((element) -> {
-                    JsonObject object = element.getAsJsonObject();
-                    CACHED_LEVELS.put(UUID.fromString(object.get("uuid").getAsString()), Tier.ofValue(object.get("tier").getAsInt()));
-                });
-            }
-
-            loadSpecialForms(client);
-
-            UniversalDist.displayClientMessage(new TextComponent("Updated Patreon Data."), false);
-            return true;
-        }
-
-        return false;
-    }
 
     public static void loadBenefits() throws IOException, InterruptedException {
         if (!Changed.config.common.downloadPatreonContent.get()) return;
@@ -460,14 +260,6 @@ public class PatreonBenefits {
             throw ex;
         }
 
-        // Load forms
-        try {
-            loadSpecialForms(client);
-        } catch (Exception ex) {
-            LOGGER.error("Encountered error while loading special forms");
-            throw ex;
-        }
-
         // Load version
         try {
             request = HttpRequest.newBuilder(URI.create(VERSION_DOCUMENT)).GET().build();
@@ -482,19 +274,6 @@ public class PatreonBenefits {
         return CACHED_LEVELS.getOrDefault(player.getUUID(), Tier.NONE);
     }
 
-    @Nullable
-    public static SpecialForm getPlayerSpecialForm(UUID player) {
-        return CACHED_SPECIAL_FORMS.getOrDefault(player, null);
-    }
-
-    public static TransfurVariant<?> getPlayerSpecialVariant(UUID player) {
-        SpecialForm form = getPlayerSpecialForm(player);
-        if (form == null)
-            return null;
-
-        return form.variant;
-    }
-
     public static Component getPlayerName(Player player, Component username) {
         if (!Changed.config.common.displayPatronage.get())
             return username;
@@ -503,24 +282,24 @@ public class PatreonBenefits {
 
         switch (PatreonBenefits.getPlayerTier(player)) {
             case LEVEL0 -> {
-                copy.getSiblings().add(new TextComponent(" | "));
-                copy.getSiblings().add(new TranslatableComponent("changed.patreon.level0").withStyle(ChatFormatting.GRAY));
+                copy.getSiblings().add(Component.literal(" | "));
+                copy.getSiblings().add(Component.translatable("changed.patreon.level0").withStyle(ChatFormatting.GRAY));
             }
             case LEVEL1 -> {
-                copy.getSiblings().add(new TextComponent(" | "));
-                copy.getSiblings().add(new TranslatableComponent("changed.patreon.level1").withStyle(ChatFormatting.GREEN));
+                copy.getSiblings().add(Component.literal(" | "));
+                copy.getSiblings().add(Component.translatable("changed.patreon.level1").withStyle(ChatFormatting.GREEN));
             }
             case LEVEL2 -> {
-                copy.getSiblings().add(new TextComponent(" | "));
-                copy.getSiblings().add(new TranslatableComponent("changed.patreon.level2").withStyle(ChatFormatting.AQUA));
+                copy.getSiblings().add(Component.literal(" | "));
+                copy.getSiblings().add(Component.translatable("changed.patreon.level2").withStyle(ChatFormatting.AQUA));
             }
             case LEVEL3 -> {
-                copy.getSiblings().add(new TextComponent(" | "));
-                copy.getSiblings().add(new TranslatableComponent("changed.patreon.level3").withStyle(ChatFormatting.LIGHT_PURPLE));
+                copy.getSiblings().add(Component.literal(" | "));
+                copy.getSiblings().add(Component.translatable("changed.patreon.level3").withStyle(ChatFormatting.LIGHT_PURPLE));
             }
             case LEVEL4 -> {
-                copy.getSiblings().add(new TextComponent(" | "));
-                copy.getSiblings().add(new TranslatableComponent("changed.patreon.level4").withStyle(ChatFormatting.GOLD));
+                copy.getSiblings().add(Component.literal(" | "));
+                copy.getSiblings().add(Component.translatable("changed.patreon.level4").withStyle(ChatFormatting.GOLD));
             }
         }
 

@@ -4,9 +4,14 @@
 # Ignore Gradle build output directory
 build
 run
+run-data
+run-server
 src/generated
 src/test
 
 # Ignore Intellij IDEA files
 /.idea/
+/.venv/
+
+# Ignore macOS .DS_Store
 .DS_Store

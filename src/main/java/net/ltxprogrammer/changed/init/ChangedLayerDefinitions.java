@@ -34,7 +34,9 @@ public class ChangedLayerDefinitions {
 
         event.registerLayerDefinition(GasSkunkModel.LAYER_LOCATION, GasSkunkModel::createBodyLayer);
         event.registerLayerDefinition(GasTigerModel.LAYER_LOCATION, GasTigerModel::createBodyLayer);
-        event.registerLayerDefinition(GasWolfModel.LAYER_LOCATION, GasWolfModel::createBodyLayer);
+        event.registerLayerDefinition(GasWolfFemaleModel.LAYER_LOCATION, GasWolfFemaleModel::createBodyLayer);
+        event.registerLayerDefinition(GasWolfMaleModel.LAYER_LOCATION, GasWolfMaleModel::createBodyLayer);
+        event.registerLayerDefinition(GasWolfPupModel.LAYER_LOCATION, GasWolfPupModel::createBodyLayer);
         event.registerLayerDefinition(PooltoyWolfModel.LAYER_LOCATION, PooltoyWolfModel::createBodyLayer);
         event.registerLayerDefinition(DarkLatexDragonModel.LAYER_LOCATION, DarkLatexDragonModel::createBodyLayer);
         event.registerLayerDefinition(DarkLatexWolfFemaleModel.LAYER_LOCATION, DarkLatexWolfFemaleModel::createBodyLayer);
@@ -52,13 +54,16 @@ public class ChangedLayerDefinitions {
         event.registerLayerDefinition(LatexAlienModel.LAYER_LOCATION, LatexAlienModel::createBodyLayer);
         event.registerLayerDefinition(LatexBeeModel.LAYER_LOCATION, LatexBeeModel::createBodyLayer);
         event.registerLayerDefinition(LatexBeifengModel.LAYER_LOCATION, LatexBeifengModel::createBodyLayer);
+        event.registerLayerDefinition(LatexBenignOrcaModel.LAYER_LOCATION, LatexBenignOrcaModel::createBodyLayer);
         event.registerLayerDefinition(LatexBenignWolfModel.LAYER_LOCATION, LatexBenignWolfModel::createBodyLayer);
         event.registerLayerDefinition(LatexBlueDragonModel.LAYER_LOCATION, LatexBlueDragonModel::createBodyLayer);
         event.registerLayerDefinition(LatexBlueWolfModel.LAYER_LOCATION, LatexBlueWolfModel::createBodyLayer);
         event.registerLayerDefinition(LatexCrocodileModel.LAYER_LOCATION, LatexCrocodileModel::createBodyLayer);
+        event.registerLayerDefinition(LatexCrowModel.LAYER_LOCATION, LatexCrowModel::createBodyLayer);
         event.registerLayerDefinition(LatexCrystalWolfModel.LAYER_LOCATION, LatexCrystalWolfModel::createBodyLayer);
         event.registerLayerDefinition(LatexCrystalWolfHornedModel.LAYER_LOCATION, LatexCrystalWolfHornedModel::createBodyLayer);
         event.registerLayerDefinition(LatexDeerModel.LAYER_LOCATION, LatexDeerModel::createBodyLayer);
+        event.registerLayerDefinition(LatexEelModel.LAYER_LOCATION, LatexEelModel::createBodyLayer);
         event.registerLayerDefinition(LatexFennecFoxModel.LAYER_LOCATION, LatexFennecFoxModel::createBodyLayer);
         event.registerLayerDefinition(LatexGoldenDragonModel.LAYER_LOCATION, LatexGoldenDragonModel::createBodyLayer);
         event.registerLayerDefinition(GreenLizardModel.LAYER_LOCATION, GreenLizardModel::createBodyLayer);
@@ -167,7 +172,10 @@ public class ChangedLayerDefinitions {
         ArmorLatexMaleBuffTaurUpperModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition);
         ArmorLatexFemaleTaurUpperModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition);
         ArmorLatexHeavyTaurUpperModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition);
-        ArmorLatexCentaurLowerModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition);
+        ArmorLatexCentaurLowerModel.MODEL_SET_WITH_TORSO.registerDefinitions(event::registerLayerDefinition);
+
+        ArmorLatexMaleBirdModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition);
+        ArmorLatexFemaleBirdModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition);
 
         ArmorHumanModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition);
 
@@ -187,5 +195,15 @@ public class ChangedLayerDefinitions {
 
         event.registerLayerDefinition(LatexContainerRenderer.LAYER_LOCATION, LatexContainerRenderer::createLatexFill);
         event.registerLayerDefinition(PillowRenderer.LAYER_LOCATION, PillowRenderer::createBodyLayer);
+
+        event.registerLayerDefinition(BipedArmorStandModel.ARMOR_STAND, BipedArmorStandModel::createStandLayer);
+        event.registerLayerDefinition(CentaurArmorStandModel.ARMOR_STAND, CentaurArmorStandModel::createStandLayer);
+        event.registerLayerDefinition(LeglessArmorStandModel.ARMOR_STAND, LeglessArmorStandModel::createStandLayer);
+
+        BipedArmorStandModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition);
+        CentaurArmorStandModel.MODEL_SET_UPPER.registerDefinitions(event::registerLayerDefinition);
+        CentaurArmorStandModel.MODEL_SET_LOWER.registerDefinitions(event::registerLayerDefinition);
+        LeglessArmorStandModel.MODEL_SET_UPPER.registerDefinitions(event::registerLayerDefinition);
+        LeglessArmorStandModel.MODEL_SET_LOWER.registerDefinitions(event::registerLayerDefinition);
     }
 }

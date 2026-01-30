@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.ltxprogrammer.changed.client.renderer.AdvancedHumanoidRenderer;
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel;
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModelInterface;
+import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel;
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModelPicker;
 import net.ltxprogrammer.changed.client.renderer.model.armor.LatexHumanoidArmorModel;
 import net.ltxprogrammer.changed.entity.ChangedEntity;
@@ -13,15 +14,21 @@ import net.ltxprogrammer.changed.extension.ChangedCompatibility;
 import net.ltxprogrammer.changed.world.enchantments.FormFittingEnchantment;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.armortrim.ArmorTrim;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -29,22 +36,28 @@ import javax.annotation.Nullable;
 import java.util.Map;
 
 @OnlyIn(Dist.CLIENT)
-public class LatexHumanoidArmorLayer<T extends ChangedEntity, M extends AdvancedHumanoidModel<T>, A extends LatexHumanoidArmorModel<T, ?>> extends RenderLayer<T, M> {
+public class LatexHumanoidArmorLayer<T extends ChangedEntity, M extends AdvancedHumanoidModel<T>> extends RenderLayer<T, M> {
     private static final Map<String, ResourceLocation> ARMOR_LOCATION_CACHE = Maps.newHashMap();
-    final AdvancedHumanoidRenderer<T, M, A> parent;
-    public final ArmorModelPicker<? super T> modelPicker;
+    final AdvancedHumanoidRenderer<T, M> parent;
+    public final ArmorModelPicker<T, ? extends LatexHumanoidArmorModel<? super T, ?>> modelPicker;
+    private final TextureAtlas armorTrimAtlas;
 
-    public LatexHumanoidArmorLayer(AdvancedHumanoidRenderer<T, M, A> parentModel, ArmorModelPicker<? super T> modelPicker) {
+    public LatexHumanoidArmorLayer(AdvancedHumanoidRenderer<T, M> parentModel, ArmorModelPicker<T, ? extends LatexHumanoidArmorModel<? super T, ?>> modelPicker, ModelManager modelManager) {
         super(parentModel);
         this.parent = parentModel;
         this.modelPicker = modelPicker;
+        this.armorTrimAtlas = modelManager.getAtlas(Sheets.ARMOR_TRIMS_SHEET);
     }
 
     public void render(PoseStack pose, MultiBufferSource buffers, int packedLight, T entity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
         if (!parent.shouldRenderArmor(entity)) return;
 
-        if (parent.getModel(entity) instanceof AdvancedHumanoidModelInterface advancedModel)
-            this.modelPicker.applyAnimatorProperties(entity, advancedModel.getAnimator(entity));
+        if (parent.getModel(entity) instanceof AdvancedHumanoidModelInterface advancedModel) {
+            final var animator = advancedModel.getAnimator(entity);
+            this.modelPicker.forEach(entity, ArmorModel::isArmor, (layer, model) -> {
+                model.getAnimator(entity).copyProperties(animator);
+            });
+        }
         this.modelPicker.prepareAndSetupModels(entity, limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch);
         boolean firstPerson = ChangedCompatibility.isFirstPersonRendering();
 
@@ -60,38 +73,53 @@ public class LatexHumanoidArmorLayer<T extends ChangedEntity, M extends Advanced
         ItemStack itemstack = FormFittingEnchantment.getFormFitted(entity, entity.getItemBySlot(slot), slot);
         if (itemstack.getItem() instanceof ArmorItem) {
             ArmorItem armoritem = (ArmorItem)itemstack.getItem();
-            if (armoritem.getSlot() == slot) {
-                boolean foil = itemstack.hasFoil();
+            if (armoritem.getEquipmentSlot() == slot) {
                 var altModel = net.minecraftforge.client.ForgeHooksClient.getArmorModel(entity, itemstack, slot, model);
                 if (altModel != model) {
+                    boolean flag = this.usesInnerModel(slot);
                     if (armoritem instanceof net.minecraft.world.item.DyeableLeatherItem) {
                         int i = ((net.minecraft.world.item.DyeableLeatherItem)armoritem).getColor(itemstack);
                         float red = (float)(i >> 16 & 255) / 255.0F;
                         float green = (float)(i >> 8 & 255) / 255.0F;
                         float blue = (float)(i & 255) / 255.0F;
                         this.renderModel(pose, buffers, packedLight,
-                                foil, altModel, red, green, blue, this.getArmorResource(entity, itemstack, slot, null));
+                                altModel, red, green, blue, this.getArmorResource(entity, itemstack, slot, null));
                         this.renderModel(pose, buffers, packedLight,
-                                foil, altModel, 1.0F, 1.0F, 1.0F, this.getArmorResource(entity, itemstack, slot, "overlay"));
+                                altModel, 1.0F, 1.0F, 1.0F, this.getArmorResource(entity, itemstack, slot, "overlay"));
                     } else {
                         this.renderModel(pose, buffers, packedLight,
-                                foil, altModel, 1.0F, 1.0F, 1.0F, this.getArmorResource(entity, itemstack, slot, null));
+                                altModel, 1.0F, 1.0F, 1.0F, this.getArmorResource(entity, itemstack, slot, null));
+                    }
+
+                    ArmorTrim.getTrim(entity.level().registryAccess(), itemstack).ifPresent((trim) -> {
+                        this.renderTrim(armoritem.getMaterial(), pose, buffers, packedLight, trim, altModel, flag);
+                    });
+                    if (itemstack.hasFoil()) {
+                        this.renderGlint(pose, buffers, packedLight, altModel);
                     }
                 }
 
                 else {
+                    boolean flag = this.usesInnerModel(slot);
                     if (armoritem instanceof net.minecraft.world.item.DyeableLeatherItem) {
                         int i = ((net.minecraft.world.item.DyeableLeatherItem)armoritem).getColor(itemstack);
                         float red = (float)(i >> 16 & 255) / 255.0F;
                         float green = (float)(i >> 8 & 255) / 255.0F;
                         float blue = (float)(i & 255) / 255.0F;
                         this.renderModel(entity, itemstack, slot, pose, buffers, packedLight,
-                                foil, model, red, green, blue, this.getArmorResource(entity, itemstack, slot, null));
+                                model, red, green, blue, this.getArmorResource(entity, itemstack, slot, null));
                         this.renderModel(entity, itemstack, slot, pose, buffers, packedLight,
-                                foil, model, 1.0F, 1.0F, 1.0F, this.getArmorResource(entity, itemstack, slot, "overlay"));
+                                model, 1.0F, 1.0F, 1.0F, this.getArmorResource(entity, itemstack, slot, "overlay"));
                     } else {
                         this.renderModel(entity, itemstack, slot, pose, buffers, packedLight,
-                                foil, model, 1.0F, 1.0F, 1.0F, this.getArmorResource(entity, itemstack, slot, null));
+                                model, 1.0F, 1.0F, 1.0F, this.getArmorResource(entity, itemstack, slot, null));
+                    }
+
+                    ArmorTrim.getTrim(entity.level().registryAccess(), itemstack).ifPresent((trim) -> {
+                        this.renderTrim(entity, itemstack, slot, armoritem.getMaterial(), pose, buffers, packedLight, trim, model, flag);
+                    });
+                    if (itemstack.hasFoil()) {
+                        this.renderGlint(entity, itemstack, slot, pose, buffers, packedLight, model);
                     }
                 }
             }
@@ -99,18 +127,61 @@ public class LatexHumanoidArmorLayer<T extends ChangedEntity, M extends Advanced
     }
 
     private void renderModel(T entity, ItemStack stack, EquipmentSlot slot,
-                             PoseStack pose, MultiBufferSource buffers, int packedLight, boolean foil, LatexHumanoidArmorModel<? super T, ?> model,
+                             PoseStack pose, MultiBufferSource buffers, int packedLight, LatexHumanoidArmorModel<? super T, ?> model,
                              float red, float green, float blue, ResourceLocation armorResource) {
         model.prepareVisibility(slot, stack);
         model.renderForSlot(entity, (RenderLayerParent) this.parent, stack, slot, pose,
-                ItemRenderer.getArmorFoilBuffer(buffers, RenderType.armorCutoutNoCull(armorResource), false, foil),
+                buffers.getBuffer(RenderType.armorCutoutNoCull(armorResource)),
                 packedLight, OverlayTexture.NO_OVERLAY, red, green, blue, 1.0F);
         model.prepareVisibility(slot, stack);
     }
 
-    private void renderModel(PoseStack pose, MultiBufferSource buffers, int packedLight, boolean foil, net.minecraft.client.model.Model model, float red, float green, float blue, ResourceLocation armorResource) {
-        VertexConsumer vertexconsumer = ItemRenderer.getArmorFoilBuffer(buffers, RenderType.armorCutoutNoCull(armorResource), false, foil);
+    private void renderModel(PoseStack pose, MultiBufferSource buffers, int packedLight, net.minecraft.client.model.Model model, float red, float green, float blue, ResourceLocation armorResource) {
+        VertexConsumer vertexconsumer = buffers.getBuffer(RenderType.armorCutoutNoCull(armorResource));
         model.renderToBuffer(pose, vertexconsumer, packedLight, OverlayTexture.NO_OVERLAY, red, green, blue, 1.0F);
+    }
+
+    private void renderTrim(T entity, ItemStack stack, EquipmentSlot slot,
+                            ArmorMaterial material, PoseStack pose, MultiBufferSource buffers, int packedLight, ArmorTrim trim, LatexHumanoidArmorModel<? super T, ?> model, boolean inner) {
+        model.prepareVisibility(slot, stack);
+
+        ResourceLocation trimTexture = switch (slot) {
+            case HEAD -> entity.getEntityShape().headShape.getTrimTexture(trim, material);
+            case CHEST -> entity.getEntityShape().torsoShape.getTrimTexture(trim, material);
+            case LEGS -> entity.getEntityShape().legsShape.getTrimTexture(trim, material);
+            case FEET -> entity.getEntityShape().feetShape.getTrimTexture(trim, material);
+            default -> null; // Failsafe below
+        };
+
+        if (trimTexture == null)
+            trimTexture = inner ? trim.innerTexture(material) : trim.outerTexture(material);
+
+        TextureAtlasSprite textureatlassprite = this.armorTrimAtlas.getSprite(trimTexture);
+        VertexConsumer vertexconsumer = textureatlassprite.wrap(buffers.getBuffer(Sheets.armorTrimsSheet()));
+        model.renderForSlot(entity, (RenderLayerParent) this.parent, stack, slot, pose,
+                vertexconsumer, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+
+        model.prepareVisibility(slot, stack);
+    }
+
+    private void renderTrim(ArmorMaterial material, PoseStack pose, MultiBufferSource buffers, int packedLight, ArmorTrim trim, net.minecraft.client.model.Model model, boolean inner) {
+        TextureAtlasSprite textureatlassprite = this.armorTrimAtlas.getSprite(inner ? trim.innerTexture(material) : trim.outerTexture(material));
+        VertexConsumer vertexconsumer = textureatlassprite.wrap(buffers.getBuffer(Sheets.armorTrimsSheet()));
+        model.renderToBuffer(pose, vertexconsumer, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
+    private void renderGlint(T entity, ItemStack stack, EquipmentSlot slot,
+                             PoseStack pose, MultiBufferSource buffers, int packedLight, LatexHumanoidArmorModel<? super T, ?> model) {
+        model.prepareVisibility(slot, stack);
+
+        model.renderForSlot(entity, (RenderLayerParent) this.parent, stack, slot, pose,
+                buffers.getBuffer(RenderType.armorEntityGlint()), packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+
+        model.prepareVisibility(slot, stack);
+    }
+
+    private void renderGlint(PoseStack pose, MultiBufferSource buffers, int packedLight, net.minecraft.client.model.Model model) {
+        model.renderToBuffer(pose, buffers.getBuffer(RenderType.armorEntityGlint()), packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     public LatexHumanoidArmorModel<? super T, ?> getArmorModel(T entity, EquipmentSlot slot) {
@@ -147,7 +218,7 @@ public class LatexHumanoidArmorLayer<T extends ChangedEntity, M extends Advanced
         ResourceLocation resourcelocation = ARMOR_LOCATION_CACHE.get(s1);
 
         if (resourcelocation == null) {
-            resourcelocation = new ResourceLocation(s1);
+            resourcelocation = ResourceLocation.parse(s1);
             ARMOR_LOCATION_CACHE.put(s1, resourcelocation);
         }
 

@@ -34,14 +34,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import tschipp.carryon.client.event.RenderEvents;
-import tschipp.carryon.client.helper.CarryRenderHelper;
+import tschipp.carryon.client.render.CarryRenderHelper;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Mixin(value = RenderEvents.class, remap = false)
+/*@Mixin(value = RenderEvents.class, remap = false)
 @RequiredMods("carryon")
 public abstract class RenderEventsMixin {
     @Unique private static Player currentPlayer = null;
@@ -54,7 +53,7 @@ public abstract class RenderEventsMixin {
 
         return Optional.ofNullable(ProcessTransfur.ifPlayerTransfurred(currentPlayer, variant -> {
             EntityRenderer renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(variant.getChangedEntity());
-            if (renderer instanceof AdvancedHumanoidRenderer<?,?,?> advanced) {
+            if (renderer instanceof AdvancedHumanoidRenderer<?,?> advanced) {
                 var changedModel = advanced.getModel(variant.getChangedEntity());
 
                 if (part == playerModel.rightArm)
@@ -102,7 +101,7 @@ public abstract class RenderEventsMixin {
         ProcessTransfur.ifPlayerTransfurred(currentPlayer, variant -> {
             matrix.pushPose(); // reset matrix to entity
             EntityRenderer renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(variant.getChangedEntity());
-            if (renderer instanceof AdvancedHumanoidRenderer<?,?,?> advanced) {
+            if (renderer instanceof AdvancedHumanoidRenderer<?,?> advanced) {
                 int perspective = CarryRenderHelper.getPerspective();
                 var entity = variant.getChangedEntity();
                 AdvancedHumanoidModel entityModel = advanced.getModel(entity);
@@ -163,4 +162,4 @@ public abstract class RenderEventsMixin {
             CarryRenderHelper.renderItem(state, tag, stack, tileStack, matrix, buffer, light, model);
         });
     }
-}
+}*/

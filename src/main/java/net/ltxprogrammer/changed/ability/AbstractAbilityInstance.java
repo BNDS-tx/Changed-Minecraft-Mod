@@ -6,8 +6,6 @@ import net.ltxprogrammer.changed.network.packet.AbilityPayloadPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -49,14 +47,14 @@ public abstract class AbstractAbilityInstance {
         }
 
         public Component getName(Level level) {
-            if (level.isClientSide)
+            if (level != null && level.isClientSide)
                 return getName.get();
             else
-                return TextComponent.EMPTY;
+                return Component.empty();
         }
 
         public boolean isDown(Level level) {
-            if (level.isClientSide)
+            if (level != null && level.isClientSide)
                 return isDown.get();
             else
                 return false;
@@ -99,17 +97,17 @@ public abstract class AbstractAbilityInstance {
     public void sendPayload(CompoundTag tag) {
         if (this.entity.getLevel().isClientSide) {
             Changed.PACKET_HANDLER.sendToServer(
-                    new AbilityPayloadPacket(this.entity.getEntity().getId(), this.ability, tag));
+                    new AbilityPayloadPacket(this.entity.getId(), this.ability, tag));
         } else {
             Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(this.entity::getEntity),
-                    new AbilityPayloadPacket(this.entity.getEntity().getId(), this.ability, tag));
+                    new AbilityPayloadPacket(this.entity.getId(), this.ability, tag));
         }
     }
 
     public void sendPayload(CompoundTag tag, Player destination) {
         if (destination instanceof ServerPlayer serverPlayer) {
             Changed.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> serverPlayer),
-                    new AbilityPayloadPacket(this.entity.getEntity().getId(), this.ability, tag));
+                    new AbilityPayloadPacket(this.entity.getId(), this.ability, tag));
         }
     }
 

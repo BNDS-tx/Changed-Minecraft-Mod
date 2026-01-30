@@ -32,7 +32,7 @@ public enum AnimationCategory implements StringRepresentable, IExtensibleEnum {
 
     public static DataResult<AnimationCategory> fromSerial(String name) {
         return Arrays.stream(values()).filter(type -> type.serialName.equals(name))
-                .findFirst().map(DataResult::success).orElseGet(() -> DataResult.error(name + " is not a known AnimationCategory"));
+                .findFirst().map(DataResult::success).orElseGet(() -> DataResult.error(() -> name + " is not a known AnimationCategory"));
     }
 
     @Override

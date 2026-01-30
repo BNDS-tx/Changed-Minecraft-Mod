@@ -2,13 +2,14 @@ package net.ltxprogrammer.changed.block;
 
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.block.entity.LatexContainerBlockEntity;
-import net.ltxprogrammer.changed.entity.LatexType;
+import net.ltxprogrammer.changed.entity.latex.LatexType;
 import net.ltxprogrammer.changed.entity.TransfurCause;
 import net.ltxprogrammer.changed.entity.TransfurContext;
 import net.ltxprogrammer.changed.init.ChangedBlockEntities;
 import net.ltxprogrammer.changed.init.ChangedSounds;
 import net.ltxprogrammer.changed.init.ChangedTransfurVariants;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
+import net.ltxprogrammer.changed.util.Cacheable;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -17,6 +18,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -27,29 +29,29 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.RenderShape;
-import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class LatexContainerBlock extends AbstractCustomShapeTallEntityBlock implements NonLatexCoverableBlock, CustomFallable {
+public class LatexContainerBlock extends AbstractCustomShapeTallEntityBlock implements CustomFallable {
     public static final VoxelShape SHAPE_WHOLE = Block.box(4.0D, 0.0D, 4.0D, 12.0D, 24, 12.0D);
 
     public LatexContainerBlock() {
-        super(BlockBehaviour.Properties.of(Material.METAL).requiresCorrectToolForDrops().sound(SoundType.GLASS).strength(3.0F, 5.0F).requiresCorrectToolForDrops());
+        super(BlockBehaviour.Properties.of().requiresCorrectToolForDrops().sound(SoundType.GLASS).strength(3.0F, 5.0F));
     }
 
     @Override
@@ -82,7 +84,7 @@ public class LatexContainerBlock extends AbstractCustomShapeTallEntityBlock impl
 
     private int processBreak(Level level, BlockPos blockPos, LatexType type, int remaining, AtomicBoolean placedFluid) {
         if (remaining == 16) {
-            var pupType = type.pup.get();
+            var pupType = type.getPupEntityType(level.random);
             if (pupType != null) {
                 var pup = pupType.create(level);
                 if (pup != null) {
@@ -98,14 +100,14 @@ public class LatexContainerBlock extends AbstractCustomShapeTallEntityBlock impl
                 return 1; // Destroy goo
             case 1:
                 if (remaining >= 4 && !placedFluid.get()) {
-                    level.setBlockAndUpdate(blockPos, type.gooBucket.get().fluid.get().defaultFluidState().createLegacyBlock());
+                    level.setBlockAndUpdate(blockPos, Objects.requireNonNull(type.getBucketItem()).fluid.get().defaultFluidState().createLegacyBlock());
                     popResource(level, blockPos, new ItemStack(this));
                     placedFluid.set(true);
                     return 4; // Put goo fluid
                 }
 
                 else {
-                    popResource(level, blockPos, new ItemStack(type.goo.get()));
+                    popResource(level, blockPos, new ItemStack(Objects.requireNonNull(type.getGooItem())));
                     return 1; // Drop goo item
                 }
             case 2:
@@ -122,17 +124,20 @@ public class LatexContainerBlock extends AbstractCustomShapeTallEntityBlock impl
                     attempts--;
                 }
             default:
-                popResource(level, blockPos, new ItemStack(type.goo.get()));
+                popResource(level, blockPos, new ItemStack(Objects.requireNonNull(type.getGooItem())));
                 return 1; // Drop goo item
         }
     }
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos blockPos, BlockState newState, boolean noSimulate) {
+        if (state.getBlock() == newState.getBlock()) return;
+        if (newState.isAir()) return;
+
         var blockEntity = getBlockEntity(state, level, blockPos);
         super.onRemove(state, level, blockPos, newState, noSimulate);
 
-        if (state.getValue(HALF) == DoubleBlockHalf.LOWER && blockEntity != null && blockEntity.getFillType() != LatexType.NEUTRAL &&
+        if (state.getValue(HALF) == DoubleBlockHalf.LOWER && blockEntity != null && !blockEntity.getFillType().isAir() &&
                 blockEntity.getFillLevel() > 0 && !noSimulate) {
             int fill = blockEntity.getFillLevel();
             AtomicBoolean atomic = new AtomicBoolean(false);
@@ -142,7 +147,13 @@ public class LatexContainerBlock extends AbstractCustomShapeTallEntityBlock impl
     }
 
     public boolean canSurvive(BlockState blockState, LevelReader level, BlockPos pos) {
-        return level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP);
+        if (blockState.getValue(HALF) == DoubleBlockHalf.LOWER) {
+            return level.getBlockState(pos.below())
+                    .isFaceSturdy(level, pos.below(), Direction.UP);
+        } else {
+            BlockState below = level.getBlockState(pos.below());
+            return below.is(this) && below.getValue(HALF) == DoubleBlockHalf.LOWER;
+        }
     }
 
     @Override
@@ -174,9 +185,12 @@ public class LatexContainerBlock extends AbstractCustomShapeTallEntityBlock impl
         return (double)falling.getStartPos().getY() - falling.getY();
     }
 
+    private static final Cacheable<ResourceLocation> MODEL_NAME = Cacheable.of(() -> DistExecutor.unsafeCallWhenOn(Dist.CLIENT,
+            () -> () ->  new ModelResourceLocation(Changed.modResource("latex_container"), "inventory")));
+
     @Override
     public ResourceLocation getModelName() {
-        return new ModelResourceLocation(Changed.modResource("latex_container"), "inventory");
+        return MODEL_NAME.get();
     }
 
     @Override
@@ -197,22 +211,18 @@ public class LatexContainerBlock extends AbstractCustomShapeTallEntityBlock impl
             return;
         } // Container fell in fluid
 
-        level.playSound(null, pos, ChangedSounds.CRASH, SoundSource.BLOCKS, 1.0f, 1.0f);
+        level.playSound(null, pos, ChangedSounds.CONTAINER_BREAK.get(), SoundSource.BLOCKS, 1.0f, 1.0f);
 
         blockEntity.ifPresent(container -> {
             if (container.getFillLevel() == 0)
                 return;
-            final var variant = switch (container.getFillType()) {
-                case DARK_LATEX -> ChangedTransfurVariants.DARK_LATEX_WOLF_PARTIAL.get();
-                case WHITE_LATEX -> ChangedTransfurVariants.PURE_WHITE_LATEX_WOLF.get();
-                default -> null;
-            };
+            final var variant = container.getFillType().getTransfurVariant(TransfurCause.LATEX_CONTAINER_FELL, level.random);
 
             if (variant == null)
                 return;
 
             level.getEntitiesOfClass(LivingEntity.class, new AABB(pos)).forEach(livingEntity -> {
-                ProcessTransfur.progressTransfur(livingEntity, 15.0f, variant, TransfurContext.hazard(TransfurCause.CEILING_HAZARD));
+                ProcessTransfur.progressTransfur(livingEntity, 15.0f, variant, TransfurContext.hazard(TransfurCause.LATEX_CONTAINER_FELL));
             });
         });
 
@@ -220,8 +230,15 @@ public class LatexContainerBlock extends AbstractCustomShapeTallEntityBlock impl
     }
 
     @Override
-    public void tick(BlockState state, ServerLevel level, BlockPos pos, Random random) {
-        if (isFree(level.getBlockState(pos.below())) && pos.getY() >= level.getMinBuildHeight()) {
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        if (state.getValue(HALF) != DoubleBlockHalf.LOWER) {
+            if (!canSurvive(state, level, pos)) {
+                level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+            }
+            return;
+        }
+
+        if (FallingBlock.isFree(level.getBlockState(pos.below())) && pos.getY() >= level.getMinBuildHeight()) {
             var blockEntity = level.getBlockEntity(pos, ChangedBlockEntities.LATEX_CONTAINER.get());
             CompoundTag blockData = blockEntity.map(BlockEntity::saveWithFullMetadata).orElse(null);
 
@@ -244,19 +261,14 @@ public class LatexContainerBlock extends AbstractCustomShapeTallEntityBlock impl
         return 2;
     }
 
-    public static boolean isFree(BlockState state) {
-        Material material = state.getMaterial();
-        return state.isAir() || state.is(BlockTags.FIRE) || material.isLiquid() || material.isReplaceable();
-    }
-
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState p_53236_, boolean p_53237_) {
         level.scheduleTick(pos, this, this.getDelayAfterPlace());
     }
 
     @Override
-    public BlockState updateShape(BlockState state, Direction direction, BlockState otherState, LevelAccessor level, BlockPos pos, BlockPos otherPos) {
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
         level.scheduleTick(pos, this, this.getDelayAfterPlace());
-        return super.updateShape(state, direction, otherState, level, pos, otherPos);
+        return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
     }
 }

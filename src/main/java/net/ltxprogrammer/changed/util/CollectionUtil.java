@@ -1,10 +1,13 @@
 package net.ltxprogrammer.changed.util;
 
+import net.minecraft.util.RandomSource;
+
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -63,9 +66,54 @@ public class CollectionUtil {
         reverseList.forEach(consumer);
     }
 
-    public static <T> Stream<T> shuffle(Stream<T> stream, Random random) {
+    public static <T> Stream<T> shuffle(Stream<T> stream, RandomSource random) {
         return stream.sorted((elemA, elemB) -> {
             return random.nextInt();
         });
+    }
+
+    private static void swap(Object[] arr, int i, int j) {
+        Object tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static void shuffle(List<?> list, RandomSource rnd) {
+        int size = list.size();
+        if (size < 5 || list instanceof RandomAccess) {
+            for (int i=size; i>1; i--)
+                Collections.swap(list, i-1, rnd.nextInt(i));
+        } else {
+            Object[] arr = list.toArray();
+
+            // Shuffle array
+            for (int i=size; i>1; i--)
+                swap(arr, i-1, rnd.nextInt(i));
+
+            // Dump array back into list
+            // instead of using a raw type here, it's possible to capture
+            // the wildcard but it will require a call to a supplementary
+            // private method
+            ListIterator it = list.listIterator();
+            for (Object e : arr) {
+                it.next();
+                it.set(e);
+            }
+        }
+    }
+
+    public static <T, R> Iterator<R> mapIterator(Iterator<T> iterator, Function<T, R> mapper) {
+        return new Iterator<R>() {
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public R next() {
+                return mapper.apply(iterator.next());
+            }
+        };
     }
 }

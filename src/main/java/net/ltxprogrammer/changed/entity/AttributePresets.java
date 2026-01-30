@@ -1,5 +1,6 @@
 package net.ltxprogrammer.changed.entity;
 
+import net.ltxprogrammer.changed.init.ChangedAttributes;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraftforge.common.ForgeMod;
@@ -15,6 +16,7 @@ public abstract class AttributePresets {
         map.getInstance(Attributes.MOVEMENT_SPEED).setBaseValue(1.0);
         map.getInstance(ForgeMod.SWIM_SPEED.get()).setBaseValue(1.0);
         map.getInstance(Attributes.MAX_HEALTH).setBaseValue(20.0);
+        map.getInstance(ForgeMod.STEP_HEIGHT_ADDITION.get()).setBaseValue(0.0);
     }
 
     public static void wolfLike(AttributeMap map) {
@@ -27,6 +29,9 @@ public abstract class AttributePresets {
         map.getInstance(Attributes.MOVEMENT_SPEED).setBaseValue(1.15);
         map.getInstance(ForgeMod.SWIM_SPEED.get()).setBaseValue(0.9);
         map.getInstance(Attributes.MAX_HEALTH).setBaseValue(22.0);
+        map.getInstance(ChangedAttributes.AIR_CAPACITY.get()).setBaseValue(7.5);
+        map.getInstance(ChangedAttributes.JUMP_STRENGTH.get()).setBaseValue(1.25);
+        map.getInstance(ChangedAttributes.FALL_RESISTANCE.get()).setBaseValue(2.5);
     }
 
     public static void sharkLike(AttributeMap map) {

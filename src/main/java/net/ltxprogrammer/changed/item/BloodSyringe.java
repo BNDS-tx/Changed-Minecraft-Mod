@@ -33,14 +33,12 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public class BloodSyringe extends Item implements SpecializedAnimations {
-    public static final DamageSource BLOODLOSS = (new DamageSource("changed:bloodloss")).bypassArmor();
-
     public BloodSyringe(Properties p_41383_) {
-        super(p_41383_.tab(ChangedTabs.TAB_CHANGED_ITEMS));
+        super(p_41383_);
     }
 
     public void appendHoverText(ItemStack p_43359_, @Nullable Level p_43360_, List<Component> p_43361_, TooltipFlag p_43362_) {
-        Syringe.addOwnerTooltip(p_43359_, p_43361_);
+        Syringe.addOwnerTooltip(p_43360_, p_43359_, p_43361_);
     }
 
     @Override
@@ -57,14 +55,14 @@ public class BloodSyringe extends Item implements SpecializedAnimations {
         if (player instanceof ServerPlayer) {
             CriteriaTriggers.CONSUME_ITEM.trigger((ServerPlayer)player, stack);
         }
-        ChangedSounds.broadcastSound(entity, ChangedSounds.SWORD1, 1, 1);
+        ChangedSounds.broadcastSound(entity, ChangedSounds.SYRINGE_PRICK, 1, 1);
         if (player != null) {
             if (ProcessTransfur.isPlayerTransfurred(player) || (stack.getOrCreateTag().contains("owner") && stack.getTag().getUUID("owner").equals(player.getUUID()))) {
                 player.heal(1.0f);
             }
 
             else {
-                player.addEffect(new MobEffectInstance(ChangedEffects.HYPERCOAGULATION, 800));
+                player.addEffect(new MobEffectInstance(ChangedEffects.HYPERCOAGULATION.get(), 800));
             }
 
             player.awardStat(Stats.ITEM_USED.get(this));
@@ -152,10 +150,10 @@ public class BloodSyringe extends Item implements SpecializedAnimations {
     public InteractionResult interactLivingEntity(ItemStack itemStack, Player player, LivingEntity livingEntity, InteractionHand hand) {
         return Changed.postModEvent(
                 new UsedOnEntity(livingEntity,
-                        player.level,
+                        player.level(),
                         player,
                         itemStack)) ?
-                InteractionResult.sidedSuccess(player.level.isClientSide) :
+                InteractionResult.sidedSuccess(player.level().isClientSide) :
                 super.interactLivingEntity(itemStack, player, livingEntity, hand);
     }
 }

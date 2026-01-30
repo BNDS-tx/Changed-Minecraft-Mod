@@ -2,9 +2,11 @@ package net.ltxprogrammer.changed.mixin.entity;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.ability.AbstractAbility;
 import net.ltxprogrammer.changed.ability.GrabEntityAbility;
+import net.ltxprogrammer.changed.ability.GrabEntityAbilityInstance;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.block.StasisChamber;
 import net.ltxprogrammer.changed.block.ThreeXThreeSection;
@@ -15,8 +17,8 @@ import net.ltxprogrammer.changed.data.AccessorySlotContext;
 import net.ltxprogrammer.changed.data.AccessorySlotType;
 import net.ltxprogrammer.changed.data.AccessorySlots;
 import net.ltxprogrammer.changed.entity.*;
+import net.ltxprogrammer.changed.entity.latex.SpreadingLatexType;
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton;
-import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.fluid.AbstractLatexFluid;
 import net.ltxprogrammer.changed.fluid.Gas;
@@ -28,12 +30,14 @@ import net.ltxprogrammer.changed.item.SpecializedAnimations;
 import net.ltxprogrammer.changed.network.packet.AccessorySyncPacket;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.EntityUtil;
+import net.ltxprogrammer.changed.world.LatexCoverState;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -43,15 +47,18 @@ import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.PacketDistributor;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -73,6 +80,8 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
 
     @Unique
     public int controlDisabledFor = 0;
+    @Unique
+    public int controlInvertedFor = 0;
     @Unique @Nullable
     public LivingEntity grabbedBy = null;
     @Unique
@@ -90,6 +99,16 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
     @Override
     public void setNoControlTicks(int ticks) {
         this.controlDisabledFor = ticks;
+    }
+
+    @Override
+    public int getInvertControlTicks() {
+        return controlInvertedFor;
+    }
+
+    @Override
+    public void setInvertControlTicks(int ticks) {
+        this.controlInvertedFor = ticks;
     }
 
     @Nullable
@@ -110,10 +129,10 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
 
     @Inject(method = "updateFallFlying", at = @At("HEAD"), cancellable = true)
     private void updateFallFlying(CallbackInfo callback) {
-        if (this.level.isClientSide) return;
+        if (this.level().isClientSide) return;
         ProcessTransfur.ifPlayerTransfurred(EntityUtil.playerOrNull(this), (player, variant) -> {
             if (variant.getParent().canGlide) {
-                this.setSharedFlag(7, player.isFallFlying() && !player.isOnGround() && !player.isPassenger() && !player.hasEffect(MobEffects.LEVITATION));
+                this.setSharedFlag(7, player.isFallFlying() && !player.onGround() && !player.isPassenger() && !player.hasEffect(MobEffects.LEVITATION));
                 callback.cancel();
             }
         });
@@ -127,21 +146,14 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
         });
     }
 
-    @Inject(method = "getJumpPower", at = @At("RETURN"), cancellable = true)
-    public void getJumpPower(CallbackInfoReturnable<Float> callback) {
-        var instance = IAbstractChangedEntity.forEitherSafe((LivingEntity)(Object)this).map(IAbstractChangedEntity::getTransfurVariantInstance).orElse(null);
-        if (instance != null) {
-            callback.setReturnValue(callback.getReturnValue() * instance.jumpStrength);
+    @WrapMethod(method = "getJumpPower")
+    public float getJumpPower(Operation<Float> original) {
+        var attributes = this.getAttributes();
+        if (attributes.hasAttribute(ChangedAttributes.JUMP_STRENGTH.get())) {
+            return original.call() * (float) attributes.getValue(ChangedAttributes.JUMP_STRENGTH.get());
+        } else {
+            return original.call();
         }
-
-        else {
-            ProcessTransfur.getEntityVariant((LivingEntity)(Object)this).map(variant -> callback.getReturnValue() * variant.jumpStrength).ifPresent(callback::setReturnValue);
-        }
-
-        Exoskeleton.getEntityExoskeleton((LivingEntity)(Object)this)
-                        .ifPresent(pair -> {
-                            callback.setReturnValue(callback.getReturnValue() * pair.getSecond().getJumpStrengthMultiplier(pair.getFirst()));
-                        });
     }
 
     @Inject(method = "hasEffect", at = @At("HEAD"), cancellable = true)
@@ -154,7 +166,7 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
                 callback.setReturnValue(true);
 
             if (effect.equals(MobEffects.NIGHT_VISION)) {
-                if (variant.getChangedEntity().getLatexType() == LatexType.WHITE_LATEX && WhiteLatexTransportInterface.isEntityInWhiteLatex(player))
+                if (WhiteLatexTransportInterface.isEntityInWhiteLatex(player))
                     callback.setReturnValue(true);
             }
             if (variant.breatheMode.canBreatheWater() && effect.equals(MobEffects.CONDUIT_POWER) && isEyeInFluid(FluidTags.WATER))
@@ -172,7 +184,7 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
                 callback.setReturnValue(new MobEffectInstance(effect, 300, 1, false, false));
 
             if (effect.equals(MobEffects.NIGHT_VISION)) {
-                if (variant.getChangedEntity().getLatexType() == LatexType.WHITE_LATEX && WhiteLatexTransportInterface.isEntityInWhiteLatex(player))
+                if (WhiteLatexTransportInterface.isEntityInWhiteLatex(player))
                     callback.setReturnValue(new MobEffectInstance(MobEffects.NIGHT_VISION, 300, 1, false, false));
             }
             if (variant.breatheMode.canBreatheWater() && effect.equals(MobEffects.CONDUIT_POWER) && isEyeInFluid(FluidTags.WATER))
@@ -254,20 +266,21 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
 
     @Unique @Nullable private Gas eyeInGas = null;
 
+    @Unique
     private void checkForGas() {
         eyeInGas = null;
         // Code from Entity.updateFluidOnEyes()
         double yCheck = this.getEyeY() - 0.11111111;
 
-        BlockPos blockpos = new BlockPos(this.getX(), yCheck, this.getZ());
-        FluidState fluidstate = this.level.getFluidState(blockpos);
-        double yFluid = ((float)blockpos.getY() + fluidstate.getHeight(this.level, blockpos));
+        BlockPos blockpos = EntityUtil.getBlock(this.getX(), yCheck, this.getZ());
+        FluidState fluidstate = this.level().getFluidState(blockpos);
+        double yFluid = ((float)blockpos.getY() + fluidstate.getHeight(this.level(), blockpos));
         if (yFluid > yCheck && fluidstate.getType() instanceof Gas transfurGas)
             eyeInGas = transfurGas;
 
-        var blockstate = this.level.getBlockState(blockpos);
+        var blockstate = this.level().getBlockState(blockpos);
         if (blockstate.is(ChangedBlocks.STASIS_CHAMBER.get())) {
-            this.level.getBlockEntity(
+            this.level().getBlockEntity(
                     blockstate.getValue(StasisChamber.SECTION).getRelative(blockpos, blockstate.getValue(HorizontalDirectionalBlock.FACING), ThreeXThreeSection.CENTER),
                     ChangedBlockEntities.STASIS_CHAMBER.get()
             ).filter(chamber -> chamber.getFluidYHeight() > yCheck).flatMap(StasisChamberBlockEntity::getFluidType).ifPresent(fluid -> {
@@ -306,10 +319,16 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
                 move.setWantedPosition(move.getWantedX(), move.getWantedY(), move.getWantedZ(), move.getSpeedModifier());
             }
 
-            /*if ((Entity)this instanceof Player player)
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> LocalUtil.mulInputImpulse(player, 0.05F));*/
-
             --controlDisabledFor;
+        }
+
+        if (controlInvertedFor > 0) {
+            if ((Entity)this instanceof Mob mob) {
+                MoveControl move = mob.getMoveControl();
+                move.setWantedPosition(move.getWantedX(), move.getWantedY(), move.getWantedZ(), move.getSpeedModifier());
+            }
+
+            --controlInvertedFor;
         }
 
         if (grabbedBy != null) {
@@ -324,32 +343,27 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
         AccessorySlots.getForEntity((LivingEntity)(Object)this).ifPresent(AccessorySlots::tick);
     }
 
-    @Inject(method = "canStandOnFluid", at = @At("HEAD"), cancellable = true)
-    public void canStandOnFluid(FluidState state, CallbackInfoReturnable<Boolean> callback) {
-        var variant = TransfurVariant.getEntityVariant((LivingEntity)(Object)this);
-        if (variant == null) return;
-        if (variant.getLatexType() == LatexType.NEUTRAL) return;
-
-        if (state.getType() instanceof AbstractLatexFluid latexFluid && latexFluid.canEntityStandOn((LivingEntity)(Object)this))
-            callback.setReturnValue(true);
+    @WrapMethod(method = "canStandOnFluid")
+    public boolean canStandOnFluid(FluidState state, Operation<Boolean> original) {
+        return state.getType() instanceof AbstractLatexFluid latexFluid && latexFluid.canEntityStandOn((LivingEntity)(Object)this) ||
+                original.call(state);
     }
 
-    @Inject(method = "breakItem", at = @At("HEAD"), cancellable = true)
-    public void useDifferentBreakSound(ItemStack itemStack, CallbackInfo ci) {
-        if (!(itemStack.getItem() instanceof ExtendedItemProperties extended) || itemStack.isEmpty())
+    @WrapMethod(method = "breakItem")
+    public void useDifferentBreakSound(ItemStack itemStack, Operation<Void> original) {
+        if (!(itemStack.getItem() instanceof ExtendedItemProperties extended) || itemStack.isEmpty()) {
+            original.call(itemStack);
             return;
+        }
 
         if (!this.isSilent()) {
-            this.level.playLocalSound(this.getX(), this.getY(), this.getZ(), extended.getBreakSound(itemStack), this.getSoundSource(), 0.8F, 0.8F + this.level.random.nextFloat() * 0.4F, false);
+            this.level().playLocalSound(this.getX(), this.getY(), this.getZ(), extended.getBreakSound(itemStack), this.getSoundSource(), 0.8F, 0.8F + this.level().random.nextFloat() * 0.4F, false);
         }
 
         this.spawnItemParticles(itemStack, 5);
-
-        ci.cancel();
     }
 
     @Shadow public abstract boolean canStandOnFluid(FluidState state);
-    @Shadow public abstract boolean isEffectiveAi();
     @Shadow public abstract boolean hasEffect(MobEffect effect);
     @Shadow public abstract AttributeInstance getAttribute(Attribute attribute);
     @Shadow protected abstract boolean isAffectedByFluids();
@@ -386,7 +400,7 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
             }
             d0 = gravity.getValue();
 
-            FluidState fluidstate = this.level.getFluidState(this.blockPosition());
+            FluidState fluidstate = this.level().getFluidState(this.blockPosition());
             if (this.isInLatex() && this.isAffectedByFluids() && !this.canStandOnFluid(fluidstate)) {
                 double d8 = this.getY();
                 this.moveRelative(0.02F, direction);
@@ -444,7 +458,8 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
 
     @Inject(method = "createLivingAttributes", at = @At("RETURN"))
     private static void addChangedAttributes(CallbackInfoReturnable<AttributeSupplier.Builder> cir) {
-        cir.getReturnValue().add(ChangedAttributes.TRANSFUR_TOLERANCE.get());
+        cir.getReturnValue().add(ChangedAttributes.TRANSFUR_TOLERANCE.get())
+                .add(ChangedAttributes.GRAB_STRUGGLE_STRENGTH.get(), GrabEntityAbilityInstance.GRAB_STRENGTH_DECAY);
     }
 
     @Inject(method = "increaseAirSupply", at = @At("HEAD"), cancellable = true)
@@ -466,11 +481,11 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
 
     @Inject(method = "stopSleeping", at = @At("HEAD"), cancellable = true)
     public void unlessIsStabilizedAndMultiplayer(CallbackInfo ci) {
-        if ((LivingEntity)(Object)this instanceof Player && level instanceof ServerLevel serverLevel) {
+        if ((LivingEntity)(Object)this instanceof Player && level() instanceof ServerLevel serverLevel) {
             if (serverLevel.players().stream().filter(player -> !player.isSpectator()).count() == 1) {
                 // Singleplayer, just skip stasis time
                 if (this.vehicle instanceof SeatEntity seatEntity) {
-                    this.level.getBlockEntity(seatEntity.getAttachedBlockPos(), ChangedBlockEntities.STASIS_CHAMBER.get())
+                    this.level().getBlockEntity(seatEntity.getAttachedBlockPos(), ChangedBlockEntities.STASIS_CHAMBER.get())
                             .ifPresent(StasisChamberBlockEntity::trimSchedule);
                 }
                 return;
@@ -484,7 +499,7 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
     public void getStasisChamberOrientation(CallbackInfoReturnable<Direction> cir) {
         if (this.vehicle instanceof SeatEntity seatEntity) {
             seatEntity.getAttachedBlockState()
-                    .map(state -> state.getBedDirection(this.level, seatEntity.getAttachedBlockPos()))
+                    .map(state -> state.getBedDirection(this.level(), seatEntity.getAttachedBlockPos()))
                     .ifPresent(cir::setReturnValue);
         }
     }
@@ -502,7 +517,7 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
 
     @Inject(method = "dropEquipment", at = @At("RETURN"))
     public void dropAccessories(CallbackInfo ci) {
-        if (!this.level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
+        if (!this.level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
             for(int i = 0; i < accessorySlots.getContainerSize(); ++i) {
                 ItemStack itemstack = accessorySlots.getItem(i);
                 if (!itemstack.isEmpty() && EnchantmentHelper.hasVanishingCurse(itemstack)) {
@@ -512,5 +527,34 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
 
             accessorySlots.dropAll(AccessorySlots.dropItemHandler((LivingEntity)(Object)this));
         }
+    }
+
+    @WrapOperation(method = "playBlockFallSound", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;getSoundType(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/world/level/block/SoundType;"))
+    public SoundType extendedSoundEvent(BlockState instance, LevelReader reader, BlockPos blockPos, Entity entity, Operation<SoundType> original) {
+        final LatexCoverState coverState = LatexCoverState.getAt(reader, blockPos.above());
+        if (coverState.isAir())
+            return original.call(instance, reader, blockPos, entity);
+        if (coverState.getProperties().contains(SpreadingLatexType.DOWN) && !coverState.getValue(SpreadingLatexType.DOWN))
+            return original.call(instance, reader, blockPos, entity);
+        final SoundType coveredSound = coverState.getSoundType(reader, blockPos.above(), entity);
+        return coveredSound != null ? coveredSound : original.call(instance, reader, blockPos, entity);
+    }
+
+    @WrapOperation(method = "getDamageAfterMagicAbsorb",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;getDamageProtection(Ljava/lang/Iterable;Lnet/minecraft/world/damagesource/DamageSource;)I"))
+    public int andAccessorySlots(Iterable<ItemStack> armorSlots, DamageSource damageSource, Operation<Integer> original) {
+        MutableInt total = new MutableInt();
+
+        accessorySlots.forEachSlot((slot, itemStack) -> {
+            if (!itemStack.isEmpty() && itemStack.getItem() instanceof AccessoryItem accessoryItem) {
+                for (Map.Entry<Enchantment, Integer> entry : itemStack.getAllEnchantments().entrySet()) {
+                    if (accessoryItem.isConsideredByEnchantment(new AccessorySlotContext<>((LivingEntity)(Object)this, slot, itemStack), entry.getKey())) {
+                        total.add(entry.getKey().getDamageProtection(entry.getValue(), damageSource));
+                    }
+                }
+            }
+        });
+
+        return total.intValue() + original.call(armorSlots, damageSource);
     }
 }

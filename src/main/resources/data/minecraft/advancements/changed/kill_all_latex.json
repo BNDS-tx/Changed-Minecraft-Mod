@@ -1,23 +1,5 @@
 {
   "parent": "minecraft:changed/root",
-  "display": {
-    "icon": {
-      "item": "changed:tsc_baton"
-    },
-    "title": {
-      "translate": "changed:advancements.main.kill_all_latex.title"
-    },
-    "description": {
-      "translate": "changed:advancements.main.kill_all_latex.description"
-    },
-    "frame": "challenge",
-    "show_toast": true,
-    "announce_to_chat": true,
-    "hidden": false
-  },
-  "rewards": {
-    "experience": 150
-  },
   "criteria": {
     "changed:gas_skunk": {
       "trigger": "minecraft:player_killed_entity",
@@ -47,14 +29,42 @@
         ]
       }
     },
-    "changed:gas_wolf": {
+    "changed:gas_wolf_female": {
       "trigger": "minecraft:player_killed_entity",
       "conditions": {
         "entity": [
           {
             "condition": "minecraft:entity_properties",
             "predicate": {
-              "type": "changed:gas_wolf"
+              "type": "changed:gas_wolf_female"
+            },
+            "entity": "this"
+          }
+        ]
+      }
+    },
+    "changed:gas_wolf_male": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "predicate": {
+              "type": "changed:gas_wolf_male"
+            },
+            "entity": "this"
+          }
+        ]
+      }
+    },
+    "changed:gas_wolf_pup": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "predicate": {
+              "type": "changed:gas_wolf_pup"
             },
             "entity": "this"
           }
@@ -229,6 +239,20 @@
         ]
       }
     },
+    "changed:latex_benign_orca": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "predicate": {
+              "type": "changed:latex_benign_orca"
+            },
+            "entity": "this"
+          }
+        ]
+      }
+    },
     "changed:latex_benign_wolf": {
       "trigger": "minecraft:player_killed_entity",
       "conditions": {
@@ -313,6 +337,20 @@
         ]
       }
     },
+    "changed:latex_crow": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "predicate": {
+              "type": "changed:latex_crow"
+            },
+            "entity": "this"
+          }
+        ]
+      }
+    },
     "changed:latex_deer": {
       "trigger": "minecraft:player_killed_entity",
       "conditions": {
@@ -321,6 +359,20 @@
             "condition": "minecraft:entity_properties",
             "predicate": {
               "type": "changed:latex_deer"
+            },
+            "entity": "this"
+          }
+        ]
+      }
+    },
+    "changed:latex_eel": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "predicate": {
+              "type": "changed:latex_eel"
             },
             "entity": "this"
           }
@@ -1041,14 +1093,14 @@
         ]
       }
     },
-    "changed:shark": {
+    "changed:latex_shark_feral": {
       "trigger": "minecraft:player_killed_entity",
       "conditions": {
         "entity": [
           {
             "condition": "minecraft:entity_properties",
             "predicate": {
-              "type": "changed:shark"
+              "type": "changed:latex_shark_feral"
             },
             "entity": "this"
           }
@@ -1154,6 +1206,21 @@
       }
     }
   },
+  "display": {
+    "announce_to_chat": true,
+    "description": {
+      "translate": "changed:advancements.main.kill_all_latex.description"
+    },
+    "frame": "challenge",
+    "hidden": false,
+    "icon": {
+      "item": "changed:tsc_baton"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "changed:advancements.main.kill_all_latex.title"
+    }
+  },
   "requirements": [
     [
       "changed:gas_skunk"
@@ -1162,7 +1229,13 @@
       "changed:gas_tiger"
     ],
     [
-      "changed:gas_wolf"
+      "changed:gas_wolf_female"
+    ],
+    [
+      "changed:gas_wolf_male"
+    ],
+    [
+      "changed:gas_wolf_pup"
     ],
     [
       "changed:behemoth_head"
@@ -1201,6 +1274,9 @@
       "changed:beifeng"
     ],
     [
+      "changed:latex_benign_orca"
+    ],
+    [
       "changed:latex_benign_wolf"
     ],
     [
@@ -1219,7 +1295,13 @@
       "changed:crystal_wolf_horned"
     ],
     [
+      "changed:latex_crow"
+    ],
+    [
       "changed:latex_deer"
+    ],
+    [
+      "changed:latex_eel"
     ],
     [
       "changed:latex_fennec_fox"
@@ -1375,7 +1457,7 @@
       "changed:milk_pudding"
     ],
     [
-      "changed:shark"
+      "changed:latex_shark_feral"
     ],
     [
       "changed:pooltoy_wolf"
@@ -1398,5 +1480,9 @@
     [
       "changed:phage_latex_wolf_male"
     ]
-  ]
+  ],
+  "rewards": {
+    "experience": 150
+  },
+  "sends_telemetry_event": false
 }

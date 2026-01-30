@@ -4,7 +4,6 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.entity.*;
-import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.init.ChangedTransfurVariants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -56,11 +55,6 @@ public class LatexHuman extends ChangedEntity implements ComplexRenderer {
     @Override
     public TransfurMode getTransfurMode() {
         return TransfurMode.REPLICATION;
-    }
-
-    @Override
-    public LatexType getLatexType() {
-        return LatexType.NEUTRAL;
     }
 
     public UUID getRepresentUUID() {
@@ -144,14 +138,29 @@ public class LatexHuman extends ChangedEntity implements ComplexRenderer {
     }
 
     @Override
-    public void onReplicateOther(IAbstractChangedEntity other, TransfurVariant<?> variant) {
-        super.onReplicateOther(other, variant);
-        //if (this.getUUID() != this.getRepresentUUID()) return;
+    public void onReplicateOther(IAbstractChangedEntity other) {
+        super.onReplicateOther(other);
 
-        if (variant.is(ChangedTransfurVariants.LATEX_HUMAN)) {
-            if (other.getChangedEntity() instanceof LatexHuman human) {
-                human.setRepresentPlayer(this.getRepresentUUID());
-            }
+        if (other.getChangedEntity() instanceof LatexHuman human) {
+            human.setRepresentPlayer(this.getRepresentUUID());
+        }
+    }
+
+    @Override
+    public void onSuitOther(IAbstractChangedEntity other) {
+        super.onSuitOther(other);
+
+        if (other.getChangedEntity() instanceof LatexHuman human) {
+            human.setRepresentPlayer(this.getRepresentUUID());
+        }
+    }
+
+    @Override
+    public void copyTraitsFrom(IAbstractChangedEntity entity) {
+        super.copyTraitsFrom(entity);
+
+        if (entity.getChangedEntity() instanceof LatexHuman human) {
+            this.setRepresentPlayer(human.getRepresentUUID());
         }
     }
 

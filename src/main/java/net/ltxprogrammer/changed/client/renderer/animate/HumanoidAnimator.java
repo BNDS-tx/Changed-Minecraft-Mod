@@ -163,6 +163,14 @@ public class HumanoidAnimator<T extends ChangedEntity, M extends AdvancedHumanoi
         for (var anim : animators.get(AnimateStage.INIT)) {
             anim.copyTo(propertyModel);
         }
+
+        propertyModel.leftLeg.setInitialPose(propertyModel.leftLeg.storePose());
+        propertyModel.rightLeg.setInitialPose(propertyModel.rightLeg.storePose());
+        propertyModel.leftArm.setInitialPose(propertyModel.leftArm.storePose());
+        propertyModel.rightArm.setInitialPose(propertyModel.rightArm.storePose());
+        propertyModel.body.setInitialPose(propertyModel.body.storePose());
+        propertyModel.head.setInitialPose(propertyModel.head.storePose());
+        propertyModel.hat.setInitialPose(propertyModel.hat.storePose());
     }
 
     public void writePropertyModel(PlayerModel<?> propertyModel) {
@@ -177,6 +185,12 @@ public class HumanoidAnimator<T extends ChangedEntity, M extends AdvancedHumanoi
         propertyModel.leftSleeve.visible = propertyModel.leftArm.visible;
         propertyModel.rightPants.visible = propertyModel.rightLeg.visible;
         propertyModel.leftPants.visible = propertyModel.leftLeg.visible;
+
+        propertyModel.leftPants.setInitialPose(propertyModel.leftPants.storePose());
+        propertyModel.rightPants.setInitialPose(propertyModel.rightPants.storePose());
+        propertyModel.leftSleeve.setInitialPose(propertyModel.leftSleeve.storePose());
+        propertyModel.rightSleeve.setInitialPose(propertyModel.rightSleeve.storePose());
+        propertyModel.jacket.setInitialPose(propertyModel.jacket.storePose());
     }
 
     /**
@@ -244,7 +258,7 @@ public class HumanoidAnimator<T extends ChangedEntity, M extends AdvancedHumanoi
     private void setupCameraAnimStage(AnimateStage stage, @NotNull CameraExtender camera, @NotNull T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         var animatorList = cameraAnimators.get(stage);
         if (animatorList == null) return;
-        boolean bobView = Minecraft.getInstance().options.bobView;
+        boolean bobView = Minecraft.getInstance().options.bobView().get();
 
         animatorList.forEach(animator -> {
             if (animator.requiresViewBob() && !bobView)
@@ -314,15 +328,15 @@ public class HumanoidAnimator<T extends ChangedEntity, M extends AdvancedHumanoi
 
     public static enum AnimateStage implements BiPredicate<HumanoidAnimator<?,?>, ChangedEntity> {
         INIT,
-        RIDE((animator, latex) -> animator.entityModel.riding),
-        SLEEP((animator, latex) -> latex.getPose() == Pose.SLEEPING),
+        RIDE(AnimateStage::isRiding),
+        SLEEP(AnimateStage::isSleeping),
         ATTACK,
-        CROUCH((animator, latex) -> animator.crouching),
-        STAND((animator, latex) -> !animator.crouching),
+        CROUCH(AnimateStage::isCrouching),
+        STAND(AnimateStage::isStanding),
         BOB,
-        CREATIVE_FLY((animator, latex) -> animator.flyAmount > 0f),
-        FALL_FLY((animator, latex) -> latex.isFallFlying()),
-        SWIM((animator, latex) -> animator.swimAmount > 0f),
+        CREATIVE_FLY(AnimateStage::isCreativeFlying),
+        FALL_FLY(AnimateStage::isFallFlying),
+        SWIM(AnimateStage::isSwimming),
         FINAL;
 
         public static final List<AnimateStage> ORDER = List.of(INIT, RIDE, SLEEP, ATTACK, CROUCH, STAND, BOB, CREATIVE_FLY, FALL_FLY, SWIM, FINAL);
@@ -344,6 +358,34 @@ public class HumanoidAnimator<T extends ChangedEntity, M extends AdvancedHumanoi
 
         private static boolean always(HumanoidAnimator<?,?> animator, ChangedEntity entity) {
             return true;
+        }
+
+        private static boolean isRiding(HumanoidAnimator<?,?> animator, ChangedEntity entity) {
+            return animator.entityModel.riding;
+        }
+
+        private static boolean isSleeping(HumanoidAnimator<?,?> animator, ChangedEntity entity) {
+            return entity.getPose() == Pose.SLEEPING;
+        }
+
+        private static boolean isCrouching(HumanoidAnimator<?,?> animator, ChangedEntity entity) {
+            return animator.crouching;
+        }
+
+        private static boolean isStanding(HumanoidAnimator<?,?> animator, ChangedEntity entity) {
+            return !animator.crouching;
+        }
+
+        private static boolean isCreativeFlying(HumanoidAnimator<?,?> animator, ChangedEntity entity) {
+            return animator.flyAmount > 0f;
+        }
+
+        private static boolean isFallFlying(HumanoidAnimator<?,?> animator, ChangedEntity entity) {
+            return entity.isFallFlying();
+        }
+
+        private static boolean isSwimming(HumanoidAnimator<?,?> animator, ChangedEntity entity) {
+            return animator.swimAmount > 0f;
         }
     }
 

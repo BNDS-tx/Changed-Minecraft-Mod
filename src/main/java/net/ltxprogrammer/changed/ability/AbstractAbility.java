@@ -7,11 +7,9 @@ import net.ltxprogrammer.changed.network.packet.SyncVariantAbilityPacket;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.registries.ForgeRegistryEntry;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -20,7 +18,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
-public abstract class AbstractAbility<Instance extends AbstractAbilityInstance> extends ForgeRegistryEntry<AbstractAbility<?>> {
+public abstract class AbstractAbility<Instance extends AbstractAbilityInstance> {
     public static class Controller {
         private final AbstractAbilityInstance abilityInstance;
         private boolean startedUsing = false;
@@ -67,9 +65,9 @@ public abstract class AbstractAbility<Instance extends AbstractAbilityInstance> 
             return abilityInstance.canKeepUsing();
         }
 
-        public void tickAbility() {
+        public void tickAbility(boolean uniqueTick) {
             if (startedUsing) {
-                holdTicks++;
+                holdTicks += uniqueTick ? 1 : 0;
                 abilityInstance.tick();
             }
         }
@@ -96,14 +94,18 @@ public abstract class AbstractAbility<Instance extends AbstractAbilityInstance> 
                 coolDownTicksRemaining--;
         }
 
+        public void forceCooldown(int ticks) {
+            coolDownTicksRemaining = ticks;
+        }
+
         public boolean exchangeKeyState(boolean keyState) {
             boolean oState = keyStateO;
             keyStateO = keyState;
             return oState;
         }
 
-        public boolean chargeAbility() {
-            chargeTicks++;
+        public boolean chargeAbility(boolean uniqueTick) {
+            chargeTicks += uniqueTick ? 1 : 0;
             return chargeTicks >= abilityInstance.ability.getChargeTime(abilityInstance.entity);
         }
 
@@ -130,7 +132,7 @@ public abstract class AbstractAbility<Instance extends AbstractAbilityInstance> 
     }
 
     public interface UseActivate {
-        void check(boolean currentKeyState, boolean oldKeyState, Controller controller);
+        void check(boolean currentKeyState, boolean oldKeyState, boolean uniqueTick, Controller controller);
     }
 
     public interface UseProgressActive {
@@ -141,26 +143,26 @@ public abstract class AbstractAbility<Instance extends AbstractAbilityInstance> 
         /**
          * Indicates the ability should activate upon keypress
          */
-        INSTANT((keyState, oldState, controller) -> {
+        INSTANT((keyState, oldState, uniqueTick, controller) -> {
             if (!oldState && keyState) {
+                controller.applyCoolDown();
                 controller.activateAbility();
                 controller.deactivateAbility();
-                controller.applyCoolDown();
             }
         }, (keyState, controller) -> keyState ? 1.0F : 0.0F),
         /**
          * Indicates the ability needs to charge while key is pressed for some time, then activates
          */
-        CHARGE_TIME((keyState, oldState, controller) -> {
+        CHARGE_TIME((keyState, oldState, uniqueTick, controller) -> {
             if (keyState) {
-                if (!controller.chargeAbility())
+                if (!controller.chargeAbility(uniqueTick))
                     return;
 
+                controller.applyCoolDown();
                 controller.activateAbility();
                 controller.deactivateAbility();
 
                 controller.resetCharge();
-                controller.applyCoolDown();
             }
 
             else {
@@ -170,25 +172,25 @@ public abstract class AbstractAbility<Instance extends AbstractAbilityInstance> 
         /**
          * Indicates the ability activates when the key is released
          */
-        CHARGE_RELEASE((keyState, oldState, controller) -> {
+        CHARGE_RELEASE((keyState, oldState, uniqueTick, controller) -> {
             if (keyState) {
                 controller.tickCharge();
             }
 
             if (!keyState && oldState) {
+                controller.applyCoolDown();
                 controller.activateAbility();
                 controller.deactivateAbility();
-                controller.applyCoolDown();
             }
         }, (keyState, controller) -> keyState ? 1.0F : 0.0F),
         /**
          * Indicates the ability activates upon keypress, and continues to fire per tick while key is down
          */
-        HOLD((keyState, oldState, controller) -> {
+        HOLD((keyState, oldState, uniqueTick, controller) -> {
             if (keyState && !oldState)
                 controller.activateAbility();
             else if (keyState && controller.canKeepUsing())
-                controller.tickAbility();
+                controller.tickAbility(uniqueTick);
             else if (oldState) {
                 controller.deactivateAbility();
                 controller.applyCoolDown();
@@ -208,8 +210,8 @@ public abstract class AbstractAbility<Instance extends AbstractAbilityInstance> 
         }
 
         @Override
-        public void check(boolean keyState, boolean oldKeyState, Controller controller) {
-            activate.check(keyState, oldKeyState, controller);
+        public void check(boolean keyState, boolean oldKeyState, boolean uniqueTick, Controller controller) {
+            activate.check(keyState, oldKeyState, uniqueTick, controller);
         }
 
         @Override
@@ -234,7 +236,7 @@ public abstract class AbstractAbility<Instance extends AbstractAbilityInstance> 
     }
 
     public Component getAbilityName(IAbstractChangedEntity entity) {
-        return new TranslatableComponent("ability." + getRegistryName().toString().replace(':', '.'));
+        return Component.translatable("ability." + ChangedRegistry.ABILITY.getKey(this).toString().replace(':', '.'));
     }
 
     public Collection<Component> getAbilityDescription(IAbstractChangedEntity entity) {
@@ -266,11 +268,10 @@ public abstract class AbstractAbility<Instance extends AbstractAbilityInstance> 
         CompoundTag data = new CompoundTag();
         saveData(data, entity);
 
-        int id = ChangedRegistry.ABILITY.get().getID(this);
         if (entity.getLevel().isClientSide)
-            Changed.PACKET_HANDLER.sendToServer(new SyncVariantAbilityPacket(id, data));
+            Changed.PACKET_HANDLER.sendToServer(new SyncVariantAbilityPacket(this, data));
         else
-            Changed.PACKET_HANDLER.send(PacketDistributor.ALL.noArg(), new SyncVariantAbilityPacket(id, data, entity.getUUID()));
+            Changed.PACKET_HANDLER.send(PacketDistributor.ALL.noArg(), new SyncVariantAbilityPacket(this, data, entity.getId()));
     }
 
     @Nullable

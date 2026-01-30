@@ -1,12 +1,17 @@
 package net.ltxprogrammer.changed.entity.beast;
 
 import net.ltxprogrammer.changed.entity.*;
+import net.ltxprogrammer.changed.entity.ai.DarkLatexFavor;
+import net.ltxprogrammer.changed.entity.ai.DarkLatexInventory;
 import net.ltxprogrammer.changed.entity.variant.EntityShape;
+import net.ltxprogrammer.changed.init.ChangedAttributes;
+import net.ltxprogrammer.changed.init.ChangedLatexTypes;
 import net.ltxprogrammer.changed.init.ChangedSounds;
 import net.ltxprogrammer.changed.init.ChangedTransfurVariants;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.Color3;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -56,7 +61,7 @@ public class DarkLatexWolfPup extends AbstractDarkLatexEntity {
     public boolean doHurtTarget(Entity entity) {
         if (entity instanceof LivingEntity livingEntity) {
             if (!this.isPuddle())
-                this.playSound(ChangedSounds.POISON, 1.0f, 1.0f);
+                this.playSound(ChangedSounds.DARK_LATEX_PUP_FORM_PUDDLE.get(), 1.0f, 1.0f);
             this.setPuddle(true);
             ticksLeftAsPuddle = 120;
             livingEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2, false, false, false)); // Slowness 2 for 5 seconds
@@ -152,7 +157,7 @@ public class DarkLatexWolfPup extends AbstractDarkLatexEntity {
         var underlyingPlayer = getUnderlyingPlayer();
         if (ProcessTransfur.ifPlayerTransfurred(underlyingPlayer, variant -> {
             if (variant.ageAsVariant > MAX_AGE || age > MAX_AGE) {
-                var newVariant = ChangedTransfurVariants.Gendered.DARK_LATEX_WOLVES.getRandomVariant(level.random);
+                var newVariant = ChangedTransfurVariants.Gendered.DARK_LATEX_WOLVES.getRandomVariant(level().random);
                 ProcessTransfur.changeTransfur(underlyingPlayer, newVariant);
                 ChangedSounds.broadcastSound(this, newVariant.sound, 1.0f, 1.0f);
                 underlyingPlayer.heal(12.0f);
@@ -160,7 +165,7 @@ public class DarkLatexWolfPup extends AbstractDarkLatexEntity {
         })) return;
 
         if (age > MAX_AGE) {
-            var newVariant = ChangedTransfurVariants.Gendered.DARK_LATEX_WOLVES.getRandomVariant(level.random);
+            var newVariant = ChangedTransfurVariants.Gendered.DARK_LATEX_WOLVES.getRandomVariant(level().random);
             var wolf = newVariant.getEntityType().create(level);
             if (wolf != null) {
                 wolf.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
@@ -179,6 +184,15 @@ public class DarkLatexWolfPup extends AbstractDarkLatexEntity {
         aged.setCustomName(this.getCustomName());
         aged.getBasicPlayerInfo().copyFrom(this.getBasicPlayerInfo());
         aged.setUnderlyingPlayer(this.getUnderlyingPlayer());
+        if (this.inventory != null) {
+            aged.inventory = aged.createInventory();
+            aged.grabEntityAbilityInstance = aged.createGrabAbility();
+
+            var items = new ListTag();
+            this.inventory.save(items);
+            aged.inventory.load(items);
+            this.inventory.clearContent();
+        }
     }
 
     public boolean canBeLeashed(Player player) {
@@ -188,7 +202,7 @@ public class DarkLatexWolfPup extends AbstractDarkLatexEntity {
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack itemstack = player.getItemInHand(hand);
-        if (this.level.isClientSide) {
+        if (this.level().isClientSide) {
             boolean flag = this.isOwnedBy(player) || this.isTame() || this.isTameItem(itemstack) && !this.isTame();
             return flag ? InteractionResult.CONSUME : InteractionResult.PASS;
         } else {
@@ -198,27 +212,27 @@ public class DarkLatexWolfPup extends AbstractDarkLatexEntity {
                 }
 
                 ProcessTransfur.ifPlayerTransfurred(player, variant -> {
-                    if (variant.getLatexType() == LatexType.DARK_LATEX && this.random.nextInt(3) == 0) { // One in 3 chance
+                    if (ChangedLatexTypes.DARK_LATEX.get().isFriendlyTo(variant.getLatexType()) && this.random.nextInt(3) == 0) { // One in 3 chance
                         this.tame(player);
                         this.navigation.stop();
                         this.setTarget(null);
-                        this.level.broadcastEntityEvent(this, (byte)7);
-                    } else if (!variant.getLatexType().isHostileTo(LatexType.DARK_LATEX) && this.random.nextInt(10) == 0) {
+                        this.level().broadcastEntityEvent(this, (byte)7);
+                    } else if (!ChangedLatexTypes.DARK_LATEX.get().isHostileTo(variant.getLatexType()) && this.random.nextInt(10) == 0) {
                         this.tame(player);
                         this.navigation.stop();
                         this.setTarget(null);
-                        this.level.broadcastEntityEvent(this, (byte)7);
+                        this.level().broadcastEntityEvent(this, (byte)7);
                     } else {
-                        this.level.broadcastEntityEvent(this, (byte)6);
+                        this.level().broadcastEntityEvent(this, (byte)6);
                     }
                 }, () -> {
                     if (this.random.nextInt(10) == 0) { // One in 10 chance
                         this.tame(player);
                         this.navigation.stop();
                         this.setTarget(null);
-                        this.level.broadcastEntityEvent(this, (byte)7);
+                        this.level().broadcastEntityEvent(this, (byte)7);
                     } else {
-                        this.level.broadcastEntityEvent(this, (byte)6);
+                        this.level().broadcastEntityEvent(this, (byte)6);
                     }
                 });
 
@@ -229,12 +243,30 @@ public class DarkLatexWolfPup extends AbstractDarkLatexEntity {
         }
     }
 
+    /*@Override
+    protected InteractionResult tamedInteract(Player player, InteractionHand hand) {
+        boolean shouldFollow = !this.isFollowingOwner();
+        this.setFollowOwner(shouldFollow);
+
+        player.displayClientMessage(Component.translatable(shouldFollow ? "text.changed.tamed.follow" : "text.changed.tamed.wander", this.getDisplayName()), true);
+        this.jumping = false;
+        this.navigation.stop();
+        this.setTarget((LivingEntity) null);
+        return InteractionResult.SUCCESS;
+    }*/
+
+    @Override
+    public boolean canDoFavor(DarkLatexFavor favor) {
+        return favor == DarkLatexFavor.NONE;
+    }
+
     @Override
     protected void setAttributes(AttributeMap attributes) {
         super.setAttributes(attributes);
         attributes.getInstance(Attributes.MOVEMENT_SPEED).setBaseValue(1.25);
         attributes.getInstance(ForgeMod.SWIM_SPEED.get()).setBaseValue(0.975);
         attributes.getInstance(Attributes.MAX_HEALTH).setBaseValue(12.0);
+        attributes.getInstance(ChangedAttributes.FALL_RESISTANCE.get()).setBaseValue(2.5);
     }
 
     @Override

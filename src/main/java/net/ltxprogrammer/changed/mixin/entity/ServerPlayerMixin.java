@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.mojang.authlib.GameProfile;
 import net.ltxprogrammer.changed.Changed;
+import net.ltxprogrammer.changed.ability.AbstractAbility;
 import net.ltxprogrammer.changed.data.AccessorySlots;
 import net.ltxprogrammer.changed.entity.PlayerDataExtension;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
@@ -19,12 +20,15 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.IntTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.network.PacketDistributor;
 import org.spongepowered.asm.mixin.Mixin;
@@ -47,7 +51,11 @@ public abstract class ServerPlayerMixin extends Player implements PlayerDataExte
     @Inject(method = "restoreFrom", at = @At("HEAD"))
     public void restoreFrom(ServerPlayer player, boolean restore, CallbackInfo callbackInfo) {
         ServerPlayer self = (ServerPlayer)(Object)this;
-        if (player.level.getGameRules().getBoolean(ChangedGameRules.RULE_KEEP_FORM) || restore) {
+
+        if (player instanceof PlayerDataExtension ext)
+            setBasicPlayerInfo(ext.getBasicPlayerInfo());
+
+        if (player.level().getGameRules().getBoolean(ChangedGameRules.RULE_KEEP_FORM) || restore) {
             ProcessTransfur.ifPlayerTransfurred(player, oldVariant -> {
                 if (!oldVariant.willSurviveTransfur)
                     return;
@@ -68,11 +76,9 @@ public abstract class ServerPlayerMixin extends Player implements PlayerDataExte
     @WrapMethod(method = "hurt")
     private boolean ignoreInvulnForTFKill(DamageSource source, float damage, Operation<Boolean> original) {
         int oldSpawnInvulnerableTime = this.spawnInvulnerableTime;
-        var damageSourceName = source.msgId;
 
         boolean wrapInvuln;
-        if (this.spawnInvulnerableTime > 0 && this.getTransfurVariant() != null && (ChangedDamageSources.TRANSFUR_NAME.equals(damageSourceName)
-                || ChangedDamageSources.ABSORB_NAME.equals(damageSourceName))) {
+        if (this.spawnInvulnerableTime > 0 && this.getTransfurVariant() != null && source.is(ChangedTags.DamageTypes.IS_TRANSFUR)) {
             this.spawnInvulnerableTime = 0;
             wrapInvuln = true;
         }
@@ -90,6 +96,24 @@ public abstract class ServerPlayerMixin extends Player implements PlayerDataExte
         return result;
     }
 
+    @WrapMethod(method = "changeDimension", remap = false)
+    public Entity carryPassengers(ServerLevel newLevel, ITeleporter teleporter, Operation<Entity> original) {
+        var entity = original.call(newLevel, teleporter);
+        if (!(entity instanceof LivingEntity livingEntity))
+            return entity;
+
+        AbstractAbility.getAbilityInstanceSafe(livingEntity, ChangedAbilities.GRAB_ENTITY_ABILITY.get()).ifPresent(ability -> {
+            if (ability.grabbedEntity == null)
+                return;
+            ability.grabbedEntity.portalEntrancePos = this.portalEntrancePos;
+            var newEntity = ability.grabbedEntity.changeDimension(newLevel, teleporter);
+            if (ability.grabbedEntity != newEntity && newEntity instanceof LivingEntity newLivingEntity)
+                ability.replaceEntityReference(newLivingEntity);
+        });
+
+        return entity;
+    }
+
     @Unique
     private void readTransfurVariant(CompoundTag tag) {
         if (tag.contains("TransfurVariant")) {
@@ -100,9 +124,9 @@ public abstract class ServerPlayerMixin extends Player implements PlayerDataExte
                 variant = ChangedTransfurVariants.FALLBACK_VARIANT.get();
             }
             final TransfurVariantInstance<?> variantInstance = ProcessTransfur.setPlayerTransfurVariant(this, variant, null, 1.0f, false,
-                    entity -> {
+                    preApplyVariant -> {
                         if (tag.contains("Leash", 10))
-                            entity.setLeashInfoTag(tag.getCompound("Leash"));
+                            preApplyVariant.getChangedEntity().setLeashInfoTag(tag.getCompound("Leash"));
                     });
 
             if (variantInstance == null) {
@@ -192,7 +216,7 @@ public abstract class ServerPlayerMixin extends Player implements PlayerDataExte
     @Inject(method = "stopRiding", at = @At("HEAD"))
     public void stopRiding(CallbackInfo callbackInfo) {
         if (this.getVehicle() instanceof Player)
-            Changed.PACKET_HANDLER.send(PacketDistributor.ALL.noArg(), new MountTransfurPacket(getUUID(), getUUID()));
+            Changed.PACKET_HANDLER.send(PacketDistributor.ALL.noArg(), new MountTransfurPacket(getId(), getId()));
     }
 
     @Override

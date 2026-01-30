@@ -88,9 +88,11 @@ public abstract class HumanoidModelMixin<T extends LivingEntity> extends Ageable
 
     @Inject(method = "setupAnim(Lnet/minecraft/world/entity/LivingEntity;FFFFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/geom/ModelPart;copyFrom(Lnet/minecraft/client/model/geom/ModelPart;)V"))
     public void setupAnimAndForceAnimation(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, CallbackInfo ci) {
-        ((ClientLivingEntityExtender)entity).getOrderedAnimations().forEach(instance -> {
-            instance.animate((HumanoidModel<?>)(Object)this, Mth.positiveModulo(ageInTicks, 1.0f));
-        });
+        if (!TransfurAnimator.isCapturing()) {
+            ((ClientLivingEntityExtender) entity).getOrderedAnimations().forEach(instance -> {
+                instance.animate((HumanoidModel<?>) (Object) this, Mth.positiveModulo(ageInTicks, 1.0f));
+            });
+        }
 
         if (limbSwing == 0.0f && limbSwingAmount == 0.0f && ageInTicks == 0.0f && netHeadYaw == 0.0f && headPitch == 0.0f) {
             // Exception case when rendering hand, ignore positioning other limbs
@@ -107,7 +109,7 @@ public abstract class HumanoidModelMixin<T extends LivingEntity> extends Ageable
                 final EntityRenderDispatcher dispatcher = minecraft.getEntityRenderDispatcher();
                 final var latexRenderer = dispatcher.getRenderer(variant.getChangedEntity());
 
-                if (!(latexRenderer instanceof AdvancedHumanoidRenderer<?,?,?> latexHumanoidRenderer)) return;
+                if (!(latexRenderer instanceof AdvancedHumanoidRenderer<?,?> latexHumanoidRenderer)) return;
 
                 final var latexModel = latexHumanoidRenderer.getModel(variant.getChangedEntity());
 

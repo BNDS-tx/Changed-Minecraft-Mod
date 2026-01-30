@@ -1,9 +1,9 @@
 package net.ltxprogrammer.changed.item;
 
 import net.ltxprogrammer.changed.data.AccessorySlotContext;
+import net.ltxprogrammer.changed.init.ChangedSounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.Entity;
@@ -12,6 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -40,7 +41,7 @@ public class LabCoatItem extends ClothingItem {
     public void accessoryInteract(AccessorySlotContext<?> slotContext) {
         super.accessoryInteract(slotContext);
         this.setClothingState(slotContext.stack(), this.getClothingState(slotContext.stack()).cycle(CLOSED));
-        SoundEvent changeSound = this.getEquipSound();
+        SoundEvent changeSound = this.getEquipSound(slotContext.stack());
         if (changeSound != null)
             slotContext.wearer().playSound(changeSound, 1F, 1F);
     }
@@ -48,10 +49,20 @@ public class LabCoatItem extends ClothingItem {
     @Nullable
     @Override
     public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, String type) {
-        ResourceLocation itemId = stack.getItem().getRegistryName();
+        ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
         if (this.getClothingState(stack).getValue(CLOSED))
             return String.format("%s:textures/models/%s_closed.png", itemId.getNamespace(), itemId.getPath());
         else
             return String.format("%s:textures/models/%s.png", itemId.getNamespace(), itemId.getPath());
+    }
+
+    @Override
+    public SoundEvent getEquipSound(ItemStack itemStack) {
+        return ChangedSounds.COAT_EQUIP.get();
+    }
+
+    @Override
+    public SoundEvent getBreakSound(ItemStack itemStack) {
+        return ChangedSounds.COAT_BREAK.get();
     }
 }

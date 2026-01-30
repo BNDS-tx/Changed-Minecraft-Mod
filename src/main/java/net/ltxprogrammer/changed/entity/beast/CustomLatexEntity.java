@@ -2,8 +2,10 @@ package net.ltxprogrammer.changed.entity.beast;
 
 import net.ltxprogrammer.changed.block.WhiteLatexTransportInterface;
 import net.ltxprogrammer.changed.entity.*;
+import net.ltxprogrammer.changed.entity.latex.LatexType;
 import net.ltxprogrammer.changed.entity.variant.EntityShape;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
+import net.ltxprogrammer.changed.init.ChangedAttributes;
 import net.ltxprogrammer.changed.init.ChangedEntities;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.Color3;
@@ -206,10 +208,7 @@ public class CustomLatexEntity extends ChangedEntity implements LatexTaur<Custom
         this.refreshDimensions();
 
         ProcessTransfur.ifPlayerTransfurred(this.getUnderlyingPlayer(), variant -> {
-            variant.stepSize = this.getLegType() == LegType.CENTAUR ? 1.1f : 0.6f;
-            variant.jumpStrength = (this.getLegType() == LegType.CENTAUR || this.getTailType() == TailType.CAT) ? 1.25f : 1.0f;
             variant.breatheMode = switch (this.getTailType()) {
-                case CAT -> TransfurVariant.BreatheMode.WEAK;
                 case SHARK -> TransfurVariant.BreatheMode.ANY;
                 default -> TransfurVariant.BreatheMode.NORMAL;
             };
@@ -260,7 +259,7 @@ public class CustomLatexEntity extends ChangedEntity implements LatexTaur<Custom
             case CROUCHING -> EntityDimensions.scalable(core.width, core.height - 0.3f);
             case DYING -> EntityDimensions.fixed(0.2f, 0.2f);
             default -> core;
-        }).scale(getBasicPlayerInfo().getSize() * this.getScale());
+        }).scale(getBasicPlayerInfo().getSize(this) * this.getScale());
     }
 
     public int getRawFormFlags() {
@@ -427,11 +426,6 @@ public class CustomLatexEntity extends ChangedEntity implements LatexTaur<Custom
     }
 
     @Override
-    public LatexType getLatexType() {
-        return LatexType.NEUTRAL;
-    }
-
-    @Override
     public TransfurMode getTransfurMode() {
         return TransfurMode.ABSORPTION;
     }
@@ -454,11 +448,15 @@ public class CustomLatexEntity extends ChangedEntity implements LatexTaur<Custom
     protected void setAttributes(AttributeMap attributes) {
         super.setAttributes(attributes);
 
+        attributes.getInstance(ForgeMod.STEP_HEIGHT_ADDITION.get()).setBaseValue(computeStepHeightOffset(0.7));
+
         switch (getLegType()) {
             case CENTAUR -> {
                 attributes.getInstance(Attributes.MOVEMENT_SPEED).setBaseValue(1.2);
                 attributes.getInstance(ForgeMod.SWIM_SPEED.get()).setBaseValue(0.9);
                 attributes.getInstance(Attributes.MAX_HEALTH).setBaseValue(30);
+                attributes.getInstance(ForgeMod.STEP_HEIGHT_ADDITION.get()).setBaseValue(computeStepHeightOffset(1.1));
+                attributes.getInstance(ChangedAttributes.JUMP_STRENGTH.get()).setBaseValue(1.25);
             }
             case MERMAID -> {
                 attributes.getInstance(Attributes.MOVEMENT_SPEED).setBaseValue(0.34);
@@ -506,7 +504,7 @@ public class CustomLatexEntity extends ChangedEntity implements LatexTaur<Custom
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (isSaddled()) {
             this.doPlayerRide(player);
-            return InteractionResult.sidedSuccess(this.level.isClientSide);
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
 
         return InteractionResult.PASS;

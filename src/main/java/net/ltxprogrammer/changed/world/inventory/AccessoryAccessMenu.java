@@ -8,7 +8,7 @@ import net.ltxprogrammer.changed.init.ChangedMenus;
 import net.ltxprogrammer.changed.init.ChangedRegistry;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
@@ -43,43 +43,44 @@ public class AccessoryAccessMenu extends AbstractContainerMenu {
     private ImmutableList<AccessorySlotType> builtSlots;
     private final Map<Integer, Slot> customSlots = new HashMap<>();
 
-    private AccessoryAccessMenu(int id, Player owner, List<AccessorySlotType> slotTypes) {
-        super(ChangedMenus.ACCESSORY_ACCESS, id);
+    private AccessoryAccessMenu(int id, Player owner, List<AccessorySlotType> slotTypes, ItemStack carried) {
+        super(ChangedMenus.ACCESSORY_ACCESS.get(), id);
         this.owner = owner;
         this.inventory = owner.getInventory();
         this.accessorySlots = AccessorySlots.getForEntity(owner).orElseGet(AccessorySlots::new);
         this.createSlots(inventory, slotTypes);
-
-        if (owner.containerMenu != null) {
-            this.setCarried(owner.containerMenu.getCarried());
-            owner.containerMenu.setCarried(ItemStack.EMPTY);
-        }
+        this.setCarried(carried);
     }
 
     public AccessoryAccessMenu(int id, Player owner) {
-        this(id, owner, AccessorySlots.getForEntity(owner).orElseGet(AccessorySlots::new).getOrderedSlots());
+        this(id, owner, AccessorySlots.getForEntity(owner).orElseGet(AccessorySlots::new).getOrderedSlots(), ItemStack.EMPTY);
     }
 
-    public static void openForPlayer(ServerPlayer player) {
-        final var registry = ChangedRegistry.ACCESSORY_SLOTS.get();
+    public AccessoryAccessMenu(int id, Inventory inventory, FriendlyByteBuf extra) {
+        this(id, inventory.player, readSlotTypes(extra), ItemStack.EMPTY);
+    }
+
+    public static void openForPlayer(ServerPlayer player, ItemStack carryRequest) {
         final var slots = AccessorySlots.getForEntity(player).orElseGet(AccessorySlots::new);
 
-        NetworkHooks.openGui(player,
-                new SimpleMenuProvider((id, inv, accessor) -> new AccessoryAccessMenu(id, accessor, slots.getOrderedSlots()), TextComponent.EMPTY),
+        if (!player.getAbilities().instabuild) {
+            carryRequest = player.inventoryMenu.getCarried();
+            player.inventoryMenu.setCarried(ItemStack.EMPTY);
+        }
+
+        final ItemStack resolvedCarryRequest = carryRequest;
+
+        NetworkHooks.openScreen(player,
+                new SimpleMenuProvider((id, inv, accessor) -> new AccessoryAccessMenu(id, accessor, slots.getOrderedSlots(), resolvedCarryRequest), Component.empty()),
                 extra -> {
-                    extra.writeCollection(slots.getOrderedSlots(), (listBuffer, slotType) -> listBuffer.writeInt(registry.getID(slotType)));
+                    extra.writeCollection(slots.getOrderedSlots(), ChangedRegistry.ACCESSORY_SLOTS::writeRegistryObject);
                 });
     }
 
     private static List<AccessorySlotType> readSlotTypes(@Nullable FriendlyByteBuf buffer) {
         if (buffer == null)
             return List.of();
-        final var registry = ChangedRegistry.ACCESSORY_SLOTS.get();
-        return buffer.readList(listBuffer -> registry.getValue(listBuffer.readInt()));
-    }
-
-    public AccessoryAccessMenu(int id, Inventory inventory, FriendlyByteBuf extra) {
-        this(id, inventory.player, readSlotTypes(extra));
+        return buffer.readList(ChangedRegistry.ACCESSORY_SLOTS::readRegistryObject);
     }
 
     protected void makeAccessorySlots(List<AccessorySlotType> slotTypes) {

@@ -1,6 +1,8 @@
 package net.ltxprogrammer.changed.entity.beast;
 
 import net.ltxprogrammer.changed.entity.*;
+import net.ltxprogrammer.changed.entity.latex.LatexType;
+import net.ltxprogrammer.changed.init.ChangedAttributes;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -17,11 +19,7 @@ public class LatexYuin extends ChangedEntity implements PowderSnowWalkable, Patr
         super.setAttributes(attributes);
         attributes.getInstance(Attributes.MOVEMENT_SPEED).setBaseValue(1.05);
         attributes.getInstance(ForgeMod.SWIM_SPEED.get()).setBaseValue(0.95);
-    }
-
-    @Override
-    public LatexType getLatexType() {
-        return LatexType.NEUTRAL;
+        attributes.getInstance(ChangedAttributes.FALL_RESISTANCE.get()).setBaseValue(2.5);
     }
 
     @Override

@@ -1,11 +1,17 @@
 package net.ltxprogrammer.changed.network.packet;
 
 import net.ltxprogrammer.changed.block.entity.GluBlockEntity;
+import net.ltxprogrammer.changed.init.ChangedRegistry;
 import net.ltxprogrammer.changed.world.features.structures.facility.Zone;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
 public class ServerboundSetGluBlockPacket implements ChangedPacket {
@@ -20,7 +26,7 @@ public class ServerboundSetGluBlockPacket implements ChangedPacket {
         this.pos = buffer.readBlockPos();
         this.size = buffer.readInt();
         this.hasDoor = buffer.readBoolean();
-        this.zone = Zone.byName(buffer.readUtf()).orElse(Zone.BLUE_ZONE);
+        this.zone = ChangedRegistry.FACILITY_ZONES.readRegistryObject(buffer);
         this.jointType = GluBlockEntity.JointType.byName(buffer.readUtf()).orElse(GluBlockEntity.JointType.ENTRANCE);
         this.finalState = buffer.readUtf();
     }
@@ -39,27 +45,38 @@ public class ServerboundSetGluBlockPacket implements ChangedPacket {
         buffer.writeBlockPos(pos);
         buffer.writeInt(size);
         buffer.writeBoolean(hasDoor);
-        buffer.writeUtf(zone.getSerializedName());
+        ChangedRegistry.FACILITY_ZONES.writeRegistryObject(buffer, zone);
         buffer.writeUtf(jointType.getSerializedName());
         buffer.writeUtf(finalState);
     }
 
     @Override
-    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
-        var context = contextSupplier.get();
-        var level = context.getSender().level;
-        var blockState = level.getBlockState(pos);
-        var blockEntity = level.getBlockEntity(pos);
-        if (blockEntity instanceof GluBlockEntity gluBlockEntity) {
-            gluBlockEntity.setSize(size);
-            gluBlockEntity.setHasDoor(hasDoor);
-            gluBlockEntity.setZone(zone);
-            gluBlockEntity.setJointType(jointType);
-            gluBlockEntity.setFinalState(finalState);
-            gluBlockEntity.setChanged();
-            level.sendBlockUpdated(pos, blockState, blockState, 3);
+    public CompletableFuture<Void> handle(NetworkEvent.Context context, CompletableFuture<Level> levelFuture, Executor sidedExecutor) {
+        if (context.getDirection().getReceptionSide() == LogicalSide.SERVER) {
+            if (!context.getSender().canUseGameMasterBlocks()) {
+                context.getSender().sendSystemMessage(Component.translatable("advMode.notAllowed"));
+                return CompletableFuture.failedFuture(new IllegalArgumentException("Sender cannot use game master blocks"));
+            }
+
+            return levelFuture.thenAcceptAsync(level -> {
+                var blockState = level.getBlockState(pos);
+                var blockEntity = level.getBlockEntity(pos);
+                if (blockEntity instanceof GluBlockEntity gluBlockEntity) {
+                    gluBlockEntity.setSize(size);
+                    gluBlockEntity.setHasDoor(hasDoor);
+                    gluBlockEntity.setZone(zone);
+                    gluBlockEntity.setJointType(jointType);
+                    gluBlockEntity.setFinalState(finalState);
+                    gluBlockEntity.setChanged();
+                    level.sendBlockUpdated(pos, blockState, blockState, 3);
+                }
+
+                else {
+                    throw new IllegalArgumentException("Specified block is not a Glu block");
+                }
+            }, sidedExecutor);
         }
 
-        context.setPacketHandled(true);
+        return CompletableFuture.failedFuture(makeIllegalSideException(context.getDirection().getReceptionSide(), LogicalSide.SERVER));
     }
 }

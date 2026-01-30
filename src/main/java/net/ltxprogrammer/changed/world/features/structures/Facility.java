@@ -2,46 +2,41 @@ package net.ltxprogrammer.changed.world.features.structures;
 
 import com.mojang.serialization.Codec;
 import net.ltxprogrammer.changed.Changed;
+import net.ltxprogrammer.changed.init.ChangedStructureTypes;
+import net.ltxprogrammer.changed.world.features.structures.facility.FacilityKeystone;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.levelgen.GenerationStep;
-import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.levelgen.feature.StructureFeature;
-import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
-import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
-import net.minecraft.world.level.levelgen.structure.pieces.PieceGenerator;
-import net.minecraft.world.level.levelgen.structure.pieces.PieceGeneratorSupplier;
+import net.minecraft.world.level.levelgen.structure.Structure;
+import net.minecraft.world.level.levelgen.structure.StructurePiece;
+import net.minecraft.world.level.levelgen.structure.StructureType;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePiecesBuilder;
 
-public class Facility extends StructureFeature<NoneFeatureConfiguration> {
-    public static final int GENERATION_CHUNK_RADIUS = 6;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
-    private final GenerationStep.Decoration step;
+public class Facility extends Structure {
+    public static final int GENERATION_CHUNK_RADIUS = 8;
 
-    public Facility(Codec<NoneFeatureConfiguration> codec, GenerationStep.Decoration step) {
-        super(codec, PieceGeneratorSupplier.simple(Facility::checkLocation, Facility::generatePieces));
-        this.step = step;
+    public static final Codec<Facility> CODEC = simpleCodec(Facility::new);
+
+    public Facility(Structure.StructureSettings settings) {
+        super(settings);
     }
 
-    private static <C extends FeatureConfiguration> boolean checkLocation(PieceGeneratorSupplier.Context<C> context) {
-        if (!context.validBiomeOnTop(Heightmap.Types.WORLD_SURFACE_WG)) {
-            return false;
-        } else {
-            int[] heights = context.getCornerHeights(
-                    context.chunkPos().getMinBlockX(), context.chunkPos().getMaxBlockX(),
-                    context.chunkPos().getMinBlockZ(), context.chunkPos().getMaxBlockZ());
-            int variation = Math.abs(Math.abs(heights[0] - heights[1]) - Math.abs(heights[2] - heights[3]));
-            if (variation > 1)
-                return false;
-
-            int lowestY = context.getLowestY(12, 15);
-
-            return lowestY >= context.chunkGenerator().getSeaLevel() && lowestY <= context.chunkGenerator().getSeaLevel() + 30;
-        }
+    public Optional<Structure.GenerationStub> findGenerationPoint(GenerationContext context) {
+        Rotation rotation = Rotation.getRandom(context.random());
+        BlockPos blockpos = this.getLowestYIn5by5BoxOffset7Blocks(context, rotation);
+        return blockpos.getY() < 60 ? Optional.empty() : Optional.of(new Structure.GenerationStub(blockpos, (builder) -> {
+            this.generatePieces(builder, context, blockpos, rotation);
+        }));
     }
 
-    private static void generatePieces(StructurePiecesBuilder builder, PieceGenerator.Context<NoneFeatureConfiguration> context) {
+    private static final int REROLL_FOR_SIZE_COUNT = 1;
+
+    private void generatePieces(StructurePiecesBuilder builder, GenerationContext context, BlockPos blockPos, Rotation rotation) {
         ChunkPos center = context.chunkPos();
         ChunkPos min = new ChunkPos(center.x - GENERATION_CHUNK_RADIUS, center.z - GENERATION_CHUNK_RADIUS);
         ChunkPos max = new ChunkPos(center.x + GENERATION_CHUNK_RADIUS, center.z + GENERATION_CHUNK_RADIUS);
@@ -50,12 +45,36 @@ public class Facility extends StructureFeature<NoneFeatureConfiguration> {
 
         BoundingBox generationRegion = BoundingBox.fromCorners(minPos, maxPos);
 
-        FacilityPieces.generateFacility(builder, context, 5, 25, generationRegion);
-        Changed.LOGGER.info("Generated facility with {} pieces, at ChunkPos {}", ((StructurePiecesBuilderExtender)builder).pieceCount(), center);
+        List<Integer> sizes = new ArrayList<>(REROLL_FOR_SIZE_COUNT);
+        List<StructurePiece> largestSet = List.of();
+        FacilityKeystone largestKeystone = null;
+
+        for (int reroll = 0; reroll < REROLL_FOR_SIZE_COUNT; reroll++) {
+            builder.clear();
+
+            FacilityKeystone keystone = FacilityPieces.generateFacility(builder, context, 5, 20, generationRegion);
+            builder.addPiece(keystone);
+
+            int size = ((StructurePiecesBuilderExtender)builder).pieceCount();
+            sizes.add(size);
+            if (((StructurePiecesBuilderExtender)builder).pieceCount() > largestSet.size()) {
+                largestSet = new ArrayList<>(((StructurePiecesBuilderExtender)builder).getPieces());
+                largestKeystone = keystone;
+            }
+        }
+
+        builder.clear();
+        largestSet.forEach(builder::addPiece);
+
+        Changed.LOGGER.info("Generated facility \"{}\" with {} pieces (best of {}), at ChunkPos {}",
+                largestKeystone,
+                largestSet.size(),
+                sizes,
+                center);
     }
 
     @Override
-    public GenerationStep.Decoration step() {
-        return step;
+    public StructureType<?> type() {
+        return ChangedStructureTypes.FACILITY.get();
     }
 }

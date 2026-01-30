@@ -1,8 +1,9 @@
 package net.ltxprogrammer.changed.client.tfanimations;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix3f;
-import com.mojang.math.Matrix4f;
+import com.mojang.datafixers.util.Pair;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import net.ltxprogrammer.changed.client.ClientLivingEntityExtender;
 import net.ltxprogrammer.changed.client.CubeExtender;
 import net.ltxprogrammer.changed.client.FormRenderHandler;
 import net.ltxprogrammer.changed.client.PoseStackExtender;
@@ -18,7 +19,9 @@ import net.ltxprogrammer.changed.entity.AccessoryEntities;
 import net.ltxprogrammer.changed.entity.LimbCoverTransition;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.extension.ChangedCompatibility;
+import net.ltxprogrammer.changed.init.ChangedRegistry;
 import net.ltxprogrammer.changed.util.Color3;
+import net.ltxprogrammer.changed.util.ReversibleKeyedMap;
 import net.ltxprogrammer.changed.util.Transition;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
@@ -43,6 +46,11 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
+import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -51,6 +59,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public abstract class TransfurAnimator {
+    public static ReversibleKeyedMap<ModelPart, EntityGeometry> TRANSITIONS_CACHE = new ReversibleKeyedMap<>();
+
     public record ModelPose(PoseStack.Pose matrix, PartPose pose) {
         public ModelPose translate(float x, float y, float z) {
             return new ModelPose(matrix, PartPose.offsetAndRotation(
@@ -89,138 +99,177 @@ public abstract class TransfurAnimator {
 
     private static final Map<ModelPart, ModelPose> CAPTURED_MODELS = new HashMap<>();
 
-    private static ModelPart.Cube copyCube(ModelPart.Cube cube) {
-        ModelPart.Cube newCube = new ModelPart.Cube(0, 0, cube.minX, cube.minY, cube.minZ,
-                cube.maxX - cube.minX, cube.maxY - cube.minY, cube.maxZ - cube.minZ,
-                0.0f, 0.0f, 0.0f, false, 1.0f, 1.0f);
-        ((CubeExtender)newCube).copyPolygonsFrom(cube);
-        return newCube;
-    }
-
-    private static ModelPart deepCopyPart(@Nullable ModelPart part, boolean copyVisibility) {
+    private static EntityGeometry deepCopyPart(@Nullable ModelPart part, Predicate<ModelPart> predicate, boolean copyVisibility) {
         if (part == null)
             return null;
-        ModelPart copied = new ModelPart(
-                part.cubes.stream().map(TransfurAnimator::copyCube).toList(),
-                part.children.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> deepCopyPart(entry.getValue(), copyVisibility))));
-        copied.loadPose(part.storePose());
-        if (copyVisibility)
-            copied.visible = part.visible;
+        EntityGeometry copied = new EntityGeometry(part, predicate);
+        if (!copyVisibility)
+            copied.visit(visited -> visited.visible = true);
         return copied;
     }
 
-    private static ModelPart deepCopyPart(@Nullable ModelPart part, Predicate<ModelPart> predicate, boolean copyVisibility) {
-        if (part == null)
-            return null;
-        ModelPart copied = new ModelPart(
-                part.cubes.stream().map(TransfurAnimator::copyCube).toList(),
-                part.children.entrySet().stream().filter(entry -> predicate.test(entry.getValue())).collect(Collectors.toMap(Map.Entry::getKey, entry -> deepCopyPart(entry.getValue(), predicate, copyVisibility))));
-        copied.loadPose(part.storePose());
-        if (copyVisibility)
-            copied.visible = part.visible;
-        return copied;
+    private static Pair<EntityGeometry, EntityGeometry> matchCubeCount(EntityGeometry begin, EntityGeometry end) {
+        return matchCubeCount(begin, end, SplittingSource.empty(), SplittingSource.empty());
     }
 
-    private static ModelPart.Cube clampCube(ModelPart.Cube a, ModelPart.Cube clampBy) {
-        if (clampBy == null)
-            return a;
+    private static final Comparator<EntityGeometry.Cube> MASS_SORT = (left, right) -> {
+        var max = left.getMax();
+        var min = left.getMin();
+        max.sub(min);
+        float leftMass = max.x * max.y * max.z;
 
-        float minX = Mth.clamp(a.minX, clampBy.minX, clampBy.maxX);
-        float minY = Mth.clamp(a.minY, clampBy.minY, clampBy.maxY);
-        float minZ = Mth.clamp(a.minZ, clampBy.minZ, clampBy.maxZ);
+        max = right.getMax();
+        min = right.getMin();
+        max.sub(min);
+        float rightMass = max.x * max.y * max.z;
 
-        float maxX = Mth.clamp(a.maxX, clampBy.minX, clampBy.maxX);
-        float maxY = Mth.clamp(a.maxY, clampBy.minY, clampBy.maxY);
-        float maxZ = Mth.clamp(a.maxZ, clampBy.minZ, clampBy.maxZ);
+        return Float.compare(rightMass, leftMass);
+    };
 
-        ModelPart.Cube newCube = new ModelPart.Cube(0, 0, minX, minY, minZ,
-                maxX - minX, maxY - minY, maxZ - minZ,
-                0.0f, 0.0f, 0.0f, false, 1.0f, 1.0f);
-        var polyCube = ((CubeExtender)newCube).getPolygons();
-        var polyClamp = ((CubeExtender)clampBy).getPolygons();
-        for (int i = 0; i < polyCube.length && i < polyClamp.length; ++i) {
-            for (int v = 0; v < polyCube[i].vertices.length && v < polyClamp[i].vertices.length; ++v) {
-                polyCube[i].vertices[v] = polyCube[i].vertices[v].remap(polyClamp[i].vertices[v].u, polyClamp[i].vertices[v].v);
-            }
-        }
-        return newCube;
-    }
+    private static final Comparator<String> PRIORITIZE_SKELETON = (left, right) -> {
+        if (EntityGeometry.isSkeletonName(left) && !EntityGeometry.isSkeletonName(right))
+            return -1;
+        else if (!EntityGeometry.isSkeletonName(left) && EntityGeometry.isSkeletonName(right))
+            return 1;
+        return left.compareTo(right);
+    };
 
-    private static ModelPart replaceCubesAndZeroParts(ModelPart part, ModelPart.Cube cube) {
-        ModelPart ret = new ModelPart(
-                part.cubes.stream().map(otherCube -> clampCube(otherCube, cube)).toList(),
-                part.children.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> replaceCubesAndZeroParts(entry.getValue(), cube))));
-        ret.loadPose(PartPose.ZERO);
-        return ret;
-    }
+    private static Pair<EntityGeometry, EntityGeometry> matchCubeCount(EntityGeometry begin, EntityGeometry end,
+                                                                       SplittingSource beginSplittingSource, SplittingSource endSplittingSource) {
+        int targetCubeCount = Math.max(begin.cubes.size(), end.cubes.size());
+        int targetChildrenCount = Math.max(begin.children.size(), end.children.size());
 
-    private static ModelPart shallowCopyPart(ModelPart part) {
-        return new ModelPart(part.cubes.stream().map(TransfurAnimator::copyCube).toList(), Map.of());
-    }
+        // Sort cubes to have consistent results across similar models
+        List<EntityGeometry.Cube> beginCubesSorted = begin.cubes.stream().sorted(MASS_SORT).toList();
+        List<EntityGeometry.Cube> endCubesSorted = end.cubes.stream().sorted(MASS_SORT).toList();
 
-    private static ModelPart matchCubeCount(ModelPart to, ModelPart from, ModelPart.Cube copyWith, boolean copyVisibility) {
-        List<ModelPart.Cube> cubes = new ArrayList<>();
+        List<EntityGeometry.Cube> beginResultCubes = new ArrayList<>(targetCubeCount);
+        List<EntityGeometry.Cube> endResultCubes = new ArrayList<>(targetCubeCount);
+        Map<String, EntityGeometry> beginResultChildren = new Object2ObjectArrayMap<>(targetChildrenCount);
+        Map<String, EntityGeometry> endResultChildren = new Object2ObjectArrayMap<>(targetChildrenCount);
 
-        final int targetCubeCount = Math.max(to.cubes.size(), from.cubes.size());
-        int cubeCount = 0;
+        SplittingSource subBeginSplittingSource = SplittingSource.forSources(
+                SplittingSource.forSourceCubes(beginCubesSorted),
+                beginSplittingSource
+        );
+        SplittingSource subEndSplittingSource = SplittingSource.forSources(
+                SplittingSource.forSourceCubes(endCubesSorted),
+                endSplittingSource
+        );
 
-        for (var cube : to.cubes) {
-            if (cubeCount >= targetCubeCount) break;
-
-            cubes.add(copyCube(cube));
-            cubeCount++;
-        }
-
-        for (var cube : from.cubes) {
-            if (cubeCount >= targetCubeCount) break;
-
-            cubes.add(clampCube(cube, copyWith));
-            cubeCount++;
+        if (Math.min(begin.cubes.size(), end.cubes.size()) == 0) {
+            if (subBeginSplittingSource.isEmpty() || subEndSplittingSource.isEmpty())
+                targetCubeCount = 0;
         }
 
-        cubes.sort((c1, c2) -> {
-            int yCompare = Float.compare(c1.maxY, c2.maxY);
-            int xCompare = Float.compare(c1.maxX, c2.maxX);
-            int zCompare = Float.compare(c1.maxZ, c2.maxZ);
-
-            if (yCompare == 0) {
-                if (xCompare == 0)
-                    return zCompare;
-                return xCompare;
-            }
-            return yCompare;
-        });
-
-        Map<String, ModelPart> children = new HashMap<>();
-
-        for (var k : to.children.keySet()) {
-            children.put(k, deepCopyPart(to.children.get(k), copyVisibility));
-        }
-
-        ModelPart.Cube copyOverride = !to.cubes.isEmpty() ? to.cubes.get(0) : copyWith;
-
-        for (var k : from.children.keySet()) {
-            if (to.children.containsKey(k)) {
-                var model = matchCubeCount(to.children.get(k), from.children.get(k), copyOverride, copyVisibility);
-                model.loadPose(to.children.get(k).storePose());
-                children.put(k, model);
+        if (targetCubeCount >= 1) {
+            if (beginCubesSorted.size() == 1 && endCubesSorted.size() == 1) { // 1:1
+                beginResultCubes.addAll(beginCubesSorted);
+                endResultCubes.addAll(endCubesSorted);
+            } else if (beginCubesSorted.size() == 1 && !endCubesSorted.isEmpty()) {
+                beginResultCubes.addAll(EntityGeometry.Cube.segment(subBeginSplittingSource, endCubesSorted));
+                endResultCubes.addAll(endCubesSorted);
+            } else if (endCubesSorted.size() == 1 && !beginCubesSorted.isEmpty()) {
+                beginResultCubes.addAll(beginCubesSorted);
+                endResultCubes.addAll(EntityGeometry.Cube.segment(subEndSplittingSource, beginCubesSorted));
             } else {
-                children.put(k, replaceCubesAndZeroParts(from.children.get(k), copyOverride));
+                if (endCubesSorted.size() > beginCubesSorted.size()) {
+                    beginResultCubes.addAll(EntityGeometry.Cube.segment(subBeginSplittingSource, endCubesSorted));
+                    endResultCubes.addAll(endCubesSorted);
+                } else {
+                    beginResultCubes.addAll(beginCubesSorted);
+                    endResultCubes.addAll(EntityGeometry.Cube.segment(subEndSplittingSource, beginCubesSorted));
+                }
+            }
+
+            for (int i = 0; i < beginResultCubes.size(); i++) {
+                SplittingSource source = subBeginSplittingSource.findSourceFor(beginResultCubes.get(i));
+                final int myIndex = i;
+                if (source != null)
+                    source.setResizeConsumer((oldCube, newCube) -> beginResultCubes.set(myIndex, newCube));
+            }
+
+            for (int i = 0; i < endResultCubes.size(); i++) {
+                SplittingSource source = subEndSplittingSource.findSourceFor(endResultCubes.get(i));
+                final int myIndex = i;
+                if (source != null)
+                    source.setResizeConsumer((oldCube, newCube) -> endResultCubes.set(myIndex, newCube));
             }
         }
 
-        final ModelPart matched = new ModelPart(cubes, children);
-        if (copyVisibility)
-            matched.visible = to.visible;
-        return matched;
+        if (targetChildrenCount >= 1) {
+            for (var childName : begin.children.keySet().stream().sorted(PRIORITIZE_SKELETON).toList()) {
+                var child = begin.children.get(childName);
+                if (endResultChildren.containsKey(childName))
+                    continue;
+
+                // TODO maybe fuzz for similar children
+
+                if (end.children.containsKey(childName)) {
+                    var pair = matchCubeCount(child, end.children.get(childName));
+                    beginResultChildren.put(childName, pair.getFirst());
+                    endResultChildren.put(childName, pair.getSecond());
+                    continue;
+                }
+
+                // Similar not found, creating new child
+
+                var pair = matchCubeCount(
+                        new EntityGeometry(child).embedPositioning(/* Discard rotation, flatten position */),
+                        new EntityGeometry(/* Empty Part */),
+                        SplittingSource.empty(), subEndSplittingSource);
+                beginResultChildren.put(childName, child);
+                endResultChildren.put(childName, pair.getSecond());
+            }
+
+            for (var childName : end.children.keySet().stream().sorted(PRIORITIZE_SKELETON).toList()) {
+                var child = end.children.get(childName);
+                if (beginResultChildren.containsKey(childName))
+                    continue;
+
+                if (begin.children.containsKey(childName)) {
+                    var pair = matchCubeCount(begin.children.get(childName), child);
+                    beginResultChildren.put(childName, pair.getFirst());
+                    endResultChildren.put(childName, pair.getSecond());
+                    continue;
+                }
+
+                // Similar not found, creating new child
+
+                var pair = matchCubeCount(
+                        new EntityGeometry(/* Empty Part */),
+                        new EntityGeometry(child).embedPositioning(/* Discard rotation, flatten position */),
+                        subBeginSplittingSource, SplittingSource.empty());
+                beginResultChildren.put(childName, pair.getFirst());
+                endResultChildren.put(childName, child);
+            }
+        }
+
+        if (beginResultCubes.size() != targetCubeCount || endResultCubes.size() != targetCubeCount)
+            throw new IllegalStateException("Begin and ending cubes aren't both equal to target count");
+
+        var beginResult = new EntityGeometry(beginResultCubes, beginResultChildren);
+        var endResult = new EntityGeometry(endResultCubes, endResultChildren);
+
+        for (int i = 0; i < beginResult.cubes.size(); i++) { // Update resize consumers to new lists
+            SplittingSource source = subBeginSplittingSource.findSourceFor(beginResult.cubes.get(i));
+            final int myIndex = i;
+            if (source != null)
+                source.setResizeConsumer((oldCube, newCube) -> beginResult.cubes.set(myIndex, newCube));
+        }
+
+        for (int i = 0; i < endResult.cubes.size(); i++) {
+            SplittingSource source = subEndSplittingSource.findSourceFor(endResult.cubes.get(i));
+            final int myIndex = i;
+            if (source != null)
+                source.setResizeConsumer((oldCube, newCube) -> endResult.cubes.set(myIndex, newCube));
+        }
+
+        return Pair.of(beginResult, endResult);
     }
 
-    private static ModelPart matchCubeCount(ModelPart to, ModelPart from, boolean copyVisibility) {
-        return matchCubeCount(to, from, findCube(to), copyVisibility);
-    }
-
-    private static ModelPart.Vertex lerpVertex(ModelPart.Vertex a, ModelPart.Vertex b, float lerp) {
-        return new ModelPart.Vertex(
+    private static EntityGeometry.Vertex lerpVertex(EntityGeometry.Vertex a, EntityGeometry.Vertex b, float lerp) {
+        return new EntityGeometry.Vertex(
                 Mth.lerp(lerp, a.pos.x(), b.pos.x()),
                 Mth.lerp(lerp, a.pos.y(), b.pos.y()),
                 Mth.lerp(lerp, a.pos.z(), b.pos.z()),
@@ -232,11 +281,8 @@ public abstract class TransfurAnimator {
     private static final float GOOP_CUBE_WIDTH = 16.0f;
     private static final float GOOP_CUBE_HEIGHT = 16.0f;
 
-    private static ModelPart.Polygon lerpPolygon(ModelPart.Polygon a, ModelPart.Polygon b, float lerp, boolean remapUV) {
-        ModelPart.Vertex[] copied = new ModelPart.Vertex[a.vertices.length];
-        System.arraycopy(a.vertices, 0, copied, 0, a.vertices.length);
-        ModelPart.Polygon ret = new ModelPart.Polygon(copied, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, false,
-                Direction.getNearest(a.normal.x(), a.normal.y(), a.normal.z()));
+    private static EntityGeometry.Polygon lerpPolygon(@NotNull EntityGeometry.Polygon a, @NotNull EntityGeometry.Polygon b, float lerp, boolean remapUV) {
+        EntityGeometry.Polygon ret = new EntityGeometry.Polygon(a);
 
         for (int i = 0; i < ret.vertices.length; ++i) {
             ret.vertices[i] = lerpVertex(a.vertices[i], b.vertices[i], lerp);
@@ -269,37 +315,33 @@ public abstract class TransfurAnimator {
         return ret;
     }
 
-    private static ModelPart.Cube lerpCube(ModelPart.Cube a, ModelPart.Cube b, float lerp, boolean remapUV) {
-        float lerpMinX = Mth.lerp(lerp, a.minX, b.minX);
-        float lerpMinY = Mth.lerp(lerp, a.minY, b.minY);
-        float lerpMinZ = Mth.lerp(lerp, a.minZ, b.minZ);
-        float lerpMaxX = Mth.lerp(lerp, a.maxX, b.maxX);
-        float lerpMaxY = Mth.lerp(lerp, a.maxY, b.maxY);
-        float lerpMaxZ = Mth.lerp(lerp, a.maxZ, b.maxZ);
+    private static EntityGeometry.Cube lerpCube(@NotNull EntityGeometry.Cube a, @NotNull EntityGeometry.Cube b, float lerp, boolean remapUV) {
+        EntityGeometry.Cube ret = new EntityGeometry.Cube(a);
 
-        ModelPart.Cube ret = new ModelPart.Cube(0, 0, lerpMinX, lerpMinY, lerpMinZ, lerpMaxX - lerpMinX, lerpMaxY - lerpMinY, lerpMaxZ - lerpMinZ,
-                0.0f, 0.0f, 0.0f, false, 0.0f, 0.0f);
+        for (var normal : Direction.values()) {
+            var faceA = a.getFace(normal);
+            var faceB = b.getFace(normal);
+            if (faceA == null || faceB == null) {
+                ret.removeFace(normal);
+                continue;
+            }
 
-        final var polyA = ((CubeExtender)a).getPolygons();
-        final var polyB = ((CubeExtender)b).getPolygons();
-        final var polyR = ((CubeExtender)ret).getPolygons();
-
-        for (int i = 0; i < polyR.length; ++i) {
-            polyR[i] = lerpPolygon(polyA[i], polyB[i], lerp, remapUV);
+            ret.putFace(lerpPolygon(faceA, faceB, lerp, remapUV));
         }
 
         return ret;
     }
 
-    private static ModelPart lerpModelPart(ModelPart a, ModelPart b, float lerp, boolean remapUV) {
-        List<ModelPart.Cube> copiedCubes = new ArrayList<>();
-        for (int i = 0; i < a.cubes.size(); ++i)
+    private static EntityGeometry lerpModelPart(@NotNull EntityGeometry a, @NotNull EntityGeometry b, float lerp, boolean remapUV) {
+        List<EntityGeometry.Cube> copiedCubes = new ArrayList<>();
+        int cubeCount = Math.min(a.cubes.size(), b.cubes.size());
+        for (int i = 0; i < cubeCount; ++i)
             copiedCubes.add(lerpCube(a.cubes.get(i), b.cubes.get(i), lerp, remapUV));
-        Map<String, ModelPart> copiedChildren = new HashMap<>();
+        Map<String, EntityGeometry> copiedChildren = new HashMap<>();
         for (var k : a.children.keySet())
             copiedChildren.put(k, lerpModelPart(a.children.get(k), b.children.get(k), lerp, remapUV));
 
-        var lerped = new ModelPart(copiedCubes, copiedChildren);
+        var lerped = new EntityGeometry(copiedCubes, copiedChildren);
         lerped.x = Mth.lerp(lerp, a.x, b.x);
         lerped.y = Mth.lerp(lerp, a.y, b.y);
         lerped.z = Mth.lerp(lerp, a.z, b.z);
@@ -310,35 +352,38 @@ public abstract class TransfurAnimator {
         return lerped;
     }
 
-    private static ModelPart.Cube findCube(ModelPart part) {
-        final AtomicReference<ModelPart.Cube> cubeReturn = new AtomicReference<>(null);
+    private static Pair<EntityGeometry, EntityGeometry> createTransitionModels(EntityGeometry before, EntityGeometry after) {
+        return matchCubeCount(before, after);
 
-        part.visit(new PoseStack(), (pose, name, id, cube) -> {
-            cubeReturn.compareAndSet(null, cube);
-        });
-
-        return cubeReturn.getAcquire();
+        // TODO Undo EntityGeometry.embedPositioning()
     }
 
-    private static ModelPart transitionModelPart(ModelPart before, ModelPart after, float lerp, boolean remapUV, boolean copyAfterVisibility) {
-        ModelPart beforeCopy = matchCubeCount(deepCopyPart(before, false), after, false);
-        ModelPart afterCopy = matchCubeCount(deepCopyPart(after, copyAfterVisibility), before, copyAfterVisibility);
+    private static EntityGeometry transitionModelPart(
+            ModelPart beforeCache, ModelPart afterCache,
+            EntityGeometry before, EntityGeometry after, float lerp, boolean remapUV, boolean copyAfterVisibility) {
+        var pair = TRANSITIONS_CACHE.computeIfAbsent(
+                beforeCache, afterCache,
+                (left, right) -> createTransitionModels(before, after));
 
-        return lerpModelPart(beforeCopy, afterCopy, lerp, remapUV);
+        var transitionBefore = pair.getFirst();
+        var transitionAfter = pair.getSecond();
+
+        transitionBefore.copyPoseTreeFrom(before);
+        transitionAfter.copyPoseTreeFrom(after);
+
+        return lerpModelPart(transitionBefore, transitionAfter, lerp, remapUV);
     }
 
     private static Matrix4f lerpMatrix(Matrix4f a, Matrix4f b, float lerp) {
-        a.multiply(1.0f - lerp);
-        b.multiply(lerp);
-        a.add(b);
-        return a;
+        Matrix4f out = new Matrix4f(a);
+        out.lerp(b, lerp);
+        return out;
     }
 
     private static Matrix3f lerpMatrix(Matrix3f a, Matrix3f b, float lerp) {
-        a.mul(1.0f - lerp);
-        b.mul(lerp);
-        a.add(b);
-        return a;
+        Matrix3f out = new Matrix3f(a);
+        out.lerp(b, lerp);
+        return out;
     }
 
     private static float wrapRadians(float angle) {
@@ -373,8 +418,8 @@ public abstract class TransfurAnimator {
         var tmp = new PoseStack();
         tmp.pushPose();
 
-        Matrix4f m = lerpMatrix(before.matrix.pose().copy(), after.matrix.pose().copy(), lerp);
-        Matrix3f n = lerpMatrix(before.matrix.normal().copy(), after.matrix.normal().copy(), lerp);
+        Matrix4f m = lerpMatrix(before.matrix.pose(), after.matrix.pose(), lerp);
+        Matrix3f n = lerpMatrix(before.matrix.normal(), after.matrix.normal(), lerp);
         ((PoseStackExtender)tmp).setPose(m, n);
 
         return new ModelPose(tmp.last(), lerpPartPose(before.pose, after.pose, lerp));
@@ -384,7 +429,7 @@ public abstract class TransfurAnimator {
         return Optional.ofNullable(afterModel.getTransfurHelperModel(limb));
     }
 
-    private static void renderMorphedLimb(LivingEntity entity, Limb limb, HumanoidModel<?> beforeModel, AdvancedHumanoidModel<?> afterModel,
+    private static void renderMorphedLimb(LivingEntity entity, Limb limb, HumanoidModel<?> beforeModel, AdvancedHumanoidModel<?> afterModel, float partialTicks,
                                           float morphProgress, Color3 color, float alpha, PoseStack stack, MultiBufferSource buffer, int light,
                                           @Nullable ResourceLocation texture, boolean listenToAfterVisible) {
         ModelPart before = limb.getModelPart(beforeModel);
@@ -405,8 +450,11 @@ public abstract class TransfurAnimator {
             before = helper.map(HelperModel::getModelPart).orElse(before);
         }
 
-        final ModelPart afterCopied = deepCopyPart(limb.getModelPart(afterModel), afterModel::shouldPartTransfur, listenToAfterVisible);
-        final ModelPart transitionPart = transitionModelPart(before, afterCopied, morphProgress, texture == null, listenToAfterVisible);
+        final EntityGeometry afterCopied = deepCopyPart(limb.getModelPart(afterModel), afterModel::shouldPartTransfur, listenToAfterVisible);
+        final EntityGeometry transitionPart = transitionModelPart(
+                before, after,
+                new EntityGeometry(before).collapseSimple(), afterCopied.collapseSimple(),
+                morphProgress, texture == null, listenToAfterVisible);
         final ModelPose transitionPose = transitionModelPose(beforePose, afterPose, morphProgress);
 
         if (texture == null)
@@ -424,13 +472,17 @@ public abstract class TransfurAnimator {
 
         transitionPart.loadPose(transitionPose.pose);
 
+        // TODO apply LimbExtension stuff
+        ((ClientLivingEntityExtender)entity).getOrderedAnimations().forEach(instance -> {
+            transitionPart.loadPose(instance.animatePartAs(limb, transitionPart.storePose(), partialTicks));
+        });
+
         transitionPart.render(stack, vertexConsumer, light, overlay, color.red(), color.green(), color.blue(), alpha);
-        //transitionPart.loadPose(beforePose.pose);
 
         stack.popPose();
     }
 
-    public static void renderMorphedEntity(LivingEntity entity, HumanoidModel<?> beforeModel, AdvancedHumanoidModel<?> afterModel, float morphProgress, Color3 color, float alpha, PoseStack stack, MultiBufferSource buffer, int light, @Nullable ResourceLocation texture, boolean listenToAfterVisible) {
+    public static void renderMorphedEntity(LivingEntity entity, HumanoidModel<?> beforeModel, AdvancedHumanoidModel<?> afterModel, float partialTicks, float morphProgress, Color3 color, float alpha, PoseStack stack, MultiBufferSource buffer, int light, @Nullable ResourceLocation texture, boolean listenToAfterVisible) {
         Arrays.stream(Limb.values()).forEach(limb -> {
             if (ChangedCompatibility.isFirstPersonRendering() && limb == Limb.HEAD)
                 return;
@@ -438,7 +490,7 @@ public abstract class TransfurAnimator {
                 return;
 
             try {
-                renderMorphedLimb(entity, limb, beforeModel, afterModel, morphProgress, color, alpha, stack, buffer, light, texture, listenToAfterVisible);
+                renderMorphedLimb(entity, limb, beforeModel, afterModel, partialTicks, morphProgress, color, alpha, stack, buffer, light, texture, listenToAfterVisible);
             } catch (Exception e) {
                 CrashReport report = CrashReport.forThrowable(e, "Rendering transfurring entity's limb");
                 CrashReportCategory category = report.addCategory("Limb being renderered");
@@ -449,7 +501,7 @@ public abstract class TransfurAnimator {
     }
 
     public static float getPreMorphProgression(float transfurProgression) {
-        return Transition.easeInOutSine(Mth.clamp(Mth.map(transfurProgression, 0.2f, 0.45f, 0.0f, 1.0f), 0.0f, 1.0f));
+        return Transition.easeInOutSine(Mth.clamp(Mth.map(transfurProgression, 0.2f, 0.35f, 0.0f, 1.0f), 0.0f, 1.0f));
     }
 
     public static float getCoverProgression(float transfurProgression) {
@@ -467,14 +519,7 @@ public abstract class TransfurAnimator {
             return Mth.clamp(Mth.map(transfurProgression, 0.8f, 0.85f, 1.0f, 0.0f), 0.0f, 1.0f);
     }
 
-    private static ModelPart extendModelPartCubes(ModelPart part, float x, float y, float z) {
-        part.cubes.forEach(cube -> ((CubeExtender)cube).extendCube(x, y, z));
-        part.children.values().forEach(child -> extendModelPartCubes(child, x, y, z));
-
-        return part;
-    }
-
-    private static void renderCoveringLimb(LivingEntity entity, TransfurVariantInstance<?> variant, float coverProgress, float coverAlpha, ModelPart part, Limb limb, PoseStack stack, MultiBufferSource buffer, int light, float partialTick) {
+    private static void renderCoveringLimb(LivingEntity entity, TransfurVariantInstance<?> variant, float partialTicks, float coverProgress, float coverAlpha, ModelPart part, Limb limb, PoseStack stack, MultiBufferSource buffer, int light, float partialTick) {
         final float progress = switch (limb) {
             case HEAD -> variant.transfurContext.cause.getHeadProgress(coverProgress);
             case TORSO -> variant.transfurContext.cause.getTorsoProgress(coverProgress);
@@ -500,7 +545,7 @@ public abstract class TransfurAnimator {
 
         final float shrink = (coverAlpha - 1.0f) * 0.5f;
 
-        final ModelPart copiedPart = extendModelPartCubes(deepCopyPart(part, false), shrink, shrink, shrink);
+        final EntityGeometry copiedPart = deepCopyPart(part, pred -> true, false).offsetSize(shrink, shrink, shrink);
         final ModelPose pose = CAPTURED_MODELS.getOrDefault(part, NULL_POSE);
 
         stack.pushPose();
@@ -515,6 +560,9 @@ public abstract class TransfurAnimator {
         final Color3 color = variant.getTransfurColor();
 
         copiedPart.loadPose(pose.pose);
+        ((ClientLivingEntityExtender)entity).getOrderedAnimations().forEach(instance -> {
+            copiedPart.loadPose(instance.animatePartAs(limb, copiedPart.storePose(), partialTicks));
+        });
         copiedPart.render(stack, vertexConsumer, light, LivingEntityRenderer.getOverlayCoords(entity, 0.0f), color.red(), color.green(), color.blue(), alpha);
 
         stack.popPose();
@@ -563,22 +611,22 @@ public abstract class TransfurAnimator {
 
         if (coverAlpha > 0f) {
             if (!ChangedCompatibility.isFirstPersonRendering()) {
-                renderCoveringLimb(player, variant, coverProgress, 1.0f, playerHumanoidModel.head, Limb.HEAD, stack, buffer, light, partialTick);
-                renderCoveringLimb(player, variant, coverProgress, coverAlpha, playerHumanoidModel.hat, Limb.HEAD, stack, buffer, light, partialTick);
+                renderCoveringLimb(player, variant, partialTick, coverProgress, 1.0f, playerHumanoidModel.head, Limb.HEAD, stack, buffer, light, partialTick);
+                renderCoveringLimb(player, variant, partialTick, coverProgress, coverAlpha, playerHumanoidModel.hat, Limb.HEAD, stack, buffer, light, partialTick);
             }
             if (!(ChangedCompatibility.isFirstPersonRendering() && player.isSwimming()))
-                renderCoveringLimb(player, variant, coverProgress, 1.0f, playerHumanoidModel.body, Limb.TORSO, stack, buffer, light, partialTick);
-            renderCoveringLimb(player, variant, coverProgress, 1.0f, playerHumanoidModel.leftArm, Limb.LEFT_ARM, stack, buffer, light, partialTick);
-            renderCoveringLimb(player, variant, coverProgress, 1.0f, playerHumanoidModel.rightArm, Limb.RIGHT_ARM, stack, buffer, light, partialTick);
-            renderCoveringLimb(player, variant, coverProgress, 1.0f, playerHumanoidModel.leftLeg, Limb.LEFT_LEG, stack, buffer, light, partialTick);
-            renderCoveringLimb(player, variant, coverProgress, 1.0f, playerHumanoidModel.rightLeg, Limb.RIGHT_LEG, stack, buffer, light, partialTick);
+                renderCoveringLimb(player, variant, partialTick, coverProgress, 1.0f, playerHumanoidModel.body, Limb.TORSO, stack, buffer, light, partialTick);
+            renderCoveringLimb(player, variant, partialTick, coverProgress, 1.0f, playerHumanoidModel.leftArm, Limb.LEFT_ARM, stack, buffer, light, partialTick);
+            renderCoveringLimb(player, variant, partialTick, coverProgress, 1.0f, playerHumanoidModel.rightArm, Limb.RIGHT_ARM, stack, buffer, light, partialTick);
+            renderCoveringLimb(player, variant, partialTick, coverProgress, 1.0f, playerHumanoidModel.leftLeg, Limb.LEFT_LEG, stack, buffer, light, partialTick);
+            renderCoveringLimb(player, variant, partialTick, coverProgress, 1.0f, playerHumanoidModel.rightLeg, Limb.RIGHT_LEG, stack, buffer, light, partialTick);
             if (playerHumanoidModel instanceof PlayerModel<?> playerModel) {
                 if (!(ChangedCompatibility.isFirstPersonRendering() && player.isSwimming()))
-                    renderCoveringLimb(player, variant, coverProgress, coverAlpha, playerModel.jacket, Limb.TORSO, stack, buffer, light, partialTick);
-                renderCoveringLimb(player, variant, coverProgress, coverAlpha, playerModel.leftSleeve, Limb.LEFT_ARM, stack, buffer, light, partialTick);
-                renderCoveringLimb(player, variant, coverProgress, coverAlpha, playerModel.rightSleeve, Limb.RIGHT_ARM, stack, buffer, light, partialTick);
-                renderCoveringLimb(player, variant, coverProgress, coverAlpha, playerModel.leftPants, Limb.LEFT_LEG, stack, buffer, light, partialTick);
-                renderCoveringLimb(player, variant, coverProgress, coverAlpha, playerModel.rightPants, Limb.RIGHT_LEG, stack, buffer, light, partialTick);
+                    renderCoveringLimb(player, variant, partialTick, coverProgress, coverAlpha, playerModel.jacket, Limb.TORSO, stack, buffer, light, partialTick);
+                renderCoveringLimb(player, variant, partialTick, coverProgress, coverAlpha, playerModel.leftSleeve, Limb.LEFT_ARM, stack, buffer, light, partialTick);
+                renderCoveringLimb(player, variant, partialTick, coverProgress, coverAlpha, playerModel.rightSleeve, Limb.RIGHT_ARM, stack, buffer, light, partialTick);
+                renderCoveringLimb(player, variant, partialTick, coverProgress, coverAlpha, playerModel.leftPants, Limb.LEFT_LEG, stack, buffer, light, partialTick);
+                renderCoveringLimb(player, variant, partialTick, coverProgress, coverAlpha, playerModel.rightPants, Limb.RIGHT_LEG, stack, buffer, light, partialTick);
             }
         }
 
@@ -586,7 +634,7 @@ public abstract class TransfurAnimator {
             final var colors = variant.getTransfurColor();
             try {
                 renderMorphedEntity(player, playerHumanoidModel, latexHumanoidRenderer.getModel(variant.getChangedEntity()),
-                        morphProgress, colors, morphAlpha, stack, buffer, light, null, false);
+                        partialTick, morphProgress, colors, morphAlpha, stack, buffer, light, null, false);
             } catch (Exception e) {
                 CrashReport report = CrashReport.forThrowable(e, "Rendering entity partially transfurred");
                 throw new ReportedException(report);
@@ -612,7 +660,7 @@ public abstract class TransfurAnimator {
                         renderMorphedEntity(player,
                                 model,
                                 afterModel,
-                                morphProgress, Color3.WHITE, 1f, stack, buffer, light,
+                                partialTick, morphProgress, Color3.WHITE, 1f, stack, buffer, light,
                                 texture, true);
                         afterModel.unprepareVisibility(armorSlot, item);
                     } catch (Exception e) {
@@ -648,13 +696,13 @@ public abstract class TransfurAnimator {
                                         renderMorphedEntity(player,
                                                 before.get(),
                                                 after,
-                                                morphProgress, Color3.WHITE, 1f, stack, buffer, light,
+                                                partialTick, morphProgress, Color3.WHITE, 1f, stack, buffer, light,
                                                 texture.get(), true);
                                     } catch (Exception e) {
                                         CrashReport report = CrashReport.forThrowable(e, "Rendering transfurring entity's accessories");
                                         CrashReportCategory category = report.addCategory("Accessory being rendered");
                                         category.setDetail("Accessory Item", itemStack);
-                                        category.setDetail("Accessory Slot", slotType.getRegistryName());
+                                        category.setDetail("Accessory Slot", ChangedRegistry.ACCESSORY_SLOTS.getKey(slotType));
                                         throw new ReportedException(report);
                                     }
                                 });
@@ -673,7 +721,7 @@ public abstract class TransfurAnimator {
         if (!(playerRenderer instanceof LivingEntityRenderer<?,?> livingPlayerRenderer)) return;
         if (!(livingPlayerRenderer.getModel() instanceof HumanoidModel<?> playerHumanoidModel)) return;
 
-        if (!(latexRenderer instanceof AdvancedHumanoidRenderer<?,?,?> latexHumanoidRenderer)) return;
+        if (!(latexRenderer instanceof AdvancedHumanoidRenderer<?,?> latexHumanoidRenderer)) return;
 
         final float transfurProgression = variant.getTransfurProgression(partialTick);
         final float coverProgress = getCoverProgression(transfurProgression);
@@ -695,14 +743,14 @@ public abstract class TransfurAnimator {
 
         if (coverAlpha > 0f) {
             switch (arm) {
-                case RIGHT -> renderCoveringLimb(player, variant, coverProgress, 1.0f, playerHumanoidModel.rightArm, Limb.RIGHT_ARM, stack, buffer, light, partialTick);
-                case LEFT -> renderCoveringLimb(player, variant, coverProgress, 1.0f, playerHumanoidModel.leftArm, Limb.LEFT_ARM, stack, buffer, light, partialTick);
+                case RIGHT -> renderCoveringLimb(player, variant, partialTick, coverProgress, 1.0f, playerHumanoidModel.rightArm, Limb.RIGHT_ARM, stack, buffer, light, partialTick);
+                case LEFT -> renderCoveringLimb(player, variant, partialTick, coverProgress, 1.0f, playerHumanoidModel.leftArm, Limb.LEFT_ARM, stack, buffer, light, partialTick);
             }
 
             if (playerHumanoidModel instanceof PlayerModel<?> playerModel) {
                 switch (arm) {
-                    case RIGHT -> renderCoveringLimb(player, variant, coverProgress, 1.0f, playerModel.rightSleeve, Limb.RIGHT_ARM, stack, buffer, light, partialTick);
-                    case LEFT -> renderCoveringLimb(player, variant, coverProgress, 1.0f, playerModel.leftSleeve, Limb.LEFT_ARM, stack, buffer, light, partialTick);
+                    case RIGHT -> renderCoveringLimb(player, variant, partialTick, coverProgress, 1.0f, playerModel.rightSleeve, Limb.RIGHT_ARM, stack, buffer, light, partialTick);
+                    case LEFT -> renderCoveringLimb(player, variant, partialTick, coverProgress, 1.0f, playerModel.leftSleeve, Limb.LEFT_ARM, stack, buffer, light, partialTick);
                 }
             }
         }
@@ -713,7 +761,7 @@ public abstract class TransfurAnimator {
         final var color = variant.getTransfurColor();
         try {
             renderMorphedLimb(player, limb, playerHumanoidModel, latexHumanoidRenderer.getModel(variant.getChangedEntity()),
-                    morphProgress, color, morphAlpha, stack, buffer, light, texture, false);
+                    partialTick, morphProgress, color, morphAlpha, stack, buffer, light, texture, false);
         } catch (Exception e) {
             CrashReport report = CrashReport.forThrowable(e, "Rendering transfurring entity's arm");
             CrashReportCategory category = report.addCategory("Limb being rendered");
@@ -756,7 +804,7 @@ public abstract class TransfurAnimator {
     public static <T extends LivingEntity, M extends EntityModel<T>> boolean isLayerAllowed(RenderLayer<T, M> layer) {
         if (layer instanceof HumanoidArmorLayer<?,?,?>)
             return true;
-        if (layer instanceof LatexHumanoidArmorLayer<?,?,?>)
+        if (layer instanceof LatexHumanoidArmorLayer<?,?>)
             return true;
         if (layer instanceof AccessoryLayer<?,?>)
             return true;

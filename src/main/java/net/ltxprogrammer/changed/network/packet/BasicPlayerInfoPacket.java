@@ -10,6 +10,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 
@@ -17,78 +18,84 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
 public class BasicPlayerInfoPacket implements ChangedPacket {
     public static final BasicPlayerInfoPacket EMPTY = new BasicPlayerInfoPacket(Map.of());
 
-    record Listing(BasicPlayerInfo info) {
-        static Listing fromStream(FriendlyByteBuf buf) {
-            return new Listing(new BasicPlayerInfo(buf.readNbt()));
-        }
-
-        void toStream(FriendlyByteBuf buf) {
-            var tag = new CompoundTag();
-            info.save(tag);
-            buf.writeNbt(tag);
-        }
-    }
-
-    private final Map<UUID, Listing> playerInfos;
-    public BasicPlayerInfoPacket(Map<UUID, Listing> playerInfos) {
+    private final Map<Integer, BasicPlayerInfo> playerInfos;
+    public BasicPlayerInfoPacket(Map<Integer, BasicPlayerInfo> playerInfos) {
         this.playerInfos = playerInfos;
     }
 
     public BasicPlayerInfoPacket(FriendlyByteBuf buffer) {
         this.playerInfos = new HashMap<>();
         buffer.readList(next ->
-                new Pair<>(next.readUUID(), Listing.fromStream(next))).forEach(pair ->
+                new Pair<>(next.readVarInt(), new BasicPlayerInfo(next.readNbt()))).forEach(pair ->
                 playerInfos.put(pair.getFirst(), pair.getSecond()));
     }
 
     public void write(FriendlyByteBuf buffer) {
-        buffer.writeCollection(playerInfos.entrySet(), (next, form) -> { next.writeUUID(form.getKey()); form.getValue().toStream(next); });
+        buffer.writeCollection(playerInfos.entrySet(), (next, form) -> {
+            next.writeVarInt(form.getKey());
+            CompoundTag bpiTag = new CompoundTag();
+            form.getValue().save(bpiTag);
+            next.writeNbt(bpiTag);
+        });
     }
 
-    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        if (context.getDirection().getReceptionSide().isClient()) {
-            Level level = UniversalDist.getLevel();
+    @Override
+    public CompletableFuture<Void> handle(NetworkEvent.Context context, CompletableFuture<Level> levelFuture, Executor sidedExecutor) {
+        if (context.getDirection().getReceptionSide() == LogicalSide.CLIENT) {
+            context.setPacketHandled(true);
+            return levelFuture.thenAccept(level -> {
+                Player localPlayer = UniversalDist.getLocalPlayer();
 
-            if (!playerInfos.isEmpty()) {
-                Objects.requireNonNull(level);
-                playerInfos.forEach((uuid, listing) -> {
-                    var player = level.getPlayerByUUID(uuid);
-                    if (player instanceof PlayerDataExtension ext && !UniversalDist.isLocalPlayer(player)) {
-                        ext.getBasicPlayerInfo().copyFrom(listing.info);
-                    }
-                });
-                context.setPacketHandled(true);
-            }
+                if (!playerInfos.isEmpty()) {
+                    Objects.requireNonNull(level);
+                    playerInfos.forEach((id, listing) -> {
+                        var entity = level.getEntity(id);
+                        if (entity instanceof PlayerDataExtension ext && entity != localPlayer) {
+                            ext.getBasicPlayerInfo().copyFrom(listing);
+                        }
+                    });
+                }
 
-            else {
-                Changed.PACKET_HANDLER.sendToServer(BasicPlayerInfoPacket.Builder.of(UniversalDist.getLocalPlayer()));
-                context.setPacketHandled(true);
-            }
+                else {
+                    Changed.PACKET_HANDLER.sendToServer(BasicPlayerInfoPacket.Builder.of(localPlayer));
+                }
+            });
         }
-        else if (context.getDirection().getReceptionSide().isServer()) { // Mirror packet
+
+        else { // Mirror packet
             ServerPlayer sender = context.getSender();
             if (sender != null) {
-                if (sender instanceof PlayerDataExtension ext && playerInfos.containsKey(sender.getUUID()))
-                    ext.getBasicPlayerInfo().copyFrom(playerInfos.get(sender.getUUID()).info); // Keep player info state
-                Changed.PACKET_HANDLER.send(PacketDistributor.ALL.noArg(), this);
+                if (sender instanceof PlayerDataExtension ext && playerInfos.containsKey(sender.getId())) {
+                    BasicPlayerInfo received = playerInfos.get(sender.getId());
+                    ext.getBasicPlayerInfo().copyFrom(received); // Keep player info state
+
+                    Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY.with(() -> sender),
+                            new BasicPlayerInfoPacket(Map.of(sender.getId(), received)));
+                }
             }
             context.setPacketHandled(true);
+            return CompletableFuture.completedFuture(null);
         }
     }
 
     public static class Builder {
-        private final Map<UUID, Listing> playerInfos = new HashMap<>();
+        private final Map<Integer, BasicPlayerInfo> playerInfos = new HashMap<>();
 
         public void addPlayer(Player player) {
             if (player instanceof PlayerDataExtension ext) {
-                playerInfos.put(player.getUUID(), new Listing(ext.getBasicPlayerInfo()));
+                playerInfos.put(player.getId(), ext.getBasicPlayerInfo());
             }
+        }
+
+        public boolean worthSending() {
+            return !playerInfos.isEmpty();
         }
 
         public BasicPlayerInfoPacket build() {

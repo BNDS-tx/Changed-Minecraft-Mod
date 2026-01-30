@@ -73,7 +73,9 @@ public class ChangedEntityRenderers {
 
         registerHumanoid(event, ChangedEntities.GAS_SKUNK.get(), GasSkunkRenderer::new);
         registerHumanoid(event, ChangedEntities.GAS_TIGER.get(), GasTigerRenderer::new);
-        registerHumanoid(event, ChangedEntities.GAS_WOLF.get(), GasWolfRenderer::new);
+        registerHumanoid(event, ChangedEntities.GAS_WOLF_FEMALE.get(), GasWolfFemaleRenderer::new);
+        registerHumanoid(event, ChangedEntities.GAS_WOLF_MALE.get(), GasWolfMaleRenderer::new);
+        registerHumanoid(event, ChangedEntities.GAS_WOLF_PUP.get(), GasWolfPupRenderer::new);
         registerHumanoid(event, ChangedEntities.POOLTOY_WOLF.get(), PooltoyWolfRenderer::new);
         registerHumanoid(event, ChangedEntities.DARK_DRAGON.get(), DarkLatexDragonRenderer::new);
         registerHumanoid(event, ChangedEntities.DARK_LATEX_WOLF_FEMALE.get(), DarkLatexWolfFemaleRenderer::new);
@@ -87,13 +89,16 @@ public class ChangedEntityRenderers {
         registerHumanoid(event, ChangedEntities.LATEX_ALIEN.get(), LatexAlienRenderer::new);
         registerHumanoid(event, ChangedEntities.LATEX_BEE.get(), LatexBeeRenderer::new);
         registerHumanoid(event, ChangedEntities.BEIFENG.get(), LatexBeifengRenderer::new);
+        registerHumanoid(event, ChangedEntities.BENIGN_LATEX_ORCA.get(), LatexBenignOrcaRenderer::new);
         registerHumanoid(event, ChangedEntities.BENIGN_LATEX_WOLF.get(), LatexBenignWolfRenderer::new);
         registerHumanoid(event, ChangedEntities.BLUE_LATEX_DRAGON.get(), LatexBlueDragonRenderer::new);
         registerHumanoid(event, ChangedEntities.BLUE_LATEX_WOLF.get(), LatexBlueWolfRenderer::new);
         registerHumanoid(event, ChangedEntities.LATEX_CROCODILE.get(), LatexCrocodileRenderer::new);
+        registerHumanoid(event, ChangedEntities.LATEX_CROW.get(), LatexCrowRenderer::new);
         registerHumanoid(event, ChangedEntities.CRYSTAL_WOLF.get(), LatexCrystalWolfRenderer::new);
         registerHumanoid(event, ChangedEntities.CRYSTAL_WOLF_HORNED.get(), LatexCrystalWolfHornedRenderer::new);
         registerHumanoid(event, ChangedEntities.LATEX_DEER.get(), LatexDeerRenderer::new);
+        registerHumanoid(event, ChangedEntities.LATEX_EEL.get(), LatexEelRenderer::new);
         registerHumanoid(event, ChangedEntities.LATEX_FENNEC_FOX.get(), LatexFennecFoxRenderer::new);
         registerHumanoid(event, ChangedEntities.LATEX_GOLDEN_DRAGON.get(), LatexGoldenDragonRenderer::new);
         registerHumanoid(event, ChangedEntities.GREEN_LIZARD.get(), GreenLizardRenderer::new);
@@ -153,9 +158,7 @@ public class ChangedEntityRenderers {
         registerHumanoid(event, ChangedEntities.AZUREBYSS_ENTITY.get(), AzurebyssEntityRenderer::new);
 
         event.registerEntityRenderer(ChangedEntities.MILK_PUDDING.get(), MilkPuddingRenderer::new);
-        event.registerEntityRenderer(ChangedEntities.SHARK.get(), SharkRenderer::new);
-
-        event.registerEntityRenderer(ChangedEntities.SPECIAL_LATEX.get(), SpecialLatexRenderer::new);
+        event.registerEntityRenderer(ChangedEntities.FERAL_LATEX_SHARK.get(), SharkRenderer::new);
 
         event.registerEntityRenderer(ChangedEntities.ROOMBA.get(), RoombaRenderer::new);
         event.registerEntityRenderer(ChangedEntities.EXOSKELETON.get(), ExoskeletonRenderer::new);
@@ -164,5 +167,11 @@ public class ChangedEntityRenderers {
 
         event.registerEntityRenderer(ChangedEntities.LATEX_INKBALL.get(), ThrownItemRenderer::new);
         event.registerEntityRenderer(ChangedEntities.GAS_PARTICLE.get(), GasParticleRenderer::new);
+        event.registerEntityRenderer(ChangedEntities.WALL_SIGN.get(), WallSignRenderer::new);
+        event.registerEntityRenderer(ChangedEntities.EMITTED_LASER.get(), EmittedLaserRenderer::new);
+
+        event.registerEntityRenderer(ChangedEntities.BIPED_ARMOR_STAND.get(), BipedArmorStandRenderer::new);
+        event.registerEntityRenderer(ChangedEntities.CENTAUR_ARMOR_STAND.get(), CentaurArmorStandRenderer::new);
+        event.registerEntityRenderer(ChangedEntities.LEGLESS_ARMOR_STAND.get(), LeglessArmorStandRenderer::new);
     }
 }

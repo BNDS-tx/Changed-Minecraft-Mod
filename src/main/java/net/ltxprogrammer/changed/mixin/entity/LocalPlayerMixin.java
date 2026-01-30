@@ -1,12 +1,18 @@
 package net.ltxprogrammer.changed.mixin.entity;
 
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.authlib.GameProfile;
 import net.ltxprogrammer.changed.Changed;
+import net.ltxprogrammer.changed.ability.GrabEntityAbility;
+import net.ltxprogrammer.changed.client.InvertedInput;
 import net.ltxprogrammer.changed.client.LocalPlayerAccessor;
 import net.ltxprogrammer.changed.client.NullInput;
 import net.ltxprogrammer.changed.entity.LivingEntityDataExtension;
 import net.ltxprogrammer.changed.entity.PlayerDataExtension;
+import net.ltxprogrammer.changed.init.ChangedAttributes;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.EntityUtil;
 import net.ltxprogrammer.changed.util.InputWrapper;
@@ -16,11 +22,11 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.Input;
-import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.stats.StatsCounter;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeMod;
@@ -89,7 +95,8 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
     public void aiStep(CallbackInfo ci) {
         var playerMover = getPlayerMover();
         if (playerMover != null) {
-            this.input.tick(this.isMovingSlowly());
+            float f = Mth.clamp(0.3F + EnchantmentHelper.getSneakingSpeedBonus(this), 0.0F, 1.0F);
+            this.input.tick(this.isMovingSlowly(), f);
             playerMover.aiStep((LocalPlayer)(Object)this, InputWrapper.from(this), LogicalSide.CLIENT);
             super.aiStep();
             ci.cancel();
@@ -97,12 +104,30 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
         }
 
         LocalPlayer player = (LocalPlayer)(Object)this;
-        if (!player.level.isClientSide) return;
+        if (!player.level().isClientSide) return;
 
         ProcessTransfur.ifPlayerTransfurred(player, variant -> {
             if (player.getAttributeBaseValue(ForgeMod.SWIM_SPEED.get()) >= 1.1F && variant.getEntityShape().isLegless() && player.isUnderWater())
                 player.setSprinting(true);
         });
+    }
+
+    @WrapOperation(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/Input;tick(ZF)V"))
+    public void adjustCrouchSpeed(Input instance, boolean movingSlowly, float crouchSpeed, Operation<Void> original) {
+        LocalPlayer player = (LocalPlayer)(Object)this;
+        ProcessTransfur.ifPlayerTransfurred(player, variant -> {
+            original.call(instance, movingSlowly, (float)(crouchSpeed * player.getAttributeValue(ChangedAttributes.SNEAK_SPEED.get())));
+        }, () -> {
+            original.call(instance, movingSlowly, crouchSpeed);
+        });
+    }
+
+    @WrapMethod(method = "canStartSprinting")
+    public boolean denySprintingOnZero(Operation<Boolean> original) {
+        LocalPlayer player = (LocalPlayer)(Object)this;
+        if (ProcessTransfur.isPlayerTransfurred(player) && player.getAttributeValue(ChangedAttributes.SPRINT_SPEED.get()) <= 0.0)
+            return false;
+        return original.call();
     }
     
     @Inject(method = "serverAiStep", at = @At("HEAD"), cancellable = true)
@@ -135,7 +160,7 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
     }
 
     @Unique
-    private Input inputCopy = null;
+    private Input rootInput = null;
 
     @Inject(method = "tick", at = @At("HEAD"))
     public void tick(CallbackInfo callback) {
@@ -144,14 +169,32 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
             setPlayerMover(null);
 
         boolean isNullInput = input instanceof NullInput;
-        if (this.getNoControlTicks() > 0) {
-            if (!isNullInput) {
-                inputCopy = input;
+        boolean isInvertedInput = input instanceof InvertedInput;
+        if (!isNullInput && !isInvertedInput)
+            rootInput = input; // Save root input type
+
+        boolean shouldNullInput = this.getNoControlTicks() > 0 || GrabEntityAbility.isEntityNoControl(this);
+        boolean shouldInvertInput = this.getInvertControlTicks() > 0;
+
+        if (shouldNullInput) {
+            if (!isNullInput)
                 input = new NullInput();
-            }
+
+            return;
         } else if (isNullInput) {
-            input = inputCopy;
-            inputCopy = null;
+            input = rootInput;
+        }
+
+        isInvertedInput = input instanceof InvertedInput;
+
+        if (shouldInvertInput) {
+            if (!isInvertedInput) {
+                input = new InvertedInput(input);
+            }
+
+            return;
+        } else if (isInvertedInput) {
+            input = rootInput;
         }
     }
 

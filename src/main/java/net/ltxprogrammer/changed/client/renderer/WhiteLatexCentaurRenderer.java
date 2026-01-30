@@ -10,10 +10,12 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.layers.SaddleLayer;
 import net.minecraft.resources.ResourceLocation;
 
-public class WhiteLatexCentaurRenderer extends AdvancedHumanoidRenderer<WhiteLatexCentaur, WhiteLatexCentaurModel, ArmorLatexMaleTaurUpperModel<WhiteLatexCentaur>> {
+public class WhiteLatexCentaurRenderer extends AdvancedHumanoidRenderer<WhiteLatexCentaur, WhiteLatexCentaurModel> {
+    public static final ResourceLocation DEFAULT_SKIN_LOCATION = Changed.modResource("textures/white_latex_centaur.png");
+
     public WhiteLatexCentaurRenderer(EntityRendererProvider.Context context) {
         super(context, new WhiteLatexCentaurModel(context.bakeLayer(WhiteLatexCentaurModel.LAYER_LOCATION)),
-                ArmorModelPicker.centaur(context.getModelSet(), ArmorLatexMaleTaurUpperModel.MODEL_SET, ArmorLatexCentaurLowerModel.MODEL_SET), 0.7f);
+                ArmorModelPicker.centaur(context.getModelSet(), ArmorLatexMaleTaurUpperModel.MODEL_SET, ArmorLatexCentaurLowerModel.MODEL_SET_WITH_TORSO), 0.7f);
         this.addLayer(new LatexParticlesLayer<>(this, getModel()));
         this.addLayer(CustomEyesLayer.builder(this, context.getModelSet())
                 .withSclera(Color3.fromInt(0x1b1b1b)).withIris(Color3.fromInt(0xdfdfdf)).build());
@@ -24,7 +26,7 @@ public class WhiteLatexCentaurRenderer extends AdvancedHumanoidRenderer<WhiteLat
     }
 
     @Override
-    public ResourceLocation getTextureLocation(WhiteLatexCentaur p_114482_) {
-        return Changed.modResource("textures/white_latex_centaur.png");
+    public ResourceLocation getTextureLocation(WhiteLatexCentaur entity) {
+        return DEFAULT_SKIN_LOCATION;
     }
 }

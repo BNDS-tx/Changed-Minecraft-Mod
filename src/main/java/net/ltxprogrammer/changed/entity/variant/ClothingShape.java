@@ -1,23 +1,32 @@
 package net.ltxprogrammer.changed.entity.variant;
 
 import net.ltxprogrammer.changed.Changed;
+import net.minecraft.Util;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.armortrim.ArmorTrim;
 import net.minecraftforge.common.IExtensibleEnum;
 
 import javax.annotation.Nullable;
+import java.util.function.BiFunction;
 
 public abstract class ClothingShape {
     public enum Head implements IExtensibleEnum, StringRepresentable {
-        NONE("none"),
-        ANTHRO("anthro");
+        NONE("none", null, false),
+        ANTHRO("anthro", null, false);
 
         public static final Head DEFAULT = ANTHRO;
 
         private final String serialName;
+        private final BiFunction<ArmorTrim, ArmorMaterial, ResourceLocation> trimTexture;
 
-        Head(String serialName) {
+        Head(String serialName, String trimPrefix, boolean innerArmorModel) {
             this.serialName = serialName;
+            this.trimTexture = trimPrefix == null ? null : Util.memoize((trim, material) -> {
+                return (innerArmorModel ? trim.innerTexture(material) : trim.outerTexture(material))
+                        .withPath(original -> original.replace("armor", trimPrefix));
+            });
         }
 
         @Override
@@ -29,24 +38,37 @@ public abstract class ClothingShape {
         public ResourceLocation getEmptyArmorSlot() {
             if (this == NONE || this == ANTHRO)
                 return null;
-            return Changed.modResource("items/empty_armor_slot_" + serialName + "_head");
+            return Changed.modResource("item/empty_armor_slot_" + serialName + "_head");
         }
 
-        public static Head create(String name, String serialName) {
+        @Nullable
+        public ResourceLocation getTrimTexture(ArmorTrim trim, ArmorMaterial material) {
+            if (trimTexture == null)
+                return null;
+
+            return trimTexture.apply(trim, material);
+        }
+
+        public static Head create(String name, String serialName, String trimPrefix, boolean innerArmorModel) {
             throw new IllegalStateException("Enum not extended");
         }
     }
 
     public enum Torso implements IExtensibleEnum, StringRepresentable {
-        NONE("none"),
-        ANTHRO("anthro");
+        NONE("none", null, false),
+        ANTHRO("anthro", null, false);
 
         public static final Torso DEFAULT = ANTHRO;
 
         private final String serialName;
+        private final BiFunction<ArmorTrim, ArmorMaterial, ResourceLocation> trimTexture;
 
-        Torso(String serialName) {
+        Torso(String serialName, String trimPrefix, boolean innerArmorModel) {
             this.serialName = serialName;
+            this.trimTexture = trimPrefix == null ? null : Util.memoize((trim, material) -> {
+                return (innerArmorModel ? trim.innerTexture(material) : trim.outerTexture(material))
+                        .withPath(original -> original.replace("armor", trimPrefix));
+            });
         }
 
         @Override
@@ -58,26 +80,39 @@ public abstract class ClothingShape {
         public ResourceLocation getEmptyArmorSlot() {
             if (this == NONE || this == ANTHRO)
                 return null;
-            return Changed.modResource("items/empty_armor_slot_" + serialName + "_torso");
+            return Changed.modResource("item/empty_armor_slot_" + serialName + "_torso");
         }
 
-        public static Torso create(String name, String serialName) {
+        @Nullable
+        public ResourceLocation getTrimTexture(ArmorTrim trim, ArmorMaterial material) {
+            if (trimTexture == null)
+                return null;
+
+            return trimTexture.apply(trim, material);
+        }
+
+        public static Torso create(String name, String serialName, String trimPrefix, boolean innerArmorModel) {
             throw new IllegalStateException("Enum not extended");
         }
     }
 
     public enum Legs implements IExtensibleEnum, StringRepresentable {
-        NONE("none"),
-        BIPEDAL("bipedal"),
-        QUADRUPEDAL("quadrupedal"),
-        TAIL("tail");
+        NONE("none", null, true),
+        BIPEDAL("bipedal", null, true),
+        QUADRUPEDAL("quadrupedal", "quadrupedal_armor", true),
+        TAIL("tail", "abdomen_armor", false);
 
         public static final Legs DEFAULT = BIPEDAL;
 
         private final String serialName;
+        private final BiFunction<ArmorTrim, ArmorMaterial, ResourceLocation> trimTexture;
 
-        Legs(String serialName) {
+        Legs(String serialName, String trimPrefix, boolean innerArmorModel) {
             this.serialName = serialName;
+            this.trimTexture = trimPrefix == null ? null : Util.memoize((trim, material) -> {
+                return (innerArmorModel ? trim.innerTexture(material) : trim.outerTexture(material))
+                        .withPath(original -> original.replace("armor", trimPrefix));
+            });
         }
 
         @Override
@@ -89,26 +124,39 @@ public abstract class ClothingShape {
         public ResourceLocation getEmptyArmorSlot() {
             if (this == NONE || this == BIPEDAL)
                 return null;
-            return Changed.modResource("items/empty_armor_slot_" + serialName + "_legs");
+            return Changed.modResource("item/empty_armor_slot_" + serialName + "_legs");
         }
 
-        public static Legs create(String name, String serialName) {
+        @Nullable
+        public ResourceLocation getTrimTexture(ArmorTrim trim, ArmorMaterial material) {
+            if (trimTexture == null)
+                return null;
+
+            return trimTexture.apply(trim, material);
+        }
+
+        public static Legs create(String name, String serialName, String trimPrefix, boolean innerArmorModel) {
             throw new IllegalStateException("Enum not extended");
         }
     }
 
     public enum Feet implements IExtensibleEnum, StringRepresentable {
-        NONE("none"),
-        BIPEDAL("bipedal"),
-        QUADRUPEDAL("quadrupedal"),
-        TAIL("tail");
+        NONE("none", null, false),
+        BIPEDAL("bipedal", null, false),
+        QUADRUPEDAL("quadrupedal", "quadrupedal_armor", false),
+        TAIL("tail", "abdomen_armor", true);
 
         public static final Feet DEFAULT = BIPEDAL;
 
         private final String serialName;
+        private final BiFunction<ArmorTrim, ArmorMaterial, ResourceLocation> trimTexture;
 
-        Feet(String serialName) {
+        Feet(String serialName, String trimPrefix, boolean innerArmorModel) {
             this.serialName = serialName;
+            this.trimTexture = trimPrefix == null ? null : Util.memoize((trim, material) -> {
+                return (innerArmorModel ? trim.innerTexture(material) : trim.outerTexture(material))
+                        .withPath(original -> original.replace("armor", trimPrefix));
+            });
         }
 
         @Override
@@ -120,10 +168,18 @@ public abstract class ClothingShape {
         public ResourceLocation getEmptyArmorSlot() {
             if (this == NONE || this == BIPEDAL)
                 return null;
-            return Changed.modResource("items/empty_armor_slot_" + serialName + "_feet");
+            return Changed.modResource("item/empty_armor_slot_" + serialName + "_feet");
         }
 
-        public static Feet create(String name, String serialName) {
+        @Nullable
+        public ResourceLocation getTrimTexture(ArmorTrim trim, ArmorMaterial material) {
+            if (trimTexture == null)
+                return null;
+
+            return trimTexture.apply(trim, material);
+        }
+
+        public static Feet create(String name, String serialName, String trimPrefix, boolean innerArmorModel) {
             throw new IllegalStateException("Enum not extended");
         }
     }

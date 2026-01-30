@@ -23,7 +23,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -122,7 +121,7 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
     };
 
     protected @NotNull Component getDefaultName() {
-        return new TranslatableComponent("container.changed.stasis_chamber");
+        return Component.translatable("container.changed.stasis_chamber");
     }
 
     protected @NotNull AbstractContainerMenu createMenu(int id, @NotNull Inventory inventory) {
@@ -171,7 +170,7 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
 
     public void setItem(int slotId, ItemStack stack) {
         ItemStack existingItem = this.items.get(slotId);
-        boolean flag = !stack.isEmpty() && stack.sameItem(existingItem) && ItemStack.tagMatches(stack, existingItem);
+        boolean flag = !stack.isEmpty() && ItemStack.isSameItemSameTags(stack, existingItem);
         this.items.set(slotId, stack);
         if (stack.getCount() > this.getMaxStackSize()) {
             stack.setCount(this.getMaxStackSize());
@@ -285,7 +284,7 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
 
     public boolean chamberEntity(LivingEntity entity) {
         if (entityHolder == null || entityHolder.isRemoved()) {
-            entityHolder = SeatEntity.createFor(entity.level, this.getBlockState(), this.getBlockPos(), false, false, false);
+            entityHolder = SeatEntity.createFor(entity.level(), this.getBlockState(), this.getBlockPos(), false, false, false);
             this.markUpdated();
         }
 
@@ -499,10 +498,10 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
                         return;
 
                     customLatexEntity.setRawFormFlags(configuredCustomLatex);
-                    ChangedSounds.broadcastSound(entity.getEntity(), ChangedSounds.POISON, 1.0f, 1.0f);
+                    ChangedSounds.broadcastSound(entity.getEntity(), ChangedSounds.STASIS_CHAMBER_MODIFY_LATEX, 1.0f, 1.0f);
                 } else ChangedTransfurVariants.Gendered.getOpposite(entity.getSelfVariant()).ifPresent(otherVariant -> {
                     entity.replaceVariant(otherVariant);
-                    ChangedSounds.broadcastSound(entity.getEntity(), ChangedSounds.POISON, 1.0f, 1.0f);
+                    ChangedSounds.broadcastSound(entity.getEntity(), ChangedSounds.STASIS_CHAMBER_MODIFY_LATEX, 1.0f, 1.0f);
                 });
             });
         }
@@ -727,7 +726,7 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
                 return false;
 
             blockEntity.stabilized = true;
-            blockEntity.getChamberedEntity().map(EntityUtil::playerOrNull).map(Player::getLevel).ifPresent(level -> {
+            blockEntity.getChamberedEntity().map(EntityUtil::playerOrNull).map(Player::level).ifPresent(level -> {
                 if (level instanceof ServerLevel serverLevel)
                     serverLevel.updateSleepingPlayerList();
             });
@@ -743,7 +742,7 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
                 return false;
 
             blockEntity.stabilized = false;
-            blockEntity.getChamberedEntity().map(EntityUtil::playerOrNull).map(Player::getLevel).ifPresent(level -> {
+            blockEntity.getChamberedEntity().map(EntityUtil::playerOrNull).map(Player::level).ifPresent(level -> {
                 if (level instanceof ServerLevel serverLevel)
                     serverLevel.updateSleepingPlayerList();
             });
@@ -786,10 +785,10 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
                         return;
 
                     customLatexEntity.setRawFormFlags(blockEntity.configuredCustomLatex);
-                    ChangedSounds.broadcastSound(entity.getEntity(), ChangedSounds.POISON, 1.0f, 1.0f);
+                    ChangedSounds.broadcastSound(entity.getEntity(), ChangedSounds.STASIS_CHAMBER_MODIFY_LATEX, 1.0f, 1.0f);
                 } else ChangedTransfurVariants.Gendered.getOpposite(entity.getSelfVariant()).ifPresent(otherVariant -> {
                     entity.replaceVariant(otherVariant);
-                    ChangedSounds.broadcastSound(entity.getEntity(), ChangedSounds.POISON, 1.0f, 1.0f);
+                    ChangedSounds.broadcastSound(entity.getEntity(), ChangedSounds.STASIS_CHAMBER_MODIFY_LATEX, 1.0f, 1.0f);
                 });
             });
 
@@ -809,7 +808,7 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
             blockEntity.getChamberedEntity().ifPresent(entity -> {
                 if (TransfurVariant.getEntityVariant(entity) != null) return;
 
-                ProcessTransfur.transfur(entity, entity.level, blockEntity.findVariantFromSlots(), true, TransfurContext.hazard(TransfurCause.STASIS_CHAMBER));
+                ProcessTransfur.transfur(entity, entity.level(), blockEntity.findVariantFromSlots(), true, TransfurContext.hazard(TransfurCause.STASIS_CHAMBER));
                 if (entity.isRemoved() || entity.isDeadOrDying()) { // Transfurring killed entity, replaced with npc
                     blockEntity.cachedEntity = null;
                     blockEntity.ensureCapturedIsStillInside();
@@ -835,7 +834,7 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
             newEntity.moveTo(blockPos.getX(), blockPos.getY(), blockPos.getZ(), facing.toYRot(), 0f);
             blockEntity.level.addFreshEntity(newEntity);
             blockEntity.chamberEntity(newEntity);
-            ChangedSounds.broadcastSound(newEntity, ChangedSounds.POISON, 1.0f, 1.0f);
+            ChangedSounds.broadcastSound(newEntity, ChangedSounds.STASIS_CHAMBER_CREATE_LATEX, 1.0f, 1.0f);
             return false;
         }),
         /**
@@ -848,7 +847,7 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
             if (entity == null || entity instanceof Player)
                 return false;
 
-            ChangedSounds.broadcastSound(entity, ChangedSounds.POISON, 1.0f, 1.0f);
+            ChangedSounds.broadcastSound(entity, ChangedSounds.STASIS_CHAMBER_DISCARD_LATEX, 1.0f, 1.0f);
             entity.stopRiding();
             entity.discard();
             return false;
@@ -863,7 +862,7 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
 
             if (blockEntity.stabilized) {
                 blockEntity.stabilized = false;
-                blockEntity.getChamberedEntity().map(EntityUtil::playerOrNull).map(Player::getLevel).ifPresent(level -> {
+                blockEntity.getChamberedEntity().map(EntityUtil::playerOrNull).map(Player::level).ifPresent(level -> {
                     if (level instanceof ServerLevel serverLevel)
                         serverLevel.updateSleepingPlayerList();
                 });
@@ -937,12 +936,12 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
             return this.functionTick.apply(blockEntity);
         }
 
-        public TranslatableComponent getDisplayText() {
-            return new TranslatableComponent("changed.stasis.command." + serialName);
+        public Component getDisplayText() {
+            return Component.translatable("changed.stasis.command." + serialName);
         }
 
-        public TranslatableComponent getActiveDisplayText() {
-            return new TranslatableComponent("changed.stasis.command._active", getDisplayText());
+        public Component getActiveDisplayText() {
+            return Component.translatable("changed.stasis.command._active", getDisplayText());
         }
     }
 }

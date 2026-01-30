@@ -80,25 +80,23 @@ public class ChangedFusions extends SimplePreparableReloadListener<List<ChangedF
     }
 
     public Stream<TransfurVariant<?>> getFusionsFor(TransfurVariant<?> variantA, TransfurVariant<?> variantB) {
-        return getFusionDefinitions().mapMulti((fusionDefinition, next) -> {
-            if (fusionDefinition.matches(variantA, variantB))
-                next.accept(fusionDefinition.fusion());
-        });
+        return getFusionDefinitions().filter(fusionDefinition -> {
+            return fusionDefinition.matches(variantA, variantB);
+        }).map(FusionDefinition::fusion);
     }
 
     public Stream<TransfurVariant<?>> getFusionsFor(TransfurVariant<?> variant, Class<? extends LivingEntity> mob) {
-        return getFusionDefinitions().mapMulti((fusionDefinition, next) -> {
-            if (fusionDefinition.matches(variant, mob))
-                next.accept(fusionDefinition.fusion());
-        });
+        return getFusionDefinitions().filter(fusionDefinition -> {
+            return fusionDefinition.matches(variant, mob);
+        }).map(FusionDefinition::fusion);
     }
 
     private FusionDefinition processJSONFile(ResourceLocation name, JsonObject root) throws ClassNotFoundException {
         FusionDefinition.Builder builder = new FusionDefinition.Builder();
 
-        if (root.has("fusion")) builder.withFusion(new ResourceLocation(root.get("fusion").getAsString()));
-        if (root.has("variant")) builder.withVariant(new ResourceLocation(root.get("variant").getAsString()));
-        if (root.has("otherVariant")) builder.withVariant(new ResourceLocation(root.get("otherVariant").getAsString()));
+        if (root.has("fusion")) builder.withFusion(ResourceLocation.parse(root.get("fusion").getAsString()));
+        if (root.has("variant")) builder.withVariant(ResourceLocation.parse(root.get("variant").getAsString()));
+        if (root.has("otherVariant")) builder.withVariant(ResourceLocation.parse(root.get("otherVariant").getAsString()));
         if (root.has("mob")) builder.withMob(root.get("mob").getAsString());
 
         return builder.build(name);

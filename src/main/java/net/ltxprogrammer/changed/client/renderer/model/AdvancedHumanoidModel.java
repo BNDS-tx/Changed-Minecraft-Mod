@@ -20,6 +20,7 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.HumanoidArm;
 
 import javax.annotation.Nullable;
@@ -88,9 +89,11 @@ public abstract class AdvancedHumanoidModel<T extends ChangedEntity> extends Pla
 
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        ((ClientLivingEntityExtender)entity.maybeGetUnderlying()).getOrderedAnimations().forEach(instance -> {
-            instance.animate(this, entity, Mth.positiveModulo(ageInTicks, 1.0f));
-        });
+        if (!TransfurAnimator.isCapturing()) {
+            ((ClientLivingEntityExtender) entity.maybeGetUnderlying()).getOrderedAnimations().forEach(instance -> {
+                instance.animate(this, entity, Mth.positiveModulo(ageInTicks, 1.0f));
+            });
+        }
 
         if (limbSwing == 0.0f && limbSwingAmount == 0.0f && ageInTicks == 0.0f && netHeadYaw == 0.0f && headPitch == 0.0f) {
             ((ClientLivingEntityExtender) entity).getOrderedAnimations().forEach(instance -> {
@@ -217,7 +220,7 @@ public abstract class AdvancedHumanoidModel<T extends ChangedEntity> extends Pla
         });
     }
 
-    public ModelPart getRandomModelPart(Random random) {
+    public ModelPart getRandomModelPart(RandomSource random) {
         List<ModelPart> partList = rootModelPart.getAllParts().toList();
         return partList.get(random.nextInt(partList.size()));
     }
