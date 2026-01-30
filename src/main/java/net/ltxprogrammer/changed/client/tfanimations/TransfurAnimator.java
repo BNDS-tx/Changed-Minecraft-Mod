@@ -7,6 +7,7 @@ import net.ltxprogrammer.changed.client.ClientLivingEntityExtender;
 import net.ltxprogrammer.changed.client.CubeExtender;
 import net.ltxprogrammer.changed.client.FormRenderHandler;
 import net.ltxprogrammer.changed.client.PoseStackExtender;
+import net.ltxprogrammer.changed.client.animations.AnimationContainer;
 import net.ltxprogrammer.changed.client.animations.Limb;
 import net.ltxprogrammer.changed.client.renderer.AdvancedHumanoidRenderer;
 import net.ltxprogrammer.changed.client.renderer.accessory.TransitionalAccessory;
@@ -473,8 +474,10 @@ public abstract class TransfurAnimator {
         transitionPart.loadPose(transitionPose.pose);
 
         // TODO apply LimbExtension stuff
-        ((ClientLivingEntityExtender)entity).getOrderedAnimations().forEach(instance -> {
-            transitionPart.loadPose(instance.animatePartAs(limb, transitionPart.storePose(), partialTicks));
+        AnimationContainer.getForEntity(entity).ifPresent(container -> {
+            container.getOrderedAnimations().forEach(instance -> {
+                transitionPart.loadPose(instance.animatePartAs(limb, transitionPart.storePose(), partialTicks));
+            });
         });
 
         transitionPart.render(stack, vertexConsumer, light, overlay, color.red(), color.green(), color.blue(), alpha);
@@ -560,8 +563,10 @@ public abstract class TransfurAnimator {
         final Color3 color = variant.getTransfurColor();
 
         copiedPart.loadPose(pose.pose);
-        ((ClientLivingEntityExtender)entity).getOrderedAnimations().forEach(instance -> {
-            copiedPart.loadPose(instance.animatePartAs(limb, copiedPart.storePose(), partialTicks));
+        AnimationContainer.getForEntity(entity).ifPresent(container -> {
+            container.getOrderedAnimations().forEach(instance -> {
+                copiedPart.loadPose(instance.animatePartAs(limb, copiedPart.storePose(), partialTicks));
+            });
         });
         copiedPart.render(stack, vertexConsumer, light, LivingEntityRenderer.getOverlayCoords(entity, 0.0f), color.red(), color.green(), color.blue(), alpha);
 
@@ -662,7 +667,6 @@ public abstract class TransfurAnimator {
                                 afterModel,
                                 partialTick, morphProgress, Color3.WHITE, 1f, stack, buffer, light,
                                 texture, true);
-                        afterModel.unprepareVisibility(armorSlot, item);
                     } catch (Exception e) {
                         CrashReport report = CrashReport.forThrowable(e, "Rendering transfurring entity's armor");
                         CrashReportCategory category = report.addCategory("Armor being rendered");

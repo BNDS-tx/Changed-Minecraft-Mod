@@ -156,9 +156,6 @@ public class ChangedTabs {
 
                         output.accept(ChangedBlocks.BEEHIVE_BED.get());
                         output.accept(ChangedBlocks.BEEHIVE_WALL.get());
-                        output.accept(ChangedBlocks.BEEHIVE_CORNER.get());
-                        output.accept(ChangedBlocks.BEEHIVE_FLOOR.get());
-                        output.accept(ChangedBlocks.BEEHIVE_ROOF.get());
 
                         output.accept(ChangedBlocks.LARGE_LAB_DOOR.get());
                         output.accept(ChangedBlocks.LARGE_LIBRARY_DOOR.get());
@@ -291,8 +288,11 @@ public class ChangedTabs {
                     .displayItems((params, output) -> {
                         output.accept(ChangedItems.BENIGN_SHORTS.get());
                         output.accept(ChangedItems.PINK_SHORTS.get());
+                        output.accept(ChangedItems.BLACK_PANTS.get());
+                        output.accept(ChangedItems.NAVY_PANTS.get());
                         output.accept(ChangedItems.BLACK_TSHIRT.get());
                         output.accept(ChangedItems.WHITE_TSHIRT.get());
+                        output.accept(ChangedItems.TSC_VEST.get());
                         output.accept(ChangedItems.SPORTS_BRA.get());
                         output.accept(ChangedItems.LAB_COAT.get());
                         output.accept(ChangedItems.WETSUIT.get());
@@ -300,6 +300,7 @@ public class ChangedTabs {
                         output.accept(ChangedItems.ORANGE_NECK_TIE.get());
                         output.accept(ChangedItems.RED_NECK_TIE.get());
                         output.accept(ChangedItems.BLUE_NECK_TIE.get());
+                        output.accept(ChangedItems.DOG_COLLAR.get());
                     })
                     .build());
 

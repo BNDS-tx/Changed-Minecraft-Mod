@@ -342,15 +342,15 @@ public class ProcessTransfur {
         public final @Nullable
         TransfurVariant<?> originalVariant;
         public final @Nullable
-        TransfurCause cause;
+        TransfurContext context;
         public @Nullable
         TransfurVariant<?> variant;
 
-        public EntityVariantAssigned(LivingEntity livingEntity, @Nullable TransfurVariant<?> variant, @Nullable TransfurCause cause) {
+        public EntityVariantAssigned(LivingEntity livingEntity, @Nullable TransfurVariant<?> variant, @Nullable TransfurContext context) {
             this.livingEntity = livingEntity;
             this.previousVariant = TransfurVariant.getEntityVariant(livingEntity);
             this.originalVariant = variant;
-            this.cause = cause;
+            this.context = context;
 
             this.variant = variant;
         }
@@ -380,13 +380,13 @@ public class ProcessTransfur {
             public final @Nullable
             TransfurVariant<?> newVariant;
             public final @Nullable
-            TransfurCause cause;
+            TransfurContext context;
 
-            public ChangedVariant(LivingEntity livingEntity, @Nullable TransfurVariant<?> variant, @Nullable TransfurCause cause) {
+            public ChangedVariant(LivingEntity livingEntity, @Nullable TransfurVariant<?> variant, @Nullable TransfurContext context) {
                 this.livingEntity = livingEntity;
                 this.oldVariant = TransfurVariant.getEntityVariant(livingEntity);
                 this.newVariant = variant;
-                this.cause = cause;
+                this.context = context;
             }
 
             @Override
@@ -431,7 +431,7 @@ public class ProcessTransfur {
                                                         float progress,
                                                         boolean temporaryFromSuit, Consumer<TransfurVariantInstance<?>> preProcess) {
         PlayerDataExtension playerDataExtension = (PlayerDataExtension)player;
-        EntityVariantAssigned event = new EntityVariantAssigned(player, ogVariant, context == null ? null : context.cause);
+        EntityVariantAssigned event = new EntityVariantAssigned(player, ogVariant, context);
         Changed.postModEvent(event);
         @Nullable TransfurVariant<?> variant = event.variant;
 
@@ -475,7 +475,7 @@ public class ProcessTransfur {
         player.setHealth(Math.min(player.getHealth(), player.getMaxHealth()));
 
         if (variant != null && !event.isRedundant() && !instance.isTemporaryFromSuit()) {
-            Changed.postModEvent(new EntityVariantAssigned.ChangedVariant(player, variant, context == null ? null : context.cause));
+            Changed.postModEvent(new EntityVariantAssigned.ChangedVariant(player, variant, context));
             ChangedFunctionTags.ON_TRANSFUR.execute(ServerLifecycleHooks.getCurrentServer(), player);
         }
 
@@ -669,6 +669,8 @@ public class ProcessTransfur {
             event.setCanceled(true);
             return;
         }
+        if (event.getSource().is(ChangedTags.DamageTypes.IGNORES_FACTION_IMMUNITY))
+            return;
         // Check for faction immunity
         LatexType factionD = LatexType.getEntityLatexType(event.getEntity());
         LatexType factionS = LatexType.getEntityLatexType(sourceEntity);
@@ -758,7 +760,7 @@ public class ProcessTransfur {
             }
 
             else if (!entity.level().isClientSide) {
-                EntityVariantAssigned event = new EntityVariantAssigned(entity, variant, context.cause);
+                EntityVariantAssigned event = new EntityVariantAssigned(entity, variant, context);
                 Changed.postModEvent(event);
                 if (event.variant != null)
                     onReplicate.accept(event.variant.replaceEntity(entity, context.source), event.variant);
@@ -789,7 +791,7 @@ public class ProcessTransfur {
             }
 
             else if (!entity.level().isClientSide) {
-                EntityVariantAssigned event = new EntityVariantAssigned(entity, fusion, context.cause);
+                EntityVariantAssigned event = new EntityVariantAssigned(entity, fusion, context);
                 Changed.postModEvent(event);
                 if (event.variant != null)
                     event.variant.replaceEntity(entity, context.source);

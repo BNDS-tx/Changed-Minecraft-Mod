@@ -83,11 +83,17 @@ public class ChangedSounds {
     public static final RegistryObject<SoundEvent> BRA_EQUIP = register("item.bra.equip");
     public static final RegistryObject<SoundEvent> COAT_BREAK = register("item.coat.break");
     public static final RegistryObject<SoundEvent> COAT_EQUIP = register("item.coat.equip");
+    public static final RegistryObject<SoundEvent> COLLAR_BREAK = register("item.collar.break");
+    public static final RegistryObject<SoundEvent> COLLAR_EQUIP = register("item.collar.equip");
     public static final RegistryObject<SoundEvent> DARK_LATEX_MASK_COMPLETE_TRANSFUR = register("item.dark_latex_mask.complete_transfur");
     public static final RegistryObject<SoundEvent> GLOVES_BREAK = register("item.gloves.break");
     public static final RegistryObject<SoundEvent> GLOVES_EQUIP = register("item.gloves.equip");
+    public static final RegistryObject<SoundEvent> FACE_MASK_BREAK = register("item.face_mask.break");
+    public static final RegistryObject<SoundEvent> FACE_MASK_EQUIP = register("item.face_mask.equip");
     public static final RegistryObject<SoundEvent> NECK_TIE_BREAK = register("item.neck_tie.break");
     public static final RegistryObject<SoundEvent> NECK_TIE_EQUIP = register("item.neck_tie.equip");
+    public static final RegistryObject<SoundEvent> PANTS_BREAK = register("item.pants.break");
+    public static final RegistryObject<SoundEvent> PANTS_EQUIP = register("item.pants.equip");
     public static final RegistryObject<SoundEvent> TSC_WEAPON_SHOCK = register("item.tsc_weapon.shock");
     public static final RegistryObject<SoundEvent> SHIRT_BREAK = register("item.shirt.break");
     public static final RegistryObject<SoundEvent> SHIRT_EQUIP = register("item.shirt.equip");
