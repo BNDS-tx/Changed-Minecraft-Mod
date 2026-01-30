@@ -61,8 +61,8 @@ public abstract class AbstractRobot extends PathfinderMob {
 
         runningCooldown = getRunningSoundDuration();
         SoundEvent sound = getRunningSound();
-        if (sound != null && level().isClientSide)
-            level().playSound(UniversalDist.getLocalPlayer(), this, sound, SoundSource.NEUTRAL, 0.5f, 1f);
+        if (sound != null && level.isClientSide)
+            level.playSound(UniversalDist.getLocalPlayer(), this, sound, SoundSource.NEUTRAL, 0.5f, 1f);
     }
 
     public void broadcastNearbyCharger(BlockPos where, ChargerType type) {
@@ -187,7 +187,7 @@ public abstract class AbstractRobot extends PathfinderMob {
             this.setDamage(this.getDamage() + 2.0F);
 
             if (this.getDamage() > this.getMaxDamage()) {
-                if (this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
+                if (this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
                     this.spawnAtLocation(this.getDropItem());
                 }
 
@@ -217,17 +217,17 @@ public abstract class AbstractRobot extends PathfinderMob {
     public boolean hurt(DamageSource source, float damage) {
         if (this.isInvulnerableTo(source)) {
             return false;
-        } else if (!this.level().isClientSide && !this.isRemoved()) {
+        } else if (!this.level.isClientSide && !this.isRemoved()) {
             this.setHurtDir(-this.getHurtDir());
             this.setHurtTime(10);
             this.setDamage(this.getDamage() + damage * 10.0F);
             if (source.getEntity() instanceof LivingEntity livingEntity)
                 this.setLastHurtByMob(livingEntity);
             this.markHurt();
-            this.gameEvent(GameEvent.ENTITY_DAMAGE, source.getEntity());
+            this.gameEvent(GameEvent.ENTITY_DAMAGED, source.getEntity());
             boolean flag = source.getEntity() instanceof Player && ((Player)source.getEntity()).getAbilities().instabuild;
             if (flag || this.getDamage() > this.getMaxDamage()) {
-                if (!flag && this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
+                if (!flag && this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
                     this.spawnAtLocation(this.getDropItem());
                 }
 
@@ -255,9 +255,9 @@ public abstract class AbstractRobot extends PathfinderMob {
     protected void detachFromCharger() {
         if (this.isCharging() && this.getSleepingPos().isPresent()) {
             final var chargerPos = this.getSleepingPos().get();
-            final var chargerState = level().getBlockState(chargerPos);
+            final var chargerState = level.getBlockState(chargerPos);
             if (chargerState.getBlock() instanceof IRobotCharger charger) {
-                charger.acceptRobotRemoved(chargerState, level(), chargerPos, this);
+                charger.acceptRobotRemoved(chargerState, level, chargerPos, this);
             }
         }
     }
@@ -298,9 +298,9 @@ public abstract class AbstractRobot extends PathfinderMob {
         public void tick() {
             super.tick();
             if (robot.getNavigation().isDone() && robot.closestCharger != null) {
-                BlockState state = robot.level().getBlockState(robot.closestCharger);
+                BlockState state = robot.level.getBlockState(robot.closestCharger);
                 if (state.getBlock() instanceof IRobotCharger charger) {
-                    charger.acceptRobot(state, robot.level(), robot.closestCharger, robot);
+                    charger.acceptRobot(state, robot.level, robot.closestCharger, robot);
                 }
                 robot.closestCharger = null;
             }

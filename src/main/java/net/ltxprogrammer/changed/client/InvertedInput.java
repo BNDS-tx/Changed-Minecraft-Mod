@@ -11,9 +11,9 @@ public class InvertedInput extends Input {
     }
 
     @Override
-    public void tick(boolean movingSlowly, float sneakSpeed) {
-        super.tick(movingSlowly, sneakSpeed);
-        wrappedInput.tick(movingSlowly, sneakSpeed);
+    public void tick(boolean movingSlowly) {
+        super.tick(movingSlowly);
+        wrappedInput.tick(movingSlowly);
 
         this.down = wrappedInput.up;
         this.up = wrappedInput.down;

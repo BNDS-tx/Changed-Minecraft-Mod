@@ -14,13 +14,11 @@ import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
-import net.minecraft.core.HolderGetter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -40,7 +38,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.StateHolder;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
@@ -48,12 +46,14 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.registries.ForgeRegistryEntry;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 
-public abstract class LatexType {
+public abstract class LatexType extends ForgeRegistryEntry<LatexType> {
     protected final StateDefinition<LatexType, LatexCoverState> coverStateDefinition;
     private LatexCoverState defaultCoverState;
 
@@ -110,7 +110,7 @@ public abstract class LatexType {
 
     public void onStruckByLighting(LatexCoverState state, Level level, BlockPos strikePosition, LightningBolt lightningBolt) {}
 
-    public void animateTick(LatexCoverState state, Level level, BlockPos pos, RandomSource random) {}
+    public void animateTick(LatexCoverState state, Level level, BlockPos pos, Random random) {}
 
     public abstract ResourceLocation getLootTable();
 
@@ -119,13 +119,13 @@ public abstract class LatexType {
     }
 
     public static List<ItemStack> getDrops(LatexCoverState state, ServerLevel level, BlockPos blockPos) {
-        LootParams.Builder builder = (new LootParams.Builder(level)).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(blockPos)).withParameter(LootContextParams.TOOL, ItemStack.EMPTY).withOptionalParameter(LootContextParams.BLOCK_ENTITY, null);
-        return state.getDrops(builder);
+        LootContext.Builder builder = (new LootContext.Builder(level)).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(blockPos)).withParameter(LootContextParams.TOOL, ItemStack.EMPTY).withOptionalParameter(LootContextParams.BLOCK_ENTITY, null);
+        return state.getDrops(blockPos, builder);
     }
 
     public static List<ItemStack> getDrops(LatexCoverState state, ServerLevel level, BlockPos blockPos, @Nullable Entity source, ItemStack tool) {
-        LootParams.Builder builder = (new LootParams.Builder(level)).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(blockPos)).withParameter(LootContextParams.TOOL, tool).withOptionalParameter(LootContextParams.THIS_ENTITY, source).withOptionalParameter(LootContextParams.BLOCK_ENTITY, null);
-        return state.getDrops(builder);
+        LootContext.Builder builder = (new LootContext.Builder(level)).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(blockPos)).withParameter(LootContextParams.TOOL, tool).withOptionalParameter(LootContextParams.THIS_ENTITY, source).withOptionalParameter(LootContextParams.BLOCK_ENTITY, null);
+        return state.getDrops(blockPos, builder);
     }
 
     public static void dropResources(LatexCoverState state, Level level, BlockPos blockPos) {
@@ -215,21 +215,36 @@ public abstract class LatexType {
 
     public void initializeClient(Consumer<IClientLatexTypeExtensions> consumer) {}
 
-    public void randomTick(LatexCoverState state, ServerLevel level, BlockPos blockPos, RandomSource random) {}
+    public void randomTick(LatexCoverState state, ServerLevel level, BlockPos blockPos, Random random) {}
 
     public void entityInside(LatexCoverState state, Level level, BlockPos blockPos, Entity entity) {}
 
     public void spawnAfterBreak(LatexCoverState state, ServerLevel level, BlockPos blockPos, ItemStack itemStack, boolean dropXp) {}
 
-    public List<ItemStack> getDrops(LatexCoverState coverState, LootParams.Builder builder) {
+    public List<ItemStack> getDrops(LatexCoverState coverState, BlockPos pos, LootContext.Builder builder) {
         ResourceLocation resourcelocation = this.getLootTable();
         if (resourcelocation == BuiltInLootTables.EMPTY) {
             return Collections.emptyList();
         } else {
-            LootParams lootparams = builder.withParameter(LatexCoverState.LOOT_CONTEXT_PARAM, coverState).create(ChangedLootContextParamSets.LATEX_COVER);
-            ServerLevel serverlevel = lootparams.getLevel();
-            LootTable loottable = serverlevel.getServer().getLootData().getLootTable(resourcelocation);
-            return loottable.getRandomItems(lootparams);
+//            LootContext lootparams = builder.withParameter(LatexCoverState.LOOT_CONTEXT_PARAM, coverState).create(ChangedLootContextParamSets.LATEX_COVER);
+//            ServerLevel serverlevel = lootparams.getLevel();
+//            LootTable loottable = serverlevel.getServer().getLootData().getLootTable(resourcelocation);
+//            return loottable.getRandomItems(lootparams);
+
+            LootContext.Builder builder1 =
+                    new LootContext.Builder((ServerLevel) builder.getLevel())
+                            .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
+                            .withOptionalParameter(LootContextParams.THIS_ENTITY, builder.getOptionalParameter(LootContextParams.THIS_ENTITY))
+                            .withOptionalParameter(LootContextParams.TOOL, builder.getOptionalParameter(LootContextParams.TOOL));
+
+            LootContext context = builder1.create(ChangedLootContextParamSets.LATEX_COVER);
+
+            LootTable table = builder.getLevel()
+                    .getServer()
+                    .getLootTables()
+                    .get(resourcelocation);
+
+            return table.getRandomItems(context);
         }
     }
 
@@ -264,12 +279,12 @@ public abstract class LatexType {
     }
 
     @Nullable
-    public EntityType<?> getPupEntityType(RandomSource random) {
+    public EntityType<?> getPupEntityType(Random random) {
         return null;
     }
 
     @Nullable
-    public TransfurVariant<?> getTransfurVariant(TransfurCause cause, RandomSource random) {
+    public TransfurVariant<?> getTransfurVariant(TransfurCause cause, Random random) {
         return null;
     }
 
@@ -361,12 +376,12 @@ public abstract class LatexType {
         return compoundtag;
     }
 
-    public static LatexCoverState readLatexCoverState(HolderGetter<LatexType> registry, CompoundTag tag) {
+    public static LatexCoverState readLatexCoverState(CompoundTag tag) {
         if (!tag.contains("Name", 8)) {
             return ChangedLatexTypes.NONE.get().defaultCoverState();
         } else {
-            ResourceLocation resourcelocation = ResourceLocation.parse(tag.getString("Name"));
-            Optional<? extends Holder<LatexType>> optional = registry.get(ChangedRegistry.LATEX_TYPE.createResourceKey(resourcelocation));
+            ResourceLocation resourcelocation = new ResourceLocation(tag.getString("Name"));
+            Optional<? extends Holder<LatexType>> optional = ChangedRegistry.LATEX_TYPE.getHolder(resourcelocation);
             if (optional.isEmpty()) {
                 return ChangedLatexTypes.NONE.get().defaultCoverState();
             } else {

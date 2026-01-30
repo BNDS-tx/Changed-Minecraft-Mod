@@ -11,10 +11,10 @@ import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.util.TagUtil;
 import net.minecraft.Util;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.SimpleContainer;
@@ -28,6 +28,7 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -108,6 +109,10 @@ public class InfuserRecipe implements Recipe<SimpleContainer> {
         return this.group;
     }
 
+    public ItemStack getResultItem() {
+        return new ItemStack(ChangedItems.LATEX_SYRINGE.get());
+    }
+
     public ItemStack processItem(ItemStack stack, Gender gender) {
         CompoundTag tag = stack.getOrCreateTag();
         if (gendered)
@@ -140,14 +145,8 @@ public class InfuserRecipe implements Recipe<SimpleContainer> {
         return i == this.ingredients.size() && (isSimple ? stackedcontents.canCraft(this, (IntList)null) : net.minecraftforge.common.util.RecipeMatcher.findMatches(inputs,  this.ingredients) != null);
     }
 
-    @Override
-    public ItemStack assemble(SimpleContainer container, RegistryAccess registryAccess) {
-        return new ItemStack(ChangedItems.LATEX_SYRINGE.get());
-    }
-
-    @Override
-    public ItemStack getResultItem(RegistryAccess registryAccess) {
-        return new ItemStack(ChangedItems.LATEX_SYRINGE.get());
+    public @NotNull ItemStack assemble(@NotNull SimpleContainer p_44260_) {
+        return this.getResultItem();
     }
 
     public boolean canCraftInDimensions(int p_44252_, int p_44253_) {
@@ -157,17 +156,17 @@ public class InfuserRecipe implements Recipe<SimpleContainer> {
     public Component getNameFor(Level level, Gender gender) {
         ResourceLocation formId = form;
         if (gendered)
-            formId = ResourceLocation.parse(formId + "/" + gender.toString().toLowerCase());
+            formId = new ResourceLocation(formId + "/" + gender.toString().toLowerCase());
         TransfurVariant<?> variant = ChangedRegistry.TRANSFUR_VARIANT.get().getValue(formId);
         if (variant == null)
-            return Component.translatable("syringe." + form);
+            return new TranslatableComponent("syringe." + form);
         ChangedEntity entity = ChangedEntities.getCachedEntity(level, variant.getEntityType());
         Component component = entity.getDisplayName();
         entity.remove(Entity.RemovalReason.DISCARDED);
         return component;
     }
 
-    public static class Serializer implements RecipeSerializer<InfuserRecipe> {
+    public static class Serializer extends net.minecraftforge.registries.ForgeRegistryEntry<RecipeSerializer<?>> implements RecipeSerializer<InfuserRecipe> {
         public InfuserRecipe fromJson(ResourceLocation p_44290_, JsonObject p_44291_) {
             String s = GsonHelper.getAsString(p_44291_, "group", "");
             NonNullList<Ingredient> nonnulllist = itemsFromJson(GsonHelper.getAsJsonArray(p_44291_, "ingredients"));
@@ -177,7 +176,7 @@ public class InfuserRecipe implements Recipe<SimpleContainer> {
                 throw new JsonParseException("Too many ingredients for infuser recipe. The maximum is " + (MAX_WIDTH * MAX_HEIGHT));
             } else {
                 boolean gendered = GsonHelper.getAsBoolean(p_44291_, "gendered", false);
-                ResourceLocation form = ResourceLocation.parse(GsonHelper.getAsString(p_44291_, "form"));
+                ResourceLocation form = new ResourceLocation(GsonHelper.getAsString(p_44291_, "form"));
                 return new InfuserRecipe(p_44290_, s, gendered, form, nonnulllist);
             }
         }

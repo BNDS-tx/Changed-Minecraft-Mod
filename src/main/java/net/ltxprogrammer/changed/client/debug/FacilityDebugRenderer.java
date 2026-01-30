@@ -41,7 +41,7 @@ public class FacilityDebugRenderer implements DebugRenderer.SimpleDebugRenderer 
         Camera camera = this.minecraft.gameRenderer.getMainCamera();
         LevelAccessor level = this.minecraft.level;
         DimensionType dimensiontype = level.dimensionType();
-        BlockPos blockpos = BlockPos.containing(camera.getPosition().x, 0.0D, camera.getPosition().z);
+        BlockPos blockpos = new BlockPos(camera.getPosition().x, 0.0D, camera.getPosition().z);
         if (this.genInfos.containsKey(dimensiontype)) {
             for (ActiveFacilityInstance.PieceGenerationInfo genInfo : this.genInfos.get(dimensiontype).values()) {
                 BoundingBox boundingBox = genInfo.region();
@@ -56,9 +56,9 @@ public class FacilityDebugRenderer implements DebugRenderer.SimpleDebugRenderer 
                             (double)(boundingBox.maxZ() + 1) - camZ,
                             1.0F, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F);
 
-                    DebugRenderer.renderFloatingText(poseStack, bufferSource, genInfo.pieceName().toString(),
+                    DebugRenderer.renderFloatingText(genInfo.pieceName().toString(),
                             center.getX(), center.getY(), center.getZ(), YELLOW);
-                    DebugRenderer.renderFloatingText(poseStack, bufferSource, genInfo.zone().toString(),
+                    DebugRenderer.renderFloatingText(genInfo.zone().toString(),
                             center.getX(), center.getY() - 1, center.getZ(), GREEN);
                 }
             }

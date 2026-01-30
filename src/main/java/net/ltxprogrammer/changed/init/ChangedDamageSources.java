@@ -2,35 +2,37 @@ package net.ltxprogrammer.changed.init;
 
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
-import net.minecraft.core.Holder;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.damagesource.EntityDamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraftforge.registries.RegistryObject;
 
 import javax.annotation.Nullable;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class ChangedDamageSources {
-    public record DamageTypeHolder(ResourceKey<DamageType> key) {
-        public DamageSource source(RegistryAccess access) {
-            final Holder<DamageType> type = access.lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(key);
-            return new DamageSource(type);
+    public record DamageTypeHolder(String id) {
+
+        /* ===========================
+         *  核心构造
+         * =========================== */
+
+        public DamageSource source() {
+            return new DamageSource(id);
         }
 
-        public DamageSource source(RegistryAccess access, Entity sourceEntity) {
-            final Holder<DamageType> type = access.lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(key);
-            return new DamageSource(type, sourceEntity);
+        public DamageSource source(@Nullable Entity source) {
+            return source == null
+                    ? new DamageSource(id)
+                    : new EntityDamageSource(id, source);
+        }
+
+        public String getId() {
+            return id;
         }
     }
 
     private static DamageTypeHolder holder(String name) {
-        return new DamageTypeHolder(ResourceKey.create(Registries.DAMAGE_TYPE, Changed.modResource(name)));
+        return new DamageTypeHolder("changed:" + name);
     }
 
     public static final DamageTypeHolder TRANSFUR = holder("transfur");
@@ -43,19 +45,27 @@ public class ChangedDamageSources {
     public static final DamageTypeHolder FAN = holder("fan");
     public static final DamageTypeHolder HEART_ATTACK = holder("heart_attack");
 
-    public static DamageSource entityTransfur(RegistryAccess access, LivingEntity source) {
-        return TRANSFUR.source(access, source);
+    public static DamageSource entityTransfur(LivingEntity source) {
+        return TRANSFUR.source(source);
     }
 
-    public static DamageSource entityTransfur(RegistryAccess access, @Nullable IAbstractChangedEntity source) {
-        return TRANSFUR.source(access, source == null ? null : source.getEntity());
+    public static DamageSource entityTransfur(@Nullable IAbstractChangedEntity source) {
+        return TRANSFUR.source(source == null ? null : source.getEntity());
     }
 
-    public static DamageSource entityAbsorb(RegistryAccess access, LivingEntity source) {
-        return ABSORB.source(access, source);
+    public static DamageSource entityAbsorb(LivingEntity source) {
+        return ABSORB.source(source);
     }
 
-    public static DamageSource entityAbsorb(RegistryAccess access, @Nullable IAbstractChangedEntity source) {
-        return ABSORB.source(access, source == null ? null : source.getEntity());
+    public static DamageSource entityAbsorb(@Nullable IAbstractChangedEntity source) {
+        return ABSORB.source(source == null ? null : source.getEntity());
+    }
+
+    public static DamageSource bloodLoss() {
+        return BLOODLOSS.source();
+    }
+
+    public static DamageSource electric(@Nullable Entity source) {
+        return ELECTROCUTION.source(source);
     }
 }

@@ -1,10 +1,10 @@
 package net.ltxprogrammer.changed.client.animations;
 
+import com.mojang.math.Vector3f;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.Util;
 import net.minecraft.util.Mth;
-import org.joml.Vector3f;
 
 import java.security.InvalidParameterException;
 import java.util.List;

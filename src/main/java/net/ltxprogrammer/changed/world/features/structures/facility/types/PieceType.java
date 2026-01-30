@@ -2,8 +2,10 @@ package net.ltxprogrammer.changed.world.features.structures.facility.types;
 
 import com.mojang.serialization.Codec;
 import net.ltxprogrammer.changed.world.features.structures.facility.FacilityPiece;
+import net.minecraftforge.registries.ForgeRegistryEntry;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 
-public abstract class PieceType<T extends FacilityPiece> {
+public abstract class PieceType<T extends FacilityPiece> extends ForgeRegistryEntry<PieceType<?>> {
     public abstract Codec<T> getCodec();
 
     public boolean shouldConsumeSpan() {

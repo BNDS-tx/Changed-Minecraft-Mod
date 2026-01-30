@@ -98,23 +98,23 @@ public class InfuserRecipeBuilder implements RecipeBuilder {
    @Override
    public void save(Consumer<FinishedRecipe> consumer, @NotNull ResourceLocation recipeId) {
       this.ensureValid(recipeId);
-      this.advancement.parent(ResourceLocation.parse("recipes/root"))
+      this.advancement.parent(new ResourceLocation("recipes/root"))
               .addCriterion("has_the_recipe", RecipeUnlockedTrigger.unlocked(recipeId))
               .rewards(AdvancementRewards.Builder.recipe(recipeId))
               .requirements(RequirementsStrategy.OR);
 
       consumer.accept(new Result(recipeId, this.result, this.group == null ? "" : this.group,
               this.ingredients, this.gendered, this.advancement,
-              ResourceLocation.fromNamespaceAndPath(recipeId.getNamespace(),
+              new ResourceLocation(recipeId.getNamespace(),
                       "recipes/" + (!this.gendered ? result.getFormId().getPath() : getFormIdPathWithoutGender().toString()))));
    }
 
    public ResourceLocation getFormIdWithoutGender() {
-      return ResourceLocation.parse(this.result.getFormId().toString().replace("/female", "").replace("/male", ""));
+      return new ResourceLocation(this.result.getFormId().toString().replace("/female", "").replace("/male", ""));
    }
 
    public ResourceLocation getFormIdPathWithoutGender() {
-      return ResourceLocation.parse(this.result.getFormId().getPath().replace("/female", "").replace("/male", ""));
+      return new ResourceLocation(this.result.getFormId().getPath().replace("/female", "").replace("/male", ""));
    }
 
    private void ensureValid(ResourceLocation id) {
@@ -164,7 +164,7 @@ public class InfuserRecipeBuilder implements RecipeBuilder {
       }
 
       public ResourceLocation getFormIdWithoutGender() {
-         return ResourceLocation.parse(this.result.getFormId().toString().replace("/female", "").replace("/male", ""));
+         return new ResourceLocation(this.result.getFormId().toString().replace("/female", "").replace("/male", ""));
       }
 
       @Override

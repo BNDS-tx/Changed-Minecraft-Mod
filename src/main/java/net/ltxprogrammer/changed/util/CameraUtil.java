@@ -3,6 +3,8 @@ package net.ltxprogrammer.changed.util;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.datafixers.util.Either;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector4f;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.entity.PlayerDataExtension;
 import net.ltxprogrammer.changed.network.packet.TugCameraPacket;
@@ -16,8 +18,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix4f;
-import org.joml.Vector4f;
 
 public class CameraUtil {
     public static class TugData {
@@ -71,12 +71,12 @@ public class CameraUtil {
             if (lookAt.left().isPresent())
                 return lookAt.left().get();
             else {
-                return getEntity(source.level()).getEyePosition().subtract(source.getEyePosition(partialTicks)).normalize();
+                return getEntity(source.level).getEyePosition().subtract(source.getEyePosition(partialTicks)).normalize();
             }
         }
 
         public boolean shouldExpire(LivingEntity source) {
-            if (this.lookAt.right().isPresent() && getEntity(source.level()).isDeadOrDying())
+            if (this.lookAt.right().isPresent() && getEntity(source.level).isDeadOrDying())
                 return true;
             if (source instanceof Player player && (player.isCreative() || player.isSpectator()))
                 return true;
@@ -130,7 +130,7 @@ public class CameraUtil {
         livingEntity.yRotO = yRotO;
     }
 
-    private static @NotNull Matrix4f viewSpaceToWorldSpaceMatrix = Util.make(new Matrix4f(), Matrix4f::identity);
+    private static @NotNull Matrix4f viewSpaceToWorldSpaceMatrix = Util.make(new Matrix4f(), Matrix4f::setIdentity);
     public static void setViewSpaceToWorldSpaceMatrix(@NotNull Matrix4f matrix) {
         viewSpaceToWorldSpaceMatrix = matrix;
     }
@@ -138,16 +138,23 @@ public class CameraUtil {
     public static Vector4f toWorldSpace(Vector4f localSpace, PoseStack.Pose localToModel) {
         RenderSystem.assertOnRenderThread();
 
-        final Vector4f modelSpace = new Vector4f();
-        localSpace.mul(localToModel.pose(), modelSpace);
+        // 1. 创建 modelSpace (作为 localSpace 的副本)
+        // 注意：在 1.18.2 中，必须手动通过构造函数复制值
+        final Vector4f modelSpace = new Vector4f(localSpace.x(), localSpace.y(), localSpace.z(), localSpace.w());
+
+        // 2. 执行变换 (就地修改 modelSpace)
+        // JOML: localSpace.mul(matrix, dest) -> Mojang: dest.transform(matrix)
+        modelSpace.transform(localToModel.pose());
 
         final Matrix4f cameraMatrix = RenderSystem.getModelViewMatrix();
 
-        final Vector4f viewSpace = new Vector4f();
-        modelSpace.mul(cameraMatrix, viewSpace); // viewSpace is where the vertex resides on the client's screen
+        // 3. 创建 viewSpace (作为 modelSpace 的副本) 并变换
+        final Vector4f viewSpace = new Vector4f(modelSpace.x(), modelSpace.y(), modelSpace.z(), modelSpace.w());
+        viewSpace.transform(cameraMatrix); // viewSpace is where the vertex resides on the client's screen
 
-        final Vector4f worldSpace = new Vector4f();
-        viewSpace.mul(viewSpaceToWorldSpaceMatrix, worldSpace);
+        // 4. 创建 worldSpace (作为 viewSpace 的副本) 并变换
+        final Vector4f worldSpace = new Vector4f(viewSpace.x(), viewSpace.y(), viewSpace.z(), viewSpace.w());
+        worldSpace.transform(viewSpaceToWorldSpaceMatrix);
 
         return worldSpace;
 

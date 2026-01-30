@@ -14,7 +14,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -24,13 +24,13 @@ public class ExoskeletonDamageOverlay {
     private static final ResourceLocation TEXTURE = Changed.modResource("textures/misc/exoskeleton_damage_outline.png");
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public static void eventHandler(RenderGuiOverlayEvent.Pre event) {
+    public static void eventHandler(RenderGameOverlayEvent.Pre event) {
         if (/*event.getType() == RenderGuiOverlayEvent.ElementType.ALL &&*/ Minecraft.getInstance().getCameraEntity() instanceof LivingEntity wearer) {
             var exoOpt = Exoskeleton.getEntityExoskeleton(wearer);
             if (exoOpt.isEmpty())
                 return;
 
-            float width = Mth.clamp((float)((wearer.hurtTime - 1) + (1f - event.getPartialTick())) / (float)wearer.hurtDuration, 0f, 1f);
+            float width = Mth.clamp((float)((wearer.hurtTime - 1) + (1f - event.getPartialTicks())) / (float)wearer.hurtDuration, 0f, 1f);
             if (width <= 0f)
                 return;
 

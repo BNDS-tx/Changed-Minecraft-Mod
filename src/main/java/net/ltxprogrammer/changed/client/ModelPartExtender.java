@@ -1,10 +1,12 @@
 package net.ltxprogrammer.changed.client;
 
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.util.RandomSource;
+
+import java.util.Random;
+
 
 public interface ModelPartExtender {
     void addTriangle(Triangle triangle);
 
-    ModelPart.Cube getRandomCubeWeighted(RandomSource random);
+    ModelPart.Cube getRandomCubeWeighted(Random random);
 }

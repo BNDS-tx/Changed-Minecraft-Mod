@@ -3,7 +3,7 @@
     {
       "type": "directory",
       "source": "latex_particle",
-      "prefix": ""
+      "prefix": "latex_particle"
     }
   ]
 }

@@ -5,7 +5,6 @@ import net.minecraft.Util;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ArmorMaterial;
-import net.minecraft.world.item.armortrim.ArmorTrim;
 import net.minecraftforge.common.IExtensibleEnum;
 
 import javax.annotation.Nullable;
@@ -19,14 +18,9 @@ public abstract class ClothingShape {
         public static final Head DEFAULT = ANTHRO;
 
         private final String serialName;
-        private final BiFunction<ArmorTrim, ArmorMaterial, ResourceLocation> trimTexture;
 
         Head(String serialName, String trimPrefix, boolean innerArmorModel) {
             this.serialName = serialName;
-            this.trimTexture = trimPrefix == null ? null : Util.memoize((trim, material) -> {
-                return (innerArmorModel ? trim.innerTexture(material) : trim.outerTexture(material))
-                        .withPath(original -> original.replace("armor", trimPrefix));
-            });
         }
 
         @Override
@@ -41,14 +35,6 @@ public abstract class ClothingShape {
             return Changed.modResource("item/empty_armor_slot_" + serialName + "_head");
         }
 
-        @Nullable
-        public ResourceLocation getTrimTexture(ArmorTrim trim, ArmorMaterial material) {
-            if (trimTexture == null)
-                return null;
-
-            return trimTexture.apply(trim, material);
-        }
-
         public static Head create(String name, String serialName, String trimPrefix, boolean innerArmorModel) {
             throw new IllegalStateException("Enum not extended");
         }
@@ -61,14 +47,9 @@ public abstract class ClothingShape {
         public static final Torso DEFAULT = ANTHRO;
 
         private final String serialName;
-        private final BiFunction<ArmorTrim, ArmorMaterial, ResourceLocation> trimTexture;
 
         Torso(String serialName, String trimPrefix, boolean innerArmorModel) {
             this.serialName = serialName;
-            this.trimTexture = trimPrefix == null ? null : Util.memoize((trim, material) -> {
-                return (innerArmorModel ? trim.innerTexture(material) : trim.outerTexture(material))
-                        .withPath(original -> original.replace("armor", trimPrefix));
-            });
         }
 
         @Override
@@ -81,14 +62,6 @@ public abstract class ClothingShape {
             if (this == NONE || this == ANTHRO)
                 return null;
             return Changed.modResource("item/empty_armor_slot_" + serialName + "_torso");
-        }
-
-        @Nullable
-        public ResourceLocation getTrimTexture(ArmorTrim trim, ArmorMaterial material) {
-            if (trimTexture == null)
-                return null;
-
-            return trimTexture.apply(trim, material);
         }
 
         public static Torso create(String name, String serialName, String trimPrefix, boolean innerArmorModel) {
@@ -105,14 +78,9 @@ public abstract class ClothingShape {
         public static final Legs DEFAULT = BIPEDAL;
 
         private final String serialName;
-        private final BiFunction<ArmorTrim, ArmorMaterial, ResourceLocation> trimTexture;
 
         Legs(String serialName, String trimPrefix, boolean innerArmorModel) {
             this.serialName = serialName;
-            this.trimTexture = trimPrefix == null ? null : Util.memoize((trim, material) -> {
-                return (innerArmorModel ? trim.innerTexture(material) : trim.outerTexture(material))
-                        .withPath(original -> original.replace("armor", trimPrefix));
-            });
         }
 
         @Override
@@ -125,14 +93,6 @@ public abstract class ClothingShape {
             if (this == NONE || this == BIPEDAL)
                 return null;
             return Changed.modResource("item/empty_armor_slot_" + serialName + "_legs");
-        }
-
-        @Nullable
-        public ResourceLocation getTrimTexture(ArmorTrim trim, ArmorMaterial material) {
-            if (trimTexture == null)
-                return null;
-
-            return trimTexture.apply(trim, material);
         }
 
         public static Legs create(String name, String serialName, String trimPrefix, boolean innerArmorModel) {
@@ -149,14 +109,9 @@ public abstract class ClothingShape {
         public static final Feet DEFAULT = BIPEDAL;
 
         private final String serialName;
-        private final BiFunction<ArmorTrim, ArmorMaterial, ResourceLocation> trimTexture;
 
         Feet(String serialName, String trimPrefix, boolean innerArmorModel) {
             this.serialName = serialName;
-            this.trimTexture = trimPrefix == null ? null : Util.memoize((trim, material) -> {
-                return (innerArmorModel ? trim.innerTexture(material) : trim.outerTexture(material))
-                        .withPath(original -> original.replace("armor", trimPrefix));
-            });
         }
 
         @Override
@@ -169,14 +124,6 @@ public abstract class ClothingShape {
             if (this == NONE || this == BIPEDAL)
                 return null;
             return Changed.modResource("item/empty_armor_slot_" + serialName + "_feet");
-        }
-
-        @Nullable
-        public ResourceLocation getTrimTexture(ArmorTrim trim, ArmorMaterial material) {
-            if (trimTexture == null)
-                return null;
-
-            return trimTexture.apply(trim, material);
         }
 
         public static Feet create(String name, String serialName, String trimPrefix, boolean innerArmorModel) {

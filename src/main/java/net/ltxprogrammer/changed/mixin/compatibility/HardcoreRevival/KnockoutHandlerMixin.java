@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class KnockoutHandlerMixin {
     @Inject(method = "onPlayerDamage", at = @At("HEAD"), cancellable = true)
     private static void maybeIgnoreEvent(LivingDamageEvent event, CallbackInfo callback) {
-        if (event.getDamageSource().is(ChangedTags.DamageTypes.IS_TRANSFUR))
+        if (ChangedTags.DamageTypes.isTransfur(event.getDamageSource()))
             callback.cancel();
     }
 }

@@ -67,7 +67,7 @@ public class AccessorySlots implements Container {
     public static final AccessorySlots DUMMY = new AccessorySlots(null);
 
     public static void openAccessoriesMenu(@NotNull LivingEntity entity, ItemStack carried) {
-        if (entity.level().isClientSide)
+        if (entity.level.isClientSide)
             Changed.PACKET_HANDLER.sendToServer(new AccessorySyncPacket(entity.getId(), carried));
     }
 
@@ -160,14 +160,14 @@ public class AccessorySlots implements Container {
             SoundEvent soundevent = ext.getEquipSound(stack);
             if (!stack.isEmpty() && soundevent != null && !entity.isSpectator()) {
                 entity.gameEvent(GameEvent.EQUIP);
-                if (!entity.level().isClientSide)
+                if (!entity.level.isClientSide)
                     ChangedSounds.broadcastSound(entity, soundevent.getLocation(), 1.0F, 1.0F);
             }
         }
     }
 
     public static void onBrokenAccessory(LivingEntity livingEntity, AccessorySlotType slotType) {
-        if (livingEntity.level().isClientSide)
+        if (livingEntity.level.isClientSide)
             return;
 
         Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> livingEntity),
@@ -175,7 +175,7 @@ public class AccessorySlots implements Container {
     }
 
     public static void onInteractAccessory(LivingEntity livingEntity, AccessorySlotType slotType) {
-        if (livingEntity.level().isClientSide) {
+        if (livingEntity.level.isClientSide) {
             Changed.PACKET_HANDLER.sendToServer(
                     new AccessoryEventPacket(livingEntity.getId(), slotType, 2));
             return;
@@ -381,7 +381,7 @@ public class AccessorySlots implements Container {
     public void load(CompoundTag tag) {
         this.emptySlots();
         tag.getAllKeys().forEach(key -> {
-            ResourceLocation id = ResourceLocation.parse(key);
+            ResourceLocation id = new ResourceLocation(key);
             ItemStack value = ItemStack.of(tag.getCompound(key));
             if (!ChangedRegistry.ACCESSORY_SLOTS.get().containsKey(id)) {
                 invalidItems.add(value);
@@ -389,7 +389,7 @@ public class AccessorySlots implements Container {
                 return;
             }
 
-            AccessorySlotType slotType = ChangedRegistry.ACCESSORY_SLOTS.get().getValue(ResourceLocation.parse(key));
+            AccessorySlotType slotType = ChangedRegistry.ACCESSORY_SLOTS.get().getValue(new ResourceLocation(key));
             items.put(slotType, value);
             orderedSlots.clear();
         });
@@ -433,11 +433,11 @@ public class AccessorySlots implements Container {
             return stack -> {
                 if (stack.isEmpty()) return;
 
-                ItemEntity itemEntity = new ItemEntity(entity.level(), entity.getX(), entity.getY() + 0.5, entity.getZ(), stack);
+                ItemEntity itemEntity = new ItemEntity(entity.level, entity.getX(), entity.getY() + 0.5, entity.getZ(), stack);
                 itemEntity.setPickUpDelay(40);
                 itemEntity.setDeltaMovement(itemEntity.getDeltaMovement().multiply(0, 1, 0));
 
-                entity.level().addFreshEntity(itemEntity);
+                entity.level.addFreshEntity(itemEntity);
             };
     }
 

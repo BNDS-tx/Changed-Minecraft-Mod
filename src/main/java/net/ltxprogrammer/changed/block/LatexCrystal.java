@@ -7,7 +7,7 @@ import net.ltxprogrammer.changed.init.ChangedGameRules;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
+
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
@@ -39,7 +39,7 @@ public class LatexCrystal extends TransfurCrystalBlock {
     }
 
     @Override
-    public void randomTick(@NotNull BlockState state, @NotNull ServerLevel level, @NotNull BlockPos position, @NotNull RandomSource random) {
+    public void randomTick(@NotNull BlockState state, @NotNull ServerLevel level, @NotNull BlockPos position, @NotNull Random random) {
         super.randomTick(state, level, position, random);
         if (!level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING))
             return;
@@ -54,7 +54,7 @@ public class LatexCrystal extends TransfurCrystalBlock {
                 BoundingBox.fromCorners(position.offset(-50, -50, -50), position.offset(50, 50, 50)))).stream()
                 .filter(matchesType(entityType)).toList().size() > 35)
             return;
-        entityType.spawn(level, (CompoundTag) null, null, position, MobSpawnType.NATURAL, true, true);
+        entityType.spawn(level, null, null, position, MobSpawnType.NATURAL, true, true);
         level.setBlockAndUpdate(position, Blocks.AIR.defaultBlockState());
     }
 }

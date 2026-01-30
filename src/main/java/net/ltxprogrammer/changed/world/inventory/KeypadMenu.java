@@ -28,7 +28,7 @@ public class KeypadMenu extends AbstractContainerMenu implements UpdateableMenu 
 
     public KeypadMenu(int id, Inventory inventory, BlockPos pos, BlockState state, KeypadBlockEntity blockEntity) {
         super(ChangedMenus.KEYPAD.get(), id);
-        this.level = inventory.player.level();
+        this.level = inventory.player.level;
         this.player = inventory.player;
         this.blockPos = pos;
         this.blockState = state;
@@ -37,7 +37,7 @@ public class KeypadMenu extends AbstractContainerMenu implements UpdateableMenu 
 
     public KeypadMenu(int id, Inventory inventory, FriendlyByteBuf extraData) {
         super(ChangedMenus.KEYPAD.get(), id);
-        this.level = inventory.player.level();
+        this.level = inventory.player.level;
         this.player = inventory.player;
         this.blockPos = null;
         this.blockState = Blocks.AIR.defaultBlockState();

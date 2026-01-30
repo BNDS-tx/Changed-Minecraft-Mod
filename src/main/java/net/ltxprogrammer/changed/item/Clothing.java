@@ -16,12 +16,12 @@ import javax.annotation.Nullable;
 public interface Clothing extends AccessoryItem {
     ArmorMaterial MATERIAL = new ArmorMaterial() {
         @Override
-        public int getDurabilityForType(ArmorItem.Type p_40410_) {
+        public int getDurabilityForSlot(EquipmentSlot p_40410_) {
             return 5;
         }
 
         @Override
-        public int getDefenseForType(ArmorItem.Type p_40411_) {
+        public int getDefenseForSlot(EquipmentSlot p_40411_) {
             return 0;
         }
 

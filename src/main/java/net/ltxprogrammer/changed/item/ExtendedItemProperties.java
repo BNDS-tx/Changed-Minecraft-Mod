@@ -47,7 +47,7 @@ public interface ExtendedItemProperties {
 
     // Should only be called with armor slots
     default boolean allowedToWear(ItemStack itemStack, LivingEntity wearer, EquipmentSlot slot) {
-        if (!(itemStack.getEquipmentSlot() == slot || (itemStack.getItem() instanceof ArmorItem armorItem && armorItem.getEquipmentSlot() == slot)))
+        if (!(itemStack.getEquipmentSlot() == slot || (itemStack.getItem() instanceof ArmorItem armorItem && armorItem.getSlot() == slot)))
             return false;
         final EntityShape entityShape = EntityShape.getShapeOf(wearer).orElse(EntityShape.ANTHRO);
         return switch (slot) {
@@ -82,19 +82,19 @@ public interface ExtendedItemProperties {
     @Mod.EventBusSubscriber
     class Event {
         @SubscribeEvent
-        public static void onEntityTick(LivingEvent.LivingTickEvent event) {
+        public static void onEntityTick(LivingEvent.LivingUpdateEvent event) {
             Arrays.stream(EquipmentSlot.values()).filter(slot -> slot.getType() == EquipmentSlot.Type.ARMOR)
                             .forEach(slot -> {
-                                var itemStack = event.getEntity().getItemBySlot(slot);
+                                var itemStack = event.getEntityLiving().getItemBySlot(slot);
                                 if (itemStack.getItem() instanceof ExtendedItemProperties extended) {
-                                    if (!extended.allowedInSlot(itemStack, event.getEntity(), slot) &&
+                                    if (!extended.allowedInSlot(itemStack, event.getEntityLiving(), slot) &&
                                             EnchantmentHelper.getItemEnchantmentLevel(ChangedEnchantments.FORM_FITTING.get(), itemStack) <= 0) {
                                         event.getEntity().setItemSlot(slot, ItemStack.EMPTY);
-                                        AccessorySlots.defaultInvalidHandler(event.getEntity()).accept(itemStack);
+                                        AccessorySlots.defaultInvalidHandler(event.getEntityLiving()).accept(itemStack);
                                         return;
                                     }
 
-                                    extended.wearTick(itemStack, event.getEntity());
+                                    extended.wearTick(itemStack, event.getEntityLiving());
                                 }
                             });
         }

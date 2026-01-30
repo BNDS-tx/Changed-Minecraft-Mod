@@ -20,7 +20,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraftforge.client.event.RegisterRecipeBookCategoriesEvent;
+import net.minecraftforge.client.RecipeBookRegistry;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.event.IModBusEvent;
 import net.minecraftforge.registries.RegistryObject;
@@ -39,9 +39,9 @@ public class RecipeCategories {
         return category;
     }
 
-    public static <T extends Recipe<?>> void registerCategoriesFinder(RegisterRecipeBookCategoriesEvent event, RecipeType<T> recipeType,
+    public static <T extends Recipe<?>> void registerCategoriesFinder(RecipeType<T> recipeType,
                                                                     RecipeBookCategories coreCategory, Function<T, List<RecipeBookCategories>> finder) {
-        event.registerRecipeCategoryFinder(recipeType, recipe -> coreCategory);
+        RecipeBookRegistry.addCategoriesFinder(recipeType, recipe -> coreCategory);
         MULTICATEGORY_FINDER.add(recipe -> {
             try {
                 return finder.apply((T)recipe);
@@ -51,11 +51,10 @@ public class RecipeCategories {
         });
     }
 
-    public static <T extends Recipe<?>> void registerTypeCategories(RegisterRecipeBookCategoriesEvent event, RecipeBookType bookType, RecipeType<T> recipeType,
+    public static <T extends Recipe<?>> void registerTypeCategories(RecipeBookType bookType, RecipeType<T> recipeType,
                                                                     RecipeBookCategories coreCategory, List<RecipeBookCategories> categories, Function<T, List<RecipeBookCategories>> finder) {
-
-        event.registerBookCategories(bookType, categories);
-        registerCategoriesFinder(event, recipeType, coreCategory, finder);
+        RecipeBookRegistry.addCategoriesToType(bookType, categories);
+        registerCategoriesFinder(recipeType, coreCategory, finder);
     }
 
     public static final List<Function<Recipe<?>, List<RecipeBookCategories>>> MULTICATEGORY_FINDER = new ArrayList<>();
@@ -131,7 +130,7 @@ public class RecipeCategories {
             return false;
         }
     }
-    
+
     private static void addVariantsToCategories(GatherVariantCategoriesEvent event) {
         event.addDarkLatex(ChangedTransfurVariants.DARK_LATEX_WOLF_MALE);
         event.addDarkLatex(ChangedTransfurVariants.DARK_LATEX_WOLF_FEMALE);
@@ -185,7 +184,7 @@ public class RecipeCategories {
         event.addGendered(ChangedTransfurVariants.LATEX_MANTA_RAY_FEMALE);
     }
 
-    public static void registerCategories(RegisterRecipeBookCategoriesEvent event) {
+    public static void registerCategories() {
         final Map<RecipeBookCategories, Set<ResourceLocation>> sortedVariants = Util.make(new HashMap<>(), map -> {
             map.put(INFUSER_DARK_LATEX, new HashSet<>());
             map.put(INFUSER_WHITE_LATEX, new HashSet<>());
@@ -198,10 +197,10 @@ public class RecipeCategories {
         addVariantsToCategories(gatherEvent);
         Changed.postModLoadingEvent(gatherEvent);
 
-        registerTypeCategories(event, ChangedRecipeTypes.INFUSER_BOOK, ChangedRecipeTypes.INFUSER_RECIPE.get(), INFUSER_SEARCH, ImmutableList.of(
+        registerTypeCategories(ChangedRecipeTypes.INFUSER_BOOK, ChangedRecipeTypes.INFUSER_RECIPE.get(), INFUSER_SEARCH, ImmutableList.of(
                 INFUSER_SEARCH, INFUSER_DARK_LATEX, INFUSER_WHITE_LATEX, INFUSER_AQUATIC, INFUSER_AERIAL, INFUSER_GENDERED
         ), recipe -> {
-            ResourceLocation form = recipe.gendered ? ResourceLocation.parse(recipe.form + "/male") : recipe.form; // Default male for preview
+            ResourceLocation form = recipe.gendered ? new ResourceLocation(recipe.form + "/male") : recipe.form; // Default male for preview
             TransfurVariant<?> variant = ChangedRegistry.TRANSFUR_VARIANT.get().getValue(form);
             List<RecipeBookCategories> categories = new ArrayList<>();
             if (variant == null)
@@ -215,12 +214,11 @@ public class RecipeCategories {
             return categories;
         });
 
-        registerCategoriesFinder(event, RecipeType.CRAFTING, RecipeBookCategories.CRAFTING_SEARCH, recipe -> {
-            final var registryAccess = Minecraft.getInstance().level.registryAccess();
+        registerCategoriesFinder(RecipeType.CRAFTING, RecipeBookCategories.CRAFTING_SEARCH, recipe -> {
             List<RecipeBookCategories> categories = new ArrayList<>();
-            if (recipe.getResultItem(registryAccess).getItem() instanceof AbdomenArmor)
+            if (recipe.getResultItem().getItem() instanceof AbdomenArmor)
                 categories.add(CRAFTING_EQUIPMENT);
-            else if (recipe.getResultItem(registryAccess).getItem() instanceof TscWeapon)
+            else if (recipe.getResultItem().getItem() instanceof TscWeapon)
                 categories.add(CRAFTING_EQUIPMENT);
             return categories;
         });

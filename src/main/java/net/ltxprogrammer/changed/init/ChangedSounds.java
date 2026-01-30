@@ -17,13 +17,15 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 public class ChangedSounds {
     public static final DeferredRegister<SoundEvent> REGISTRY = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, Changed.MODID);
 
     private static RegistryObject<SoundEvent> register(String id) {
-        return REGISTRY.register(id, () -> SoundEvent.createVariableRangeEvent(Changed.modResource(id)));
+        // 1.18.2 适配：直接通过 new 关键字实例化
+        return REGISTRY.register(id, () -> new SoundEvent(Changed.modResource(id)));
     }
 
     private static RegistryObject<SoundEvent> register(String id, Function<ResourceLocation, SoundEvent> finalizer) {
@@ -121,7 +123,7 @@ public class ChangedSounds {
 
     public static void broadcastSound(ServerLevel level, RegistryObject<SoundEvent> event, SoundSource source, double x, double y, double z, float volume, float pitch) {
         level.getServer().getPlayerList().broadcastAll(new ClientboundSoundPacket(
-                event.getHolder().orElseThrow(), SoundSource.BLOCKS, x, y, z, volume, pitch, level.random.nextLong()));
+                event.get(), SoundSource.BLOCKS, x, y, z, volume, pitch));
     }
 
     public static void broadcastSound(ServerLevel level, RegistryObject<SoundEvent> event, BlockPos blockPos, float volume, float pitch) {
@@ -129,38 +131,38 @@ public class ChangedSounds {
     }
 
     public static void broadcastSound(Entity entity, RegistryObject<SoundEvent> event, float volume, float pitch) {
-        if (entity.level() instanceof ServerLevel serverLevel) {
+        if (entity.level instanceof ServerLevel serverLevel) {
             broadcastSound(serverLevel, event, SoundSource.NEUTRAL, entity.getX(), entity.getY(), entity.getZ(), volume, pitch);
         }
     }
 
     public static void broadcastSound(ServerLevel level, ResourceLocation name, SoundSource source, double x, double y, double z, float volume, float pitch) {
         level.getServer().getPlayerList().broadcastAll(new ClientboundSoundPacket(
-                ForgeRegistries.SOUND_EVENTS.getHolder(name).orElseThrow(), source, x, y, z, volume, pitch, level.random.nextLong()));
+                Objects.requireNonNull(ForgeRegistries.SOUND_EVENTS.getValue(name)), source, x, y, z, volume, pitch));
     }
 
     public static void broadcastSound(Entity entity, ResourceLocation name, float volume, float pitch) {
-        if (entity.level() instanceof ServerLevel serverLevel) {
+        if (entity.level instanceof ServerLevel serverLevel) {
             serverLevel.getChunkSource().broadcastAndSend(entity, new ClientboundSoundPacket(
-                    ForgeRegistries.SOUND_EVENTS.getHolder(name).orElseThrow(), SoundSource.NEUTRAL, entity.getX(), entity.getY(), entity.getZ(), volume, pitch, serverLevel.random.nextLong()));
+                    Objects.requireNonNull(ForgeRegistries.SOUND_EVENTS.getValue(name)), SoundSource.NEUTRAL, entity.getX(), entity.getY(), entity.getZ(), volume, pitch));
         }
     }
 
     public static void sendLocalSound(Player player, RegistryObject<SoundEvent> event, float volume, float pitch) {
         if (player instanceof ServerPlayer serverPlayer)
             serverPlayer.connection.send(new ClientboundSoundPacket(
-                    event.getHolder().orElseThrow(), SoundSource.NEUTRAL, player.getX(), player.getY(), player.getZ(), volume, pitch, player.getRandom().nextLong()));
+                    event.get(), SoundSource.NEUTRAL, player.getX(), player.getY(), player.getZ(), volume, pitch));
     }
 
     public static void sendLocalSound(Player player, BlockPos blockPos, RegistryObject<SoundEvent> event, float volume, float pitch) {
         if (player instanceof ServerPlayer serverPlayer)
             serverPlayer.connection.send(new ClientboundSoundPacket(
-                    event.getHolder().orElseThrow(), SoundSource.NEUTRAL, blockPos.getX(), blockPos.getY(), blockPos.getZ(), volume, pitch, player.getRandom().nextLong()));
+                    event.get(), SoundSource.NEUTRAL, blockPos.getX(), blockPos.getY(), blockPos.getZ(), volume, pitch));
     }
 
     public static void sendLocalSound(Player player, Vec3 pos, RegistryObject<SoundEvent> event, float volume, float pitch) {
         if (player instanceof ServerPlayer serverPlayer)
             serverPlayer.connection.send(new ClientboundSoundPacket(
-                    event.getHolder().orElseThrow(), SoundSource.NEUTRAL, pos.x(), pos.y(), pos.z(), volume, pitch, player.getRandom().nextLong()));
+                    event.get(), SoundSource.NEUTRAL, pos.x(), pos.y(), pos.z(), volume, pitch));
     }
 }

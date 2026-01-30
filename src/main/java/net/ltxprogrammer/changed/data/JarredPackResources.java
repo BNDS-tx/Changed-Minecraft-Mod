@@ -7,7 +7,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.AbstractPackResources;
 import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.resources.IoSupplier;
+import net.minecraft.server.packs.ResourcePackFileNotFoundException;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 
@@ -33,8 +33,8 @@ public class JarredPackResources extends AbstractPackResources {
     @Nullable
     private ZipFile zipFile;
 
-    public JarredPackResources(String packName, File file, String prefix) {
-        super(packName, true);
+    public JarredPackResources(File file, String prefix) {
+        super(new File(file, prefix));
         this.file = file;
         this.prefix = prefix;
         this.prefixDirCount = Path.of(prefix).getNameCount();
@@ -49,52 +49,21 @@ public class JarredPackResources extends AbstractPackResources {
         return this.zipFile;
     }
 
-    public @Nullable IoSupplier<InputStream> getResource(String resolvedPath) {
-        try {
-            ZipFile zipfile = this.getOrCreateZipFile();
-            ZipEntry zipentry = zipfile.getEntry(prefix + resolvedPath);
-            return zipentry != null ? IoSupplier.create(zipfile, zipentry) : null;
-        } catch (IOException e) {
-            return null;
+    protected InputStream getResource(String name) throws IOException {
+        ZipFile zipfile = this.getOrCreateZipFile();
+        ZipEntry zipentry = zipfile.getEntry(prefix + name);
+        if (zipentry == null) {
+            throw new ResourcePackFileNotFoundException(this.file, name);
+        } else {
+            return zipfile.getInputStream(zipentry);
         }
     }
 
-    @Override
-    public @Nullable IoSupplier<InputStream> getRootResource(String... paths) {
-        return this.getResource(String.join("/", paths));
-    }
-
-    @Override
-    public @Nullable IoSupplier<InputStream> getResource(PackType packType, ResourceLocation resourceLocation) {
-        return this.getResource(packType.getDirectory() + "/" + resourceLocation.getNamespace() + "/" + resourceLocation.getPath());
-    }
-
-    @Override
-    public void listResources(PackType packType, String namespace, String path, ResourceOutput output) {
-        ZipFile zipfile;
+    public boolean hasResource(String name) {
         try {
-            zipfile = this.getOrCreateZipFile();
+            return this.getOrCreateZipFile().getEntry(prefix + name) != null;
         } catch (IOException ioexception) {
-            return;
-        }
-
-        Enumeration<? extends ZipEntry> enumeration = zipfile.entries();
-        String s = prefix + packType.getDirectory() + "/" + namespace + "/";
-        String s1 = s + path + "/";
-
-        while (enumeration.hasMoreElements()) {
-            ZipEntry zipentry = enumeration.nextElement();
-            if (!zipentry.isDirectory()) {
-                String s2 = zipentry.getName();
-                if (!s2.startsWith(prefix))
-                    continue;
-
-                if (!s2.endsWith(".mcmeta") && s2.startsWith(s1)) {
-                    String s3 = s2.substring(s.length());
-                    output.accept(ResourceLocation.fromNamespaceAndPath(namespace, s3),
-                            IoSupplier.create(zipfile, zipentry));
-                }
-            }
+            return false;
         }
     }
 
@@ -139,5 +108,38 @@ public class JarredPackResources extends AbstractPackResources {
             this.zipFile = null;
         }
 
+    }
+
+    public Collection<ResourceLocation> getResources(PackType type, String namespace, String path, int maxDepth, Predicate<String> filter) {
+        ZipFile zipfile;
+        try {
+            zipfile = this.getOrCreateZipFile();
+        } catch (IOException ioexception) {
+            return Collections.emptySet();
+        }
+
+        Enumeration<? extends ZipEntry> enumeration = zipfile.entries();
+        List<ResourceLocation> list = Lists.newArrayList();
+        String s = prefix + type.getDirectory() + "/" + namespace + "/";
+        String s1 = s + path + "/";
+
+        while(enumeration.hasMoreElements()) {
+            ZipEntry zipentry = enumeration.nextElement();
+            if (!zipentry.isDirectory()) {
+                String s2 = zipentry.getName();
+                if (!s2.startsWith(prefix))
+                    continue;
+
+                if (!s2.endsWith(".mcmeta") && s2.startsWith(s1)) {
+                    String s3 = s2.substring(s.length());
+                    String[] astring = s3.split("/");
+                    if (astring.length >= maxDepth + 1 && filter.test(astring[astring.length - 1])) {
+                        list.add(new ResourceLocation(namespace, s3));
+                    }
+                }
+            }
+        }
+
+        return list;
     }
 }

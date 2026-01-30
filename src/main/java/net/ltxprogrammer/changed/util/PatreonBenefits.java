@@ -5,44 +5,30 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.ltxprogrammer.changed.Changed;
-import net.ltxprogrammer.changed.ability.AbstractAbility;
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel;
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModelLayerLocation;
 import net.ltxprogrammer.changed.data.DeferredModelLayerLocation;
 import net.ltxprogrammer.changed.data.DelayLoadedModel;
-import net.ltxprogrammer.changed.data.OnlineResource;
 import net.ltxprogrammer.changed.entity.HairStyle;
-import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
-import net.ltxprogrammer.changed.init.ChangedAbilities;
 import net.ltxprogrammer.changed.init.ChangedRegistry;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.util.LogicalSidedProvider;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -282,24 +268,24 @@ public class PatreonBenefits {
 
         switch (PatreonBenefits.getPlayerTier(player)) {
             case LEVEL0 -> {
-                copy.getSiblings().add(Component.literal(" | "));
-                copy.getSiblings().add(Component.translatable("changed.patreon.level0").withStyle(ChatFormatting.GRAY));
+                copy.getSiblings().add(new TextComponent(" | "));
+                copy.getSiblings().add(new TranslatableComponent("changed.patreon.level0").withStyle(ChatFormatting.GRAY));
             }
             case LEVEL1 -> {
-                copy.getSiblings().add(Component.literal(" | "));
-                copy.getSiblings().add(Component.translatable("changed.patreon.level1").withStyle(ChatFormatting.GREEN));
+                copy.getSiblings().add(new TextComponent(" | "));
+                copy.getSiblings().add(new TranslatableComponent("changed.patreon.level1").withStyle(ChatFormatting.GREEN));
             }
             case LEVEL2 -> {
-                copy.getSiblings().add(Component.literal(" | "));
-                copy.getSiblings().add(Component.translatable("changed.patreon.level2").withStyle(ChatFormatting.AQUA));
+                copy.getSiblings().add(new TextComponent(" | "));
+                copy.getSiblings().add(new TranslatableComponent("changed.patreon.level2").withStyle(ChatFormatting.AQUA));
             }
             case LEVEL3 -> {
-                copy.getSiblings().add(Component.literal(" | "));
-                copy.getSiblings().add(Component.translatable("changed.patreon.level3").withStyle(ChatFormatting.LIGHT_PURPLE));
+                copy.getSiblings().add(new TextComponent(" | "));
+                copy.getSiblings().add(new TranslatableComponent("changed.patreon.level3").withStyle(ChatFormatting.LIGHT_PURPLE));
             }
             case LEVEL4 -> {
-                copy.getSiblings().add(Component.literal(" | "));
-                copy.getSiblings().add(Component.translatable("changed.patreon.level4").withStyle(ChatFormatting.GOLD));
+                copy.getSiblings().add(new TextComponent(" | "));
+                copy.getSiblings().add(new TranslatableComponent("changed.patreon.level4").withStyle(ChatFormatting.GOLD));
             }
         }
 

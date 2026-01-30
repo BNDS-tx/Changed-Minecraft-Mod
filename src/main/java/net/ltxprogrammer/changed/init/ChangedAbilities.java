@@ -37,11 +37,11 @@ public class ChangedAbilities {
     public static final RegistryObject<DodgeAbility> DODGE = REGISTRY.register("dodge", DodgeAbility::new);
     public static final RegistryObject<UndeathAbility> UNDEATH = REGISTRY.register("undeath", UndeathAbility::new);
 
-    public static final RegistryObject<ThunderBoltAbility> THUNDERBOLT = REGISTRY.register("thunderbolt", ThunderBoltAbility::new);
-    public static final RegistryObject<ThunderPathAbility> THUNDER_PATH = REGISTRY.register("thunder_path", ThunderPathAbility::new);
-    public static final RegistryObject<ShockWaveAbility> SHOCKWAVE = REGISTRY.register("shock_wave", ShockWaveAbility::new);
-    public static final RegistryObject<DodgeAbility> DODGE = REGISTRY.register("dodge", DodgeAbility::new);
-    public static final RegistryObject<UndeathAbility> UNDEATH = REGISTRY.register("undeath", UndeathAbility::new);
+//    public static final RegistryObject<ThunderBoltAbility> THUNDERBOLT = REGISTRY.register("thunderbolt", ThunderBoltAbility::new);
+//    public static final RegistryObject<ThunderPathAbility> THUNDER_PATH = REGISTRY.register("thunder_path", ThunderPathAbility::new);
+//    public static final RegistryObject<ShockWaveAbility> SHOCKWAVE = REGISTRY.register("shock_wave", ShockWaveAbility::new);
+//    public static final RegistryObject<DodgeAbility> DODGE = REGISTRY.register("dodge", DodgeAbility::new);
+//    public static final RegistryObject<UndeathAbility> UNDEATH = REGISTRY.register("undeath", UndeathAbility::new);
 
     public static AbstractAbility<?> getAbility(ResourceLocation location) {
         return ChangedRegistry.ABILITY.get().getValue(location);

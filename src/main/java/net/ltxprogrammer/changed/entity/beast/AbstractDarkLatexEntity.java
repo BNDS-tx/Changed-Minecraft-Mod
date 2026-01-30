@@ -12,6 +12,7 @@ import net.ltxprogrammer.changed.network.packet.GrabEntityPacket;
 import net.ltxprogrammer.changed.network.syncher.ChangedEntityDataSerializers;
 import net.ltxprogrammer.changed.world.inventory.TamedDarkLatexInventoryMenu;
 import net.ltxprogrammer.changed.world.inventory.TamedDarkLatexMenu;
+import net.minecraft.Util;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -130,7 +131,7 @@ public abstract class AbstractDarkLatexEntity extends AbstractLatexWolf implemen
     public void aiStep() {
         super.aiStep();
         if (inventory != null && !this.isInteractingWith(this.getOwner())) {
-            if (!level().isClientSide) {
+            if (!level.isClientSide) {
                 List<Pair<EquipmentSlot, ItemStack>> list = null;
                 var mainHandItem = this.getItemInHand(InteractionHand.MAIN_HAND);
                 var offHandItem = this.getItemInHand(InteractionHand.OFF_HAND);
@@ -149,7 +150,7 @@ public abstract class AbstractDarkLatexEntity extends AbstractLatexWolf implemen
                 }
 
                 if (list != null && !list.isEmpty())
-                    ((ServerLevel)this.level()).getChunkSource().broadcast(this, new ClientboundSetEquipmentPacket(this.getId(), list));
+                    ((ServerLevel)this.level).getChunkSource().broadcast(this, new ClientboundSetEquipmentPacket(this.getId(), list));
             }
         }
     }
@@ -373,7 +374,7 @@ public abstract class AbstractDarkLatexEntity extends AbstractLatexWolf implemen
             double d0 = this.random.nextGaussian() * 0.02D;
             double d1 = this.random.nextGaussian() * 0.02D;
             double d2 = this.random.nextGaussian() * 0.02D;
-            this.level().addParticle(particleoptions, this.getRandomX(1.0D), this.getRandomY() + 0.5D, this.getRandomZ(1.0D), d0, d1, d2);
+            this.level.addParticle(particleoptions, this.getRandomX(1.0D), this.getRandomY() + 0.5D, this.getRandomZ(1.0D), d0, d1, d2);
         }
     }
 
@@ -399,7 +400,7 @@ public abstract class AbstractDarkLatexEntity extends AbstractLatexWolf implemen
     public LivingEntity getOwner() {
         try {
             UUID uuid = this.getOwnerUUID();
-            return uuid == null ? null : this.level().getPlayerByUUID(uuid);
+            return uuid == null ? null : this.level.getPlayerByUUID(uuid);
         } catch (IllegalArgumentException illegalargumentexception) {
             return null;
         }
@@ -436,21 +437,26 @@ public abstract class AbstractDarkLatexEntity extends AbstractLatexWolf implemen
     }
 
     protected InteractionResult tamedInteract(Player player, InteractionHand hand) {
-        if (player instanceof ServerPlayer serverPlayer)
-            NetworkHooks.openScreen(serverPlayer, new SimpleMenuProvider(
+        if (player instanceof ServerPlayer serverPlayer) {
+            // 1.18.2 修复: openScreen -> openGui
+            NetworkHooks.openGui(serverPlayer, new SimpleMenuProvider(
                     (id, inv, viewer) -> new TamedDarkLatexMenu(id, inv, this),
                     this.getDisplayName()
-            ), extraData -> {
+            ), (extraData) -> { // 这里 extraData 是 FriendlyByteBuf
+                // 建议使用 writeInt (对应 readInt) 或 writeVarInt (对应 readVarInt)
+                // 如果 writeInt 报错，请确保你的 Menu 对应读取逻辑一致
                 extraData.writeInt(this.getId());
             });
-        return InteractionResult.sidedSuccess(player.level().isClientSide);
+        }
+        // 1.18.2: player.level 是字段，不是方法 player.level()
+        return InteractionResult.sidedSuccess(player.level.isClientSide);
     }
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack itemstack = player.getItemInHand(hand);
         Item item = itemstack.getItem();
-        if (this.level().isClientSide) {
+        if (this.level.isClientSide) {
             boolean flag = this.isOwnedBy(player) || this.isTame();
             return flag ? InteractionResult.CONSUME : InteractionResult.PASS;
         } else {
@@ -458,7 +464,7 @@ public abstract class AbstractDarkLatexEntity extends AbstractLatexWolf implemen
                 if (this.isTame() && this.isTameItem(itemstack) && this.getHealth() < this.getMaxHealth()) {
                     itemstack.shrink(1);
                     this.heal(2.0F);
-                    this.level().broadcastEntityEvent(this, (byte)7); // Spawn hearts
+                    this.level.broadcastEntityEvent(this, (byte)7); // Spawn hearts
                     return InteractionResult.SUCCESS;
                 } else {
                     InteractionResult interactionresult = super.mobInteract(player, hand);
@@ -572,8 +578,8 @@ public abstract class AbstractDarkLatexEntity extends AbstractLatexWolf implemen
         super.die(source);
 
         if (this.dead)
-            if (!this.level().isClientSide && this.level().getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES) && this.getOwner() instanceof ServerPlayer) {
-                this.getOwner().sendSystemMessage(deathMessage);
+            if (!this.level.isClientSide && this.level.getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES) && this.getOwner() instanceof ServerPlayer) {
+                this.getOwner().sendMessage(deathMessage, Util.NIL_UUID);
             }
     }
 
@@ -590,7 +596,7 @@ public abstract class AbstractDarkLatexEntity extends AbstractLatexWolf implemen
 
     @Override
     public void setItemSlot(EquipmentSlot equipmentSlot, ItemStack itemStack) {
-        if (inventory == null || equipmentSlot.isArmor())
+        if (inventory == null || equipmentSlot.getType() == EquipmentSlot.Type.ARMOR)
             super.setItemSlot(equipmentSlot, itemStack);
         else {
             if (equipmentSlot == EquipmentSlot.MAINHAND)
@@ -609,7 +615,7 @@ public abstract class AbstractDarkLatexEntity extends AbstractLatexWolf implemen
             ItemStack copy = itemStack.copy();
 
             EquipmentSlot equipmentSlot = itemStack.getEquipmentSlot();
-            if (equipmentSlot != null && equipmentSlot.isArmor()) {
+            if (equipmentSlot != null && equipmentSlot.getType() == EquipmentSlot.Type.ARMOR) {
                 ItemStack currentArmor = this.getItemBySlot(equipmentSlot);
                 if (this.canReplaceCurrentItem(itemStack, currentArmor)) {
                     this.setItemSlot(equipmentSlot, itemStack.split(1));
@@ -656,7 +662,7 @@ public abstract class AbstractDarkLatexEntity extends AbstractLatexWolf implemen
 
         double d0 = this.getAttributeValue(Attributes.FOLLOW_RANGE);
         AABB aabb = AABB.unitCubeFromLowerCorner(this.position()).inflate(d0, 10.0D, d0);
-        this.level().getEntitiesOfClass(AbstractDarkLatexEntity.class, aabb, EntitySelector.NO_SPECTATORS).forEach(nearby -> {
+        this.level.getEntitiesOfClass(AbstractDarkLatexEntity.class, aabb, EntitySelector.NO_SPECTATORS).forEach(nearby -> {
             if (nearby.getTarget() == null && !nearby.isAlliedTo(source))
                 nearby.setTarget(source);
         });
@@ -681,7 +687,7 @@ public abstract class AbstractDarkLatexEntity extends AbstractLatexWolf implemen
     @Override
     public void tick() {
         super.tick();
-        if (!this.level().isClientSide) {
+        if (!this.level.isClientSide) {
             updateHeldItemChoice();
             updateOffhandItemChoice();
         }
@@ -736,7 +742,7 @@ public abstract class AbstractDarkLatexEntity extends AbstractLatexWolf implemen
             if (slot.isEmpty())
                 continue;
 
-            if (slot.is(Tags.Items.TOOLS_FISHING_RODS))
+            if ((slot.getItem() instanceof TieredItem || slot.getItem() instanceof ShieldItem) && getCurrentFavor() != DarkLatexFavor.CAVING)
                 return i;
         }
 
@@ -848,7 +854,7 @@ public abstract class AbstractDarkLatexEntity extends AbstractLatexWolf implemen
                 return;
             }
 
-            if (slot.is(Tags.Items.TOOLS_SHIELDS) && getCurrentFavor() != DarkLatexFavor.CAVING) {
+            if ((slot.getItem() instanceof TieredItem || slot.getItem() instanceof ShieldItem) && getCurrentFavor() != DarkLatexFavor.CAVING) {
                 swapSlotWithOffhand(slotIndex);
                 return;
             }

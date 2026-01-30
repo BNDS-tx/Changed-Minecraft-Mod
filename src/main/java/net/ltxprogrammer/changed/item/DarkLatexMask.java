@@ -35,11 +35,23 @@ public class DarkLatexMask extends Item implements ExtendedItemProperties {
         return EquipmentSlot.HEAD;
     }
 
-    public void fillItemList(Predicate<TransfurVariant<?>> predicate, CreativeModeTab.ItemDisplayParameters parameters, CreativeModeTab.Output output) {
+//    public void fillItemList(Predicate<TransfurVariant<?>> predicate, CreativeModeTab.NonNullList<ItemStack> parameters, CreativeModeTab.Output output) {
+//        TransfurVariant.getPublicTransfurVariants()
+//                .filter(variant -> variant.is(ChangedTags.TransfurVariants.MASKED))
+//                .filter(predicate).forEach(variant -> {
+//                    output.accept(Syringe.setOwner(
+//                            Syringe.setPureVariant(new ItemStack(this), variant.getFormId()),
+//                            UniversalDist.getLocalPlayer()));
+//                });
+//    }
+
+    public void fillItemList(Predicate<TransfurVariant<?>> predicate, NonNullList<ItemStack> items) {
         TransfurVariant.getPublicTransfurVariants()
                 .filter(variant -> variant.is(ChangedTags.TransfurVariants.MASKED))
-                .filter(predicate).forEach(variant -> {
-                    output.accept(Syringe.setOwner(
+                .filter(predicate)
+                .forEach(variant -> {
+                    // 1.18.2 写法：直接 items.add()
+                    items.add(Syringe.setOwner(
                             Syringe.setPureVariant(new ItemStack(this), variant.getFormId()),
                             UniversalDist.getLocalPlayer()));
                 });
@@ -51,7 +63,7 @@ public class DarkLatexMask extends Item implements ExtendedItemProperties {
         if (variant == null)
             variant = ChangedTransfurVariants.DARK_LATEX_WOLF_MALE.get();
         if (TransfurVariant.getEntityVariant(wearer) == ChangedTransfurVariants.DARK_LATEX_WOLF_PARTIAL.get()) {
-            if (wearer.getRandom().nextFloat() > 0.005f || wearer.level().isClientSide) return; // 0.5% chance every tick the entity will switch TF into the mask variant
+            if (wearer.getRandom().nextFloat() > 0.005f || wearer.level.isClientSide) return; // 0.5% chance every tick the entity will switch TF into the mask variant
 
             ChangedSounds.broadcastSound(ProcessTransfur.changeTransfur(wearer, variant), ChangedSounds.DARK_LATEX_MASK_COMPLETE_TRANSFUR, 1.0f, 1.0f);
             itemStack.shrink(1);

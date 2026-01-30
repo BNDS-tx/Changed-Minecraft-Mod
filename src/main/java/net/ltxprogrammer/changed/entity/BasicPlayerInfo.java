@@ -6,7 +6,6 @@ import net.ltxprogrammer.changed.util.EntityUtil;
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
@@ -96,7 +95,7 @@ public class BasicPlayerInfo {
         this.load(tag);
     }
 
-    public static BasicPlayerInfo random(RandomSource random, LivingEntity entity) {
+    public static BasicPlayerInfo random(Random random, LivingEntity entity) {
         BasicPlayerInfo info = new BasicPlayerInfo();
         info.hairColor = Util.getRandom(HAIR_COLORS, random);
         info.irisLeftColor = Util.getRandom(IRIS_COLORS, random);

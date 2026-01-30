@@ -14,7 +14,6 @@ import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -23,12 +22,10 @@ import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.entity.living.LivingBreatheEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class ServerTransfurVariantInstance<T extends ChangedEntity> extends TransfurVariantInstance<T> {
     private final ServerPlayer host;
@@ -89,7 +86,7 @@ public class ServerTransfurVariantInstance<T extends ChangedEntity> extends Tran
     }
 
     @Override
-    protected void tickBreathing(LivingBreatheEvent event) {
+    protected void tickBreathing(LivingEvent.LivingUpdateEvent event) {
         super.tickBreathing(event);
 
         if (host.isAlive() && breatheMode.canBreatheWater() && shouldApplyAbilities() && host.isEyeInFluid(FluidTags.WATER)) {
@@ -108,7 +105,7 @@ public class ServerTransfurVariantInstance<T extends ChangedEntity> extends Tran
 
         var attributes = host.getAttributes();
         counter.getAttributeAdders().forEach((attribute, value) -> {
-            var uuid = attributesByUUID.computeIfAbsent(attribute, ignored -> Mth.createInsecureUUID(RandomSource.createNewThreadLocalInstance()));
+            var uuid = attributesByUUID.computeIfAbsent(attribute, ignored -> Mth.createInsecureUUID(ThreadLocalRandom.current()));
             var instance = attributes.getInstance(attribute);
             if (instance == null)
                 return;
@@ -143,7 +140,7 @@ public class ServerTransfurVariantInstance<T extends ChangedEntity> extends Tran
         if (host.isCreative() || host.isSpectator())
             return;
 
-        List<PathfinderMob> entitiesScared = host.level().getEntitiesOfClass(
+        List<PathfinderMob> entitiesScared = host.level.getEntitiesOfClass(
                 PathfinderMob.class,
                 host.getBoundingBox().inflate(distance, 6D, distance),
                 target -> {

@@ -2,8 +2,10 @@ package net.ltxprogrammer.changed.ability.tree;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.ltxprogrammer.changed.aaBackport.CodecWrapperATNE;
 import net.ltxprogrammer.changed.ability.tree.condition.AbstractCondition;
 import net.ltxprogrammer.changed.ability.tree.condition.TrueCondition;
+import net.ltxprogrammer.changed.init.ChangedAbilityTreeCodecs;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -39,5 +41,10 @@ public class MobEffectNodeEffect extends AbilityTree.NodeEffect {
     @Override
     public Codec<? extends AbilityTree.NodeEffect> getCodec() {
         return CODEC;
+    }
+
+    @Override
+    public CodecWrapperATNE<? extends AbilityTree.NodeEffect> getCodecWrapper() {
+        return ChangedAbilityTreeCodecs.MOB_EFFECT_EFFECT.get();
     }
 }

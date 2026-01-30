@@ -21,7 +21,6 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.fluids.ForgeFlowingFluid;
 import net.minecraftforge.fml.common.Mod;
 
@@ -39,12 +38,12 @@ public abstract class AbstractLatexFluid extends ForgeFlowingFluid {
         this.form = form;
     }
 
-    public static FluidType.Properties createProperties() {
-        return FluidType.Properties.create()
-                .density(6000)
-                .viscosity(6000)
-                .motionScale(-0.014D);
-    }
+//    public static FluidType.Properties createProperties() {
+//        return FluidType.Properties.create()
+//                .density(6000)
+//                .viscosity(6000)
+//                .motionScale(-0.014D);
+//    }
 
     @Override
     protected boolean isRandomlyTicking() {
@@ -58,8 +57,8 @@ public abstract class AbstractLatexFluid extends ForgeFlowingFluid {
     public abstract boolean canEntityStandOn(LivingEntity entity);
 
     @SubscribeEvent
-    public static void onEntityTick(LivingEvent.LivingTickEvent event) {
-        Level level = event.getEntity().level();
+    public static void onEntityTick(LivingEvent.LivingUpdateEvent event) {
+        Level level = event.getEntityLiving().level;
         AbstractLatexFluid fluid = null;
         BlockState state = Blocks.AIR.defaultBlockState();
         if (level.getFluidState(event.getEntity().blockPosition()).getType() instanceof AbstractLatexFluid fluidFeet) {
@@ -72,7 +71,7 @@ public abstract class AbstractLatexFluid extends ForgeFlowingFluid {
         }
 
         if (fluid != null) {
-            if (TransfurVariant.getEntityVariant(event.getEntity()) != null) {
+            if (TransfurVariant.getEntityVariant(event.getEntityLiving()) != null) {
                 var living = event.getEntity();
                 var delta = living.getDeltaMovement();
                 living.resetFallDistance();
@@ -81,13 +80,13 @@ public abstract class AbstractLatexFluid extends ForgeFlowingFluid {
                 event.getEntity().makeStuckInBlock(state, new Vec3(0.75, 0.75, 0.75));
         }
 
-        if (event.getEntity().isAlive() && !event.getEntity().isDeadOrDying() && fluid != null) {
+        if (event.getEntityLiving().isAlive() && !event.getEntityLiving().isDeadOrDying() && fluid != null) {
             LatexType latexType = LatexType.getEntityLatexType(event.getEntity());
             if (latexType == null)
-                ProcessTransfur.progressTransfur(event.getEntity(), 5.0f, fluid.form.get(level.random.nextInt(fluid.form.size())).get(),
+                ProcessTransfur.progressTransfur(event.getEntityLiving(), 5.0f, fluid.form.get(level.random.nextInt(fluid.form.size())).get(),
                         TransfurContext.hazard(TransfurCause.LATEX_PUDDLE));
             else if (fluid.getLatexType().isHostileTo(latexType))
-                event.getEntity().hurt(ChangedDamageSources.LATEX_FLUID.source(event.getEntity().level().registryAccess()), 2.0f);
+                event.getEntityLiving().hurt(ChangedDamageSources.LATEX_FLUID.source(), 2.0f);
         }
     }
 

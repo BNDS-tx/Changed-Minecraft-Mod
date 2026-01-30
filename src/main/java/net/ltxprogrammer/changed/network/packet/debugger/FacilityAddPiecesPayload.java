@@ -7,7 +7,7 @@ import net.ltxprogrammer.changed.client.ChangedClient;
 import net.ltxprogrammer.changed.init.ChangedRegistry;
 import net.ltxprogrammer.changed.network.packet.DebuggerPacket;
 import net.ltxprogrammer.changed.world.data.ActiveFacilityInstance;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -29,7 +29,7 @@ public class FacilityAddPiecesPayload extends DebuggerPacket.Payload {
 
     public FacilityAddPiecesPayload(ServerLevel level, List<ActiveFacilityInstance.PieceGenerationInfo> pieces) {
         super(IDENTIFIER);
-        this.dimensionType = level.registryAccess().registryOrThrow(Registries.DIMENSION_TYPE).getKey(level.dimensionType());
+        this.dimensionType = level.registryAccess().registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY).getKey(level.dimensionType());
         this.pieces = pieces;
     }
 
@@ -64,7 +64,7 @@ public class FacilityAddPiecesPayload extends DebuggerPacket.Payload {
         if (context.getDirection().getReceptionSide() == LogicalSide.CLIENT) {
             context.setPacketHandled(true);
             return levelFuture.thenAccept(level -> {
-                DimensionType dimensiontype = level.registryAccess().registryOrThrow(Registries.DIMENSION_TYPE).get(dimensionType);
+                DimensionType dimensiontype = level.registryAccess().registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY).get(dimensionType);
                 ChangedClient.debugRenderer.get().facilityDebugRenderer.addPieces(dimensiontype, this.pieces);
             });
         }

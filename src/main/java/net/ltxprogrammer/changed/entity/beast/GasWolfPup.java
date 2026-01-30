@@ -78,7 +78,7 @@ public class GasWolfPup extends GasWolfMale {
         var underlyingPlayer = getUnderlyingPlayer();
         if (ProcessTransfur.ifPlayerTransfurred(underlyingPlayer, variant -> {
             if (variant.ageAsVariant > MAX_AGE || age > MAX_AGE) {
-                var newVariant = ChangedTransfurVariants.Gendered.GAS_WOLVES.getRandomVariant(level().random);
+                var newVariant = ChangedTransfurVariants.Gendered.GAS_WOLVES.getRandomVariant(level.random);
                 ProcessTransfur.changeTransfur(underlyingPlayer, newVariant);
                 ChangedSounds.broadcastSound(this, newVariant.sound, 1.0f, 1.0f);
                 underlyingPlayer.heal(12.0f);
@@ -86,7 +86,7 @@ public class GasWolfPup extends GasWolfMale {
         })) return;
 
         if (age > MAX_AGE) {
-            var newVariant = ChangedTransfurVariants.Gendered.GAS_WOLVES.getRandomVariant(level().random);
+            var newVariant = ChangedTransfurVariants.Gendered.GAS_WOLVES.getRandomVariant(level.random);
             var wolf = newVariant.getEntityType().create(level);
             if (wolf != null) {
                 wolf.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());

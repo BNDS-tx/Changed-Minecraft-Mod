@@ -19,7 +19,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import traben.entity_model_features.models.*;
-import traben.entity_model_features.models.parts.EMFModelPartWithState;
 
 @Mixin(value = HumanoidAnimator.class, remap = false)
 @RequiredMods("entity_model_features")

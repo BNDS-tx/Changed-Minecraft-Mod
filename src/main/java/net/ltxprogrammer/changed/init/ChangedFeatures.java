@@ -11,7 +11,6 @@ import net.ltxprogrammer.changed.world.features.structures.HangingBlockFixerProc
 import net.minecraft.core.Holder;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.features.FeatureUtils;
 import net.minecraft.data.worldgen.placement.PlacementUtils;
 import net.minecraft.resources.ResourceKey;
@@ -32,7 +31,6 @@ import net.minecraft.world.level.levelgen.feature.trunkplacers.StraightTrunkPlac
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessor;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorType;
-import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -54,7 +52,7 @@ public class ChangedFeatures {
     private static final List<FeatureRegistration> FEATURE_REGISTRATIONS = new ArrayList<>();
     private static final List<TreeRegistration> TREE_REGISTRATIONS = new ArrayList<>();
 
-    public static final DeferredRegister<StructureProcessorType<?>> REGISTRY_PROCESSOR = DeferredRegister.create(Registries.STRUCTURE_PROCESSOR, Changed.MODID);
+    public static final DeferredRegister<StructureProcessorType<?>> REGISTRY_PROCESSOR = DeferredRegister.create(Registry.STRUCTURE_PROCESSOR_REGISTRY, Changed.MODID);
     public static RegistryObject<StructureProcessorType<ChestLootTableProcessor>> CHEST_LOOT_TABLE_PROCESSOR = REGISTRY_PROCESSOR.register("chest_loot_table_processor",
             () -> () -> ChestLootTableProcessor.CODEC);
     public static RegistryObject<StructureProcessorType<GluReplacementProcessor>> GLU_REPLACEMENT_PROCESSOR = REGISTRY_PROCESSOR.register("glu_replacement_processor",
@@ -70,7 +68,9 @@ public class ChangedFeatures {
         return createStraightBlobTree(BlockStateProvider.simple(Blocks.OAK_LOG), DeferredStateProvider.of(ChangedBlocks.ORANGE_TREE_LEAVES), 4, 2, 0, 2).ignoreVines();
     }
 
-    public static final ResourceKey<ConfiguredFeature<?, ?>> ORANGE_TREE = FeatureUtils.createKey(Changed.modResourceStr("orange_tree"));
+//    public static final ResourceKey<ConfiguredFeature<?, ?>> ORANGE_TREE = FeatureUtils.createKey(Changed.modResourceStr("orange_tree"));
+    public static final ResourceKey<ConfiguredFeature<?, ?>> ORANGE_TREE =
+            ResourceKey.create(Registry.CONFIGURED_FEATURE_REGISTRY, Changed.modResource("orange_tree"));
 
     /*public static final Holder<ConfiguredFeature<TreeConfiguration, ?>> ORANGE_TREE = FeatureUtils.register(Changed.modResourceStr("orange_tree"), Feature.TREE, createOrangeTree().build());
     public static final Holder<PlacedFeature> ORANGE_TREE_CHECKED = registerTree("orange_tree_checked", ORANGE_TREE, Set.of()*//*new ResourceLocation("trees_birch_and_oak"), 0.1f*//*, ChangedBlocks.ORANGE_TREE_SAPLING.getId());
@@ -99,7 +99,7 @@ public class ChangedFeatures {
         //if (event.getSpawnReason() != MobSpawnType.NATURAL) return;
 
         if (ChangedEntities.DIMENSION_RESTRICTIONS.entrySet().stream().filter(entry -> entry.getKey().get().equals(event.getEntity().getType()))
-                .anyMatch(entry -> !entry.getValue().test(event.getEntity().level())))
+                .anyMatch(entry -> !entry.getValue().test(event.getEntity().level)))
             event.setResult(Event.Result.DENY);
     }
 */

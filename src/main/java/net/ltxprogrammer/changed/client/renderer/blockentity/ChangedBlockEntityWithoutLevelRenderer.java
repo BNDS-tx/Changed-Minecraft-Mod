@@ -26,7 +26,7 @@ public class ChangedBlockEntityWithoutLevelRenderer extends BlockEntityWithoutLe
     }
 
     @Override
-    public void renderByItem(ItemStack itemStack, ItemDisplayContext transformType, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
+    public void renderByItem(ItemStack itemStack, ItemTransforms.TransformType transformType, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
         super.renderByItem(itemStack, transformType, poseStack, bufferSource, packedLight, packedOverlay);
         Item item = itemStack.getItem();
         if (item instanceof BlockItem) {

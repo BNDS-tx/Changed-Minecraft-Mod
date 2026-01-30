@@ -48,9 +48,9 @@ public class PurifierMenu extends AbstractContainerMenu implements Supplier<Map<
         checkContainerDataCount(p_38972_, 1);
         this.container = p_38971_;
         this.data = p_38972_;
-        this.world = inv.player.level();
+        this.world = inv.player.level;
         this.entity = inv.player;
-        this.recipeManager = inv.player.level().getRecipeManager();
+        this.recipeManager = inv.player.level.getRecipeManager();
         this.customSlots.put(0, this.addSlot(new Slot(p_38971_, 0, 79, 35) {
             @Override
             public boolean mayPlace(ItemStack stack) {

@@ -12,9 +12,8 @@ import net.ltxprogrammer.changed.util.KeyStatesTracker;
 import net.ltxprogrammer.changed.util.UniversalDist;
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -104,7 +103,7 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
     @Override
     public void onSelected() {
         if (entity.getLevel().isClientSide)
-            this.entity.displayClientMessage(Component.translatable("ability.changed.grab_entity.how_to_grab", KeyReference.ABILITY.getName(entity.getLevel())), true);
+            this.entity.displayClientMessage(new TranslatableComponent("ability.changed.grab_entity.how_to_grab", KeyReference.ABILITY.getName(entity.getLevel())), true);
     }
 
     @Override
@@ -181,7 +180,7 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
 
         getController().resetHoldTicks();
 
-        ProcessTransfur.forceNearbyToRetarget(entity.level(), entity);
+        ProcessTransfur.forceNearbyToRetarget(entity.level, entity);
 
         if (this.grabbedEntity != entity)
             this.releaseEntity();
@@ -257,20 +256,20 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
         if (!level.isClientSide) return;
 
         if (instructionTicks == 180)
-            this.entity.displayClientMessage(Component.translatable("ability.changed.grab_entity.how_to_release", KeyReference.ABILITY.getName(level)), true);
+            this.entity.displayClientMessage(new TranslatableComponent("ability.changed.grab_entity.how_to_release", KeyReference.ABILITY.getName(level)), true);
         else if (instructionTicks == 120)
-            this.entity.displayClientMessage(Component.translatable("ability.changed.grab_entity.how_to_transfur", KeyReference.ATTACK.getName(level)), true);
+            this.entity.displayClientMessage(new TranslatableComponent("ability.changed.grab_entity.how_to_transfur", KeyReference.ATTACK.getName(level)), true);
         else if (instructionTicks == 60)
-            this.entity.displayClientMessage(Component.translatable("ability.changed.grab_entity.how_to_suit", KeyReference.USE.getName(level)), true);
+            this.entity.displayClientMessage(new TranslatableComponent("ability.changed.grab_entity.how_to_suit", KeyReference.USE.getName(level)), true);
         if (instructionTicks > 0)
             instructionTicks--;
 
         if (instructionTicks == -180)
-            this.entity.displayClientMessage(Component.translatable("ability.changed.grab_entity.how_to_release", KeyReference.ABILITY.getName(level)), true);
+            this.entity.displayClientMessage(new TranslatableComponent("ability.changed.grab_entity.how_to_release", KeyReference.ABILITY.getName(level)), true);
         else if (instructionTicks == -120)
-            this.entity.displayClientMessage(Component.translatable("ability.changed.grab_entity.how_to_absorb", KeyReference.ATTACK.getName(level), KeyReference.USE.getName(level)), true);
+            this.entity.displayClientMessage(new TranslatableComponent("ability.changed.grab_entity.how_to_absorb", KeyReference.ATTACK.getName(level), KeyReference.USE.getName(level)), true);
         else if (instructionTicks == -60 && this.grabbedEntity instanceof Player) // Only show toggle when a player is grabbed
-            this.entity.displayClientMessage(Component.translatable("ability.changed.grab_entity.how_to_toggle_control", KeyReference.ABILITY.getName(level)), true);
+            this.entity.displayClientMessage(new TranslatableComponent("ability.changed.grab_entity.how_to_toggle_control", KeyReference.ABILITY.getName(level)), true);
         if (instructionTicks < 0)
             instructionTicks++;
     }
@@ -284,7 +283,7 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
     public int ticksUnpressed = 0;
     public KeyReference lastEscapeKey = null;
     public KeyReference currentEscapeKey = null;
-    public RandomSource escapeKeyRandom = null;
+    public Random escapeKeyRandom = null;
     public int ticksGrabbed = 0;
     private static final List<KeyReference> ORDERED_KEYS = List.of(KeyReference.MOVE_FORWARD, KeyReference.MOVE_BACKWARD, KeyReference.MOVE_LEFT, KeyReference.MOVE_RIGHT);
 
@@ -293,7 +292,7 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
     }
 
     public void initializeEscape(long seed) {
-        this.escapeKeyRandom = RandomSource.create(seed);
+        this.escapeKeyRandom = new Random(seed);
         this.currentEscapeKey = this.getNextEscapeKey();
         this.lastEscapeKey = null;
     }
@@ -326,13 +325,13 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
             if (player == UniversalDist.getLocalPlayer()) { // Client-side code of the grabbed player
                 boolean stateChanged = false;
 
-                if (escapeKeys.queueKeyState(KeyReference.MOVE_FORWARD, KeyReference.MOVE_FORWARD.isDown(player.level())))
+                if (escapeKeys.queueKeyState(KeyReference.MOVE_FORWARD, KeyReference.MOVE_FORWARD.isDown(player.level)))
                     stateChanged = true;
-                if (escapeKeys.queueKeyState(KeyReference.MOVE_BACKWARD, KeyReference.MOVE_BACKWARD.isDown(player.level())))
+                if (escapeKeys.queueKeyState(KeyReference.MOVE_BACKWARD, KeyReference.MOVE_BACKWARD.isDown(player.level)))
                     stateChanged = true;
-                if (escapeKeys.queueKeyState(KeyReference.MOVE_LEFT, KeyReference.MOVE_LEFT.isDown(player.level())))
+                if (escapeKeys.queueKeyState(KeyReference.MOVE_LEFT, KeyReference.MOVE_LEFT.isDown(player.level)))
                     stateChanged = true;
-                if (escapeKeys.queueKeyState(KeyReference.MOVE_RIGHT, KeyReference.MOVE_RIGHT.isDown(player.level())))
+                if (escapeKeys.queueKeyState(KeyReference.MOVE_RIGHT, KeyReference.MOVE_RIGHT.isDown(player.level)))
                     stateChanged = true;
 
                 if (stateChanged) {
@@ -344,7 +343,7 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
                 }
             }
 
-            if (currentEscapeKey == null && !player.level().isClientSide) {
+            if (currentEscapeKey == null && !player.level.isClientSide) {
                 long seed = this.entity.getEntity().getRandom().nextLong();
                 this.initializeEscape(seed);
                 Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player), new GrabEntityPacket.AnnounceEscapeSeed(player, seed));
@@ -365,7 +364,7 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
                     // This is to reduce the strength of cheating (pressing the key too fast)
                     float trustStrength = Mth.clamp((float)ticksUnpressed / (float)GRAB_ESCAPE_TRUST, 0.0f, 1.0f);
                     float keyStrength = resolvedDecay * trustStrength;
-                    if (!player.level().isClientSide) {
+                    if (!player.level.isClientSide) {
                         this.grabStrength -= keyStrength;
                         this.suitTransition = Mth.clamp(this.suitTransition - (keyStrength * 0.5f), 0.0f, SUIT_TRANSITION_MAX);
                         Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(this.entity::getEntity),
@@ -376,7 +375,7 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
                                         this.suitTransitionO));
                     }
                 } else {
-                    if (!player.level().isClientSide) {
+                    if (!player.level.isClientSide) {
                         this.grabStrength = Mth.clamp(this.grabStrength + GRAB_STRENGTH_DECAY_PENALTY, 0.0f, 1.0f);
                         Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(this.entity::getEntity),
                                 new GrabEntityPacket.SyncGrabStrength(this.entity.getEntity(),
@@ -507,7 +506,7 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
                     this.suited = true;
                     this.suitTransition = SUIT_TRANSITION_MAX;
 
-                    if (this.entity.getEntity() instanceof Player player && player.level().isClientSide) {
+                    if (this.entity.getEntity() instanceof Player player && player.level.isClientSide) {
                         Changed.PACKET_HANDLER.sendToServer(GrabEntityPacket.suitGrab(player, this.grabbedEntity));
                         this.instructionTicks = -180;
                         this.grabStrength = 1.0f;

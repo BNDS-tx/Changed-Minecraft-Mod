@@ -10,8 +10,8 @@ import net.ltxprogrammer.changed.client.Triangle;
 import net.ltxprogrammer.changed.client.renderer.layers.LatexParticlesLayer;
 import net.ltxprogrammer.changed.client.tfanimations.TransfurAnimator;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.util.RandomSource;
-import org.joml.Vector3f;
+
+import repack.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 @Mixin(ModelPart.class)
 public abstract class ModelPartMixin implements ModelPartExtender {
@@ -53,7 +54,7 @@ public abstract class ModelPartMixin implements ModelPartExtender {
     }
 
     @Override
-    public ModelPart.Cube getRandomCubeWeighted(RandomSource random) {
+    public ModelPart.Cube getRandomCubeWeighted(Random random) {
         float[] weights = new float[cubes.size()];
         float totalWeight = 0.0f;
 

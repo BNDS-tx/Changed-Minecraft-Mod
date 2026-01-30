@@ -20,9 +20,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.random.Weight;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -57,14 +56,14 @@ public abstract class FacilitySinglePiece extends FacilityPiece {
         private final StructureTemplate template;
         private BlockPos generationPosition;
 
-        public StructureInstance(StructureTemplateManager manager, int genDepth, ResourceLocation templateName, Optional<ResourceLocation> lootTable, BoundingBox box) {
+        public StructureInstance(StructureManager manager, int genDepth, ResourceLocation templateName, Optional<ResourceLocation> lootTable, BoundingBox box) {
             super(ChangedStructurePieceTypes.FACILITY_SINGLE.get(), genDepth, box);
             this.templateName = templateName;
             this.lootTable = lootTable.orElse(null);
             this.template = manager.get(templateName).orElseThrow(() -> new IllegalArgumentException("Cannot read template " + templateName));
         }
 
-        public StructureInstance(StructureTemplateManager manager, CompoundTag tag) {
+        public StructureInstance(StructureManager manager, CompoundTag tag) {
             super(ChangedStructurePieceTypes.FACILITY_SINGLE.get(), tag);
             this.generationPosition = TagUtil.getBlockPos(tag, "genPos");
             this.templateName = TagUtil.getResourceLocation(tag, "template");
@@ -85,7 +84,7 @@ public abstract class FacilitySinglePiece extends FacilityPiece {
         }
 
         @Override
-        public void postProcess(WorldGenLevel level, StructureManager manager, ChunkGenerator generator, RandomSource random, BoundingBox bb, ChunkPos pos, BlockPos blockPos) {
+        public void postProcess(WorldGenLevel level, StructureFeatureManager manager, ChunkGenerator generator, Random random, BoundingBox bb, ChunkPos pos, BlockPos blockPos) {
             var settings = new StructurePlaceSettings()
                     .setMirror(this.getMirror())
                     .setRotation(this.getRotation()).setRandom(random)
@@ -168,12 +167,12 @@ public abstract class FacilitySinglePiece extends FacilityPiece {
         }
 
         @Override
-        public boolean setupBoundingBox(StructurePiecesBuilder builder, StructureTemplate.StructureBlockInfo exitGlu, RandomSource random, BoundingBox allowedRegion) {
+        public boolean setupBoundingBox(StructurePiecesBuilder builder, StructureTemplate.StructureBlockInfo exitGlu, Random random, BoundingBox allowedRegion) {
             var settings = new StructurePlaceSettings()
                     .addProcessor(BlockIgnoreProcessor.STRUCTURE_BLOCK)
                     .setIgnoreEntities(true);
 
-            var gluBlockPos = gluNeighbor(exitGlu.pos(), exitGlu.state());
+            var gluBlockPos = gluNeighbor(exitGlu.pos, exitGlu.state);
 
             var directions = new ArrayList<>(Direction.Plane.HORIZONTAL.stream().toList());
             CollectionUtil.shuffle(directions, random);
@@ -184,10 +183,10 @@ public abstract class FacilitySinglePiece extends FacilityPiece {
                 var blockInfoList = template.filterBlocks(BlockPos.ZERO, settings, ChangedBlocks.GLU_BLOCK.get());
                 CollectionUtil.shuffle(blockInfoList, random);
                 for (var blockInfo : blockInfoList) {
-                    if (!GluBlock.canConnect(exitGlu.state(), exitGlu.nbt(), blockInfo.state(), blockInfo.nbt()))
+                    if (!GluBlock.canConnect(exitGlu.state, exitGlu.nbt, blockInfo.state, blockInfo.nbt))
                         continue;
 
-                    var structureOrigin = gluBlockPos.subtract(blockInfo.pos());
+                    var structureOrigin = gluBlockPos.subtract(blockInfo.pos);
                     this.setupBoundingBox(structureOrigin);
                     this.generationPosition = structureOrigin;
                     if (FacilityPieces.isNotCompletelyInsideRegion(this.getBoundingBox(), allowedRegion))
@@ -222,7 +221,7 @@ public abstract class FacilitySinglePiece extends FacilityPiece {
         }
 
         @Override
-        public BlockPos getRandomStart(RandomSource random) {
+        public BlockPos getRandomStart(Random random) {
             var settings = new StructurePlaceSettings()
                     .setMirror(this.getMirror())
                     .setRotation(this.getRotation())
@@ -231,12 +230,12 @@ public abstract class FacilitySinglePiece extends FacilityPiece {
             var gluBlocks = template.filterBlocks(generationPosition, settings, ChangedBlocks.GLU_BLOCK.get());
             if (gluBlocks.isEmpty())
                 Changed.LOGGER.error("Facility structure is missing placement blocks {}", templateName);
-            return Util.getRandom(gluBlocks, random).pos();
+            return Util.getRandom(gluBlocks, random).pos;
         }
     }
 
     @Override
-    public FacilityPieceInstance createStructurePiece(StructureTemplateManager structures, int genDepth) {
+    public FacilityPieceInstance createStructurePiece(StructureManager structures, int genDepth) {
         return new StructureInstance(structures, genDepth, templateName, lootTable, null);
     }
 }

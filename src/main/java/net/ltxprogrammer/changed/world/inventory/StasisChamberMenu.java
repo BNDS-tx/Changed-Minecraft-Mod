@@ -59,7 +59,7 @@ public class StasisChamberMenu extends AbstractContainerMenu implements Updateab
             return;
         }
 
-        this.blockEntity = inventory.player.level().getBlockEntity(extra.readBlockPos(), ChangedBlockEntities.STASIS_CHAMBER.get()).orElse(null);
+        this.blockEntity = inventory.player.level.getBlockEntity(extra.readBlockPos(), ChangedBlockEntities.STASIS_CHAMBER.get()).orElse(null);
         this.container = blockEntity;
         this.container.startOpen(inventory.player);
         this.createSlots(inventory);

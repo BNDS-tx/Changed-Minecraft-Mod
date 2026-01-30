@@ -3,7 +3,7 @@
     {
       "type": "directory",
       "source": "wall_sign",
-      "prefix": ""
+      "prefix": "wall_sign"
     }
   ]
 }

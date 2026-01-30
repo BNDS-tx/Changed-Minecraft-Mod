@@ -28,6 +28,7 @@ import net.minecraftforge.eventbus.api.IEventBusInvokeDispatcher;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoader;
 import net.minecraftforge.fml.LogicalSide;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.IModBusEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -71,9 +72,10 @@ public class Changed {
         eventBus.addListener(this::customPacks);
     }
 
-    public Changed(FMLJavaModLoadingContext context) {
+    public Changed() {
         //modEventBus = context.getModEventBus();
-        config = new ChangedConfig(context);
+        var context = FMLJavaModLoadingContext.get();
+        config = new ChangedConfig(ModLoadingContext.get());
 
         registerLoadingEventListeners(context.getModEventBus());
 
@@ -95,11 +97,11 @@ public class Changed {
         ChangedAttributes.REGISTRY.register(modEventBus);
         ChangedEnchantments.REGISTRY.register(modEventBus);
         ChangedRecipeSerializers.REGISTRY.register(modEventBus);
-        ChangedStructureTypes.REGISTRY.register(modEventBus);
+        ChangedStructures.CONFIGURED_REGISTRY.register(modEventBus);
+        ChangedStructures.REGISTRY.register(modEventBus);
         ChangedStructurePieceTypes.REGISTRY.register(modEventBus);
         ChangedLootItemFunctions.REGISTRY.register(modEventBus);
         ChangedRecipeTypes.REGISTRY.register(modEventBus);
-        ChangedTabs.REGISTRY.register(modEventBus);
         ChangedSounds.REGISTRY.register(modEventBus);
         ChangedPaintings.REGISTRY.register(modEventBus);
         ChangedParticles.REGISTRY.register(modEventBus);
@@ -108,7 +110,6 @@ public class Changed {
         ChangedMenus.REGISTRY.register(modEventBus);
         ChangedEffects.REGISTRY.register(modEventBus);
         ChangedBlockEntities.REGISTRY.register(modEventBus);
-        ChangedFluids.REGISTRY_TYPES.register(modEventBus);
         ChangedFluids.REGISTRY_FLUIDS.register(modEventBus);
         ChangedItems.REGISTRY.register(modEventBus);
         ChangedBlockStateProviders.REGISTRY.register(modEventBus);
@@ -149,8 +150,7 @@ public class Changed {
 
     private void registerClientEventListeners(IEventBus eventBus) {
         MinecraftForge.EVENT_BUS.register(eventHandlerClient = new EventHandlerClient());
-        eventBus.addListener(RecipeCategories::registerCategories);
-        eventBus.addListener(ChangedOverlays::registerOverlays);
+//        eventBus.addListener(ChangedOverlays::registerOverlays);
         eventBus.addListener(ChangedClient::onBlockColorsInit);
         eventBus.addListener(ChangedClient::onItemColorsInit);
         eventBus.addListener(ChangedClient::onClientFinishSetup);
@@ -158,6 +158,8 @@ public class Changed {
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {
+        event.enqueueWork(RecipeCategories::registerCategories);
+        ChangedOverlays.registerOverlays(event);
         ChangedClient.registerEventListeners();
     }
 
@@ -183,7 +185,7 @@ public class Changed {
     }
 
     public static ResourceLocation modResource(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MODID, path);
+        return new ResourceLocation(MODID, path);
     }
     public static String modResourceStr(String path) {
         return MODID + ":" + path;

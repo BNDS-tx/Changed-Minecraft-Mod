@@ -21,7 +21,9 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.material.MaterialColor;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -39,7 +41,7 @@ public class DroppedOrange extends Block implements SimpleWaterloggedBlock {
     protected static final VoxelShape SIXPLUS_AABB = Block.box(3.5D, 0.0D, 3.5D, 12.5D, 4.0D, 12.5D);
 
     public DroppedOrange() {
-        super(BlockBehaviour.Properties.of().offsetType(OffsetType.XZ).sound(SoundType.WART_BLOCK).dynamicShape().instabreak());
+        super(BlockBehaviour.Properties.of(Material.VEGETABLE, MaterialColor.COLOR_ORANGE).sound(SoundType.WART_BLOCK).dynamicShape().instabreak());
         this.registerDefaultState(this.stateDefinition.any().setValue(ORANGES, 1).setValue(WATERLOGGED, false));
     }
 
@@ -50,7 +52,7 @@ public class DroppedOrange extends Block implements SimpleWaterloggedBlock {
     }
 
     @Override
-    public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
+    public List<ItemStack> getDrops(BlockState state, LootContext.Builder builder) {
         return List.of(new ItemStack(ChangedItems.ORANGE.get(), state.getValue(ORANGES)));
     }
 

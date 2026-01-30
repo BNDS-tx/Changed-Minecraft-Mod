@@ -38,9 +38,9 @@ public class AnimationAssociations extends SimplePreparableReloadListener<Immuta
                     .getOrThrow(false, str -> {});
             object.getAsJsonArray("animations").forEach(animation -> {
                 final JsonObject animationObject = animation.getAsJsonObject();
-                map.put(ResourceLocation.parse(entry.getKey()),
+                map.put(new ResourceLocation(entry.getKey()),
                         new AnimationAssociation(category,
-                                ResourceLocation.parse(animationObject.get("name").getAsString()),
+                                new ResourceLocation(animationObject.get("name").getAsString()),
                                 animationObject.getAsJsonObject("criteria")
                         ));
             });

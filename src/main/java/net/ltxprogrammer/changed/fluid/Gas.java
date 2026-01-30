@@ -1,51 +1,53 @@
 package net.ltxprogrammer.changed.fluid;
 
+import com.mojang.math.Vector3f;
 import net.ltxprogrammer.changed.init.ChangedBlocks;
 import net.ltxprogrammer.changed.util.Color3;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraftforge.fluids.FluidType;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.ForgeFlowingFluid;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Vector3f;
+
+import java.util.Random;
 
 public abstract class Gas extends ForgeFlowingFluid {
     protected Gas(Properties properties) {
         super(properties);
     }
 
-    @NotNull
-    public static FluidType.Properties createProperties() {
-        return FluidType.Properties.create()
-                .density(200)
-                .viscosity(200)
-                .motionScale(0.0D)
-                .fallDistanceModifier(1.0f)
-                .canDrown(false)
-                .canPushEntity(false)
-                .canSwim(false);
-    }
-
-    public static class GasFluidType extends FluidType {
-        public GasFluidType(Properties properties) {
-            super(properties);
-        }
-
-        @Override
-        public boolean isAir() { // Requires accesstransformer to work
-            return true;
-        }
-    }
+//    @NotNull
+//    public static FluidType.Properties createProperties() {
+//        return FluidType.Properties.create()
+//                .density(200)
+//                .viscosity(200)
+//                .motionScale(0.0D)
+//                .fallDistanceModifier(1.0f)
+//                .canDrown(false)
+//                .canPushEntity(false)
+//                .canSwim(false);
+//    }
+//
+//    public static class GasFluidType extends FluidType {
+//        public GasFluidType(Properties properties) {
+//            super(properties);
+//        }
+//
+//        @Override
+//        public boolean isAir() { // Requires accesstransformer to work
+//            return true;
+//        }
+//    }
 
     public abstract Color3 getColor();
 
@@ -55,7 +57,7 @@ public abstract class Gas extends ForgeFlowingFluid {
     }
 
     @Override
-    protected FluidState getNewLiquid(Level level, BlockPos pos, BlockState state) {
+    protected FluidState getNewLiquid(LevelReader level, BlockPos pos, BlockState state) {
         // Overwritten from FlowingFluid.getNewLiquid()
 
         int i = 0;
@@ -66,7 +68,7 @@ public abstract class Gas extends ForgeFlowingFluid {
             BlockState blockstate = level.getBlockState(blockpos);
             FluidState fluidstate = blockstate.getFluidState();
             if (fluidstate.getType().isSame(this) && this.canPassThroughWall(direction, level, pos, state, blockpos, blockstate)) {
-                if (fluidstate.isSource() && net.minecraftforge.event.ForgeEventFactory.canCreateFluidSource(level, blockpos, blockstate, this.canConvertToSource(level))) {
+                if (fluidstate.isSource() && net.minecraftforge.event.ForgeEventFactory.canCreateFluidSource(level, blockpos, blockstate, this.canConvertToSource())) {
                     ++j;
                 }
 
@@ -77,7 +79,7 @@ public abstract class Gas extends ForgeFlowingFluid {
         if (j >= 2) {
             BlockState blockstate1 = level.getBlockState(pos.below());
             FluidState fluidstate1 = blockstate1.getFluidState();
-            if (blockstate1.isSolid() || this.isSourceBlockOfThisType(fluidstate1)) {
+            if (blockstate1.getMaterial().isSolid() || this.isSourceBlockOfThisType(fluidstate1)) {
                 return this.getSource(false);
             }
         }
@@ -107,7 +109,7 @@ public abstract class Gas extends ForgeFlowingFluid {
     }
 
     @Override
-    protected void animateTick(Level level, BlockPos blockPos, FluidState state, RandomSource random) {
+    protected void animateTick(Level level, BlockPos blockPos, FluidState state, Random random) {
         super.animateTick(level, blockPos, state, random);
 
         float fluidLevel = state.getAmount() / 8f;

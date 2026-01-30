@@ -66,7 +66,7 @@ public class SeatEntityInfoPacket implements ChangedPacket {
 
         else {
             final SeatEntityInfoPacket response;
-            if (context.getSender().level().getBlockEntity(this.position) instanceof SeatableBlockEntity seat) {
+            if (context.getSender().level.getBlockEntity(this.position) instanceof SeatableBlockEntity seat) {
                 if (seat.getEntityHolder() != null)
                     response = new SeatEntityInfoPacket(seat.getEntityHolder());
                 else

@@ -2,8 +2,9 @@ package net.ltxprogrammer.changed.client.renderer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
+import com.mojang.math.Vector3f;
 import net.ltxprogrammer.changed.Changed;
+import net.ltxprogrammer.changed.aaBackport.JomlConverter;
 import net.ltxprogrammer.changed.entity.decoration.EmittedLaser;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -13,8 +14,8 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Matrix3f;
-import org.joml.Matrix4f;
+import repack.joml.Matrix3f;
+import repack.joml.Matrix4f;
 
 import java.util.Collection;
 import java.util.List;
@@ -44,9 +45,9 @@ public class EmittedLaserRenderer extends EntityRenderer<EmittedLaser> {
         laserDirection = laserDirection.normalize();
         float pitch = (float)Math.acos(laserDirection.y);
         float yaw = (float)Math.atan2(laserDirection.z, laserDirection.x);
-        poseStack.mulPose(Axis.YP.rotationDegrees((((float)Math.PI / 2F) - yaw) * (180F / (float)Math.PI)));
+        poseStack.mulPose(Vector3f.YP.rotationDegrees((((float)Math.PI / 2F) - yaw) * (180F / (float)Math.PI)));
         poseStack.translate(0.0D, 0.0D, zOffset);
-        poseStack.mulPose(Axis.XP.rotationDegrees(pitch * (180F / (float) Math.PI)));
+        poseStack.mulPose(Vector3f.XP.rotationDegrees(pitch * (180F / (float) Math.PI)));
         int i = 1;
         int red = 255;//64 + (int)(f8 * 191.0F);
         int green = 255;//32 + (int)(f8 * 191.0F);
@@ -78,8 +79,8 @@ public class EmittedLaserRenderer extends EntityRenderer<EmittedLaser> {
                 bufferSource.getBuffer(BEAM_RENDER_HIGHLIGHT_TYPE)
         );
         PoseStack.Pose posestack$pose = poseStack.last();
-        Matrix4f pose = posestack$pose.pose();
-        Matrix3f normal = posestack$pose.normal();
+        Matrix4f pose = new JomlConverter().toJoml(posestack$pose.pose());
+        Matrix3f normal = new JomlConverter().toJoml(posestack$pose.normal());
 
         vertex(buffers, pose, normal, f19, laserLength, f20, red, green, blue, 1.0F, f30);
         vertex(buffers, pose, normal, f19, 0.0F, f20, red, green, blue, 1.0F, f29);
@@ -106,12 +107,12 @@ public class EmittedLaserRenderer extends EntityRenderer<EmittedLaser> {
 
     private static void vertex(Collection<VertexConsumer> buffers, Matrix4f pose, Matrix3f normal, float x, float y, float z, int red, int green, int blue, float u, float v) {
         for (var buffer : buffers) {
-            buffer.vertex(pose, x, y, z)
+            buffer.vertex(new JomlConverter().toMojang(pose), x, y, z)
                     .color(red, green, blue, 255)
                     .uv(u, v)
                     .overlayCoords(OverlayTexture.NO_OVERLAY)
                     .uv2(15728880)
-                    .normal(normal, 0.0F, 1.0F, 0.0F)
+                    .normal(new JomlConverter().toMojang(normal), 0.0F, 1.0F, 0.0F)
                     .endVertex();
         }
     }

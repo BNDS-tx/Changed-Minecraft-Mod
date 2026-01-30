@@ -3,6 +3,8 @@ package net.ltxprogrammer.changed.mixin.entity;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.ltxprogrammer.changed.aaBackport.EntityBackportHelper;
+import net.ltxprogrammer.changed.aaBackport.FluidUtilCompat;
 import net.ltxprogrammer.changed.ability.AbstractAbility;
 import net.ltxprogrammer.changed.ability.GrabEntityAbility;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
@@ -17,6 +19,7 @@ import net.ltxprogrammer.changed.init.ChangedAbilities;
 import net.ltxprogrammer.changed.init.ChangedAttributes;
 import net.ltxprogrammer.changed.init.ChangedTags;
 import net.ltxprogrammer.changed.init.ChangedTransfurVariants;
+import net.ltxprogrammer.changed.mixin.aaBackport.EntityBackport;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.EntityUtil;
 import net.ltxprogrammer.changed.world.LatexCoverGetter;
@@ -292,6 +295,7 @@ public abstract class EntityMixin extends net.minecraftforge.common.capabilities
             if (ability.grabbedEntity == null)
                 return;
             ability.grabbedEntity.portalEntrancePos = this.portalEntrancePos;
+//            EntityBackportHelper.setEntityPortalEntrancePos(ability.grabbedEntity, this.portalEntrancePos);
             var newEntity = ability.grabbedEntity.changeDimension(newLevel, teleporter);
             if (ability.grabbedEntity != newEntity && newEntity instanceof LivingEntity newLivingEntity)
                 ability.replaceEntityReference(newLivingEntity);
@@ -300,25 +304,52 @@ public abstract class EntityMixin extends net.minecraftforge.common.capabilities
         return entity;
     }
 
-    @WrapMethod(method = "getFluidTypeHeight", remap = false)
-    public double orGetTransfurFluidHeight(FluidType type, Operation<Double> original) {
-        var variant = ProcessTransfur.getPlayerTransfurVariant(EntityUtil.playerOrNull(asEntity()));
-        if (variant == null)
-            return original.call(type);
-        else
-            return Math.max(variant.getChangedEntity().getFluidTypeHeight(type), original.call(type));
+//    @WrapMethod(method = "getFluidTypeHeight", remap = false)
+//    public double orGetTransfurFluidHeight(FluidType type, Operation<Double> original) {
+//        var variant = ProcessTransfur.getPlayerTransfurVariant(EntityUtil.playerOrNull(asEntity()));
+//        if (variant == null)
+//            return original.call(type);
+//        else
+//            return Math.max(variant.getChangedEntity().getFluidTypeHeight(type), original.call(type));
+//    }
+
+//    @WrapMethod(method = "isInFluidType(Ljava/util/function/BiPredicate;Z)Z", remap = false)
+//    public boolean orIsTransfurInFluidType(BiPredicate<FluidType, Double> predicate, boolean forAllTypes, Operation<Boolean> original) {
+//        var variant = ProcessTransfur.getPlayerTransfurVariant(EntityUtil.playerOrNull(asEntity()));
+//        if (variant == null)
+//            return original.call(predicate, forAllTypes);
+//
+//        if (forAllTypes)
+//            return variant.getChangedEntity().isInFluidType(predicate, true) && original.call(predicate, true);
+//        else
+//            return variant.getChangedEntity().isInFluidType(predicate, false) || original.call(predicate, false);
+//    }
+
+    @Unique
+    public double orGetTransfurFluidHeight(Entity asEntity, Fluid fluid) {
+        Player player = EntityUtil.playerOrNull(asEntity);
+        var variant = ProcessTransfur.getPlayerTransfurVariant(player);
+
+        double originalHeight = FluidUtilCompat.getFluidHeight(asEntity, fluid);
+
+        if (variant == null) {
+            return originalHeight;
+        } else {
+            double variantHeight = FluidUtilCompat.getFluidHeight(variant.getChangedEntity(), fluid);
+            return Math.max(variantHeight, originalHeight);
+        }
     }
 
-    @WrapMethod(method = "isInFluidType(Ljava/util/function/BiPredicate;Z)Z", remap = false)
-    public boolean orIsTransfurInFluidType(BiPredicate<FluidType, Double> predicate, boolean forAllTypes, Operation<Boolean> original) {
+    @Unique
+    public boolean orIsTransfurInFluidType(BiPredicate<Fluid, Double> predicate, boolean forAllTypes, Operation<Boolean> original) {
         var variant = ProcessTransfur.getPlayerTransfurVariant(EntityUtil.playerOrNull(asEntity()));
         if (variant == null)
             return original.call(predicate, forAllTypes);
 
         if (forAllTypes)
-            return variant.getChangedEntity().isInFluidType(predicate, true) && original.call(predicate, true);
+            return FluidUtilCompat.isInFluidType(variant.getChangedEntity(), predicate, false) && original.call(predicate, true);
         else
-            return variant.getChangedEntity().isInFluidType(predicate, false) || original.call(predicate, false);
+            return FluidUtilCompat.isInFluidType(variant.getChangedEntity(), predicate, true) || original.call(predicate, false);
     }
 
     @WrapMethod(method = "getMaxAirSupply")

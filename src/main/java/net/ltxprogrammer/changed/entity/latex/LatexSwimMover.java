@@ -79,8 +79,8 @@ public class LatexSwimMover extends PlayerMover<LatexSwimMover.MoverInstance> {
             final LatexType expectedLatexType = getExpectedLatexType(player);
             final Vec3 center = player.getBoundingBox().getCenter();
             final BlockPos blockPos = EntityUtil.getBlock(center);
-            final BlockState blockState = player.level().getBlockState(blockPos);
-            final LatexCoverState coverState = LatexCoverState.getAt(player.level(), blockPos);
+            final BlockState blockState = player.level.getBlockState(blockPos);
+            final LatexCoverState coverState = LatexCoverState.getAt(player.level, blockPos);
             surfaceDirection = null;
             if (blockState.getBlock() instanceof WhiteLatexTransportInterface transportInterface && !transportInterface.allowTransport(blockState))
                 return;
@@ -103,14 +103,14 @@ public class LatexSwimMover extends PlayerMover<LatexSwimMover.MoverInstance> {
             AABB testHitbox = player.getBoundingBox().inflate(0.05);
             final LatexType expectedLatexType = getExpectedLatexType(player);
             final Set<Vec3> surfaces = BlockPos.betweenClosedStream(testHitbox).map(blockPos -> {
-                final BlockState blockState = player.level().getBlockState(blockPos);
-                final LatexCoverState coverState = LatexCoverState.getAt(player.level(), blockPos);
+                final BlockState blockState = player.level.getBlockState(blockPos);
+                final LatexCoverState coverState = LatexCoverState.getAt(player.level, blockPos);
                 if (blockState.getBlock() instanceof WhiteLatexTransportInterface transportInterface && !transportInterface.allowTransport(blockState))
                     return null;
                 if (!coverState.isAir() && coverState.getType() == expectedLatexType) {
                     final Vec3 center = player.getBoundingBox().getCenter();
                     AABB newHitbox = player.getBoundingBox().inflate(-0.05);
-                    var collision = coverState.getCollisionShape(LatexCoverGetter.wrap(player.level()), blockPos, CollisionContext.empty()).move((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ());
+                    var collision = coverState.getCollisionShape(LatexCoverGetter.wrap(player.level), blockPos, CollisionContext.empty()).move((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ());
                     if (!Shapes.joinIsNotEmpty(collision, Shapes.create(newHitbox), BooleanOp.AND)) {
                         double pX = center.x - blockPos.getX();
                         double pY = center.y - blockPos.getY();
@@ -138,7 +138,7 @@ public class LatexSwimMover extends PlayerMover<LatexSwimMover.MoverInstance> {
 
             ProcessTransfur.ifPlayerTransfurred(player, variant -> {
                 if (ChangedLatexTypes.WHITE_LATEX.get().isHostileTo(variant.getLatexType()))
-                    player.hurt(ChangedDamageSources.WHITE_LATEX.source(player.level().registryAccess()), 2.0f);
+                    player.hurt(ChangedDamageSources.WHITE_LATEX.source(player), 2.0f);
             }, () -> {
                 ProcessTransfur.progressTransfur(player, 4.8f, ChangedTransfurVariants.PURE_WHITE_LATEX_WOLF.get(), TransfurContext.hazard(TransfurCause.WHITE_LATEX));
             });
@@ -204,12 +204,12 @@ public class LatexSwimMover extends PlayerMover<LatexSwimMover.MoverInstance> {
             AABB testHitbox = entity.getBoundingBox().inflate(0.05);
             final LatexType expectedLatexType = getExpectedLatexType(entity);
             return BlockPos.betweenClosedStream(testHitbox).anyMatch(blockPos -> {
-                final BlockState blockState = entity.level().getBlockState(blockPos);
-                final LatexCoverState coverState = LatexCoverState.getAt(entity.level(), blockPos);
+                final BlockState blockState = entity.level.getBlockState(blockPos);
+                final LatexCoverState coverState = LatexCoverState.getAt(entity.level, blockPos);
                 if (blockState.getBlock() instanceof WhiteLatexTransportInterface transportInterface)
                     return transportInterface.allowTransport(blockState);
                 if (!coverState.isAir() && coverState.getType() == expectedLatexType) {
-                    var shape = coverState.getSwimShape(LatexCoverGetter.wrap(entity.level()), blockPos, CollisionContext.of(entity)).move((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ());
+                    var shape = coverState.getSwimShape(LatexCoverGetter.wrap(entity.level), blockPos, CollisionContext.of(entity)).move((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ());
                     return Shapes.joinIsNotEmpty(shape, Shapes.create(testHitbox), BooleanOp.AND);
                 }
 

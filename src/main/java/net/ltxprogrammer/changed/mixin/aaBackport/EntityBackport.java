@@ -1,33 +1,27 @@
-package net.ltxprogrammer.changed.mixin.entity;
+package net.ltxprogrammer.changed.mixin.aaBackport;
 
-import net.ltxprogrammer.changed.aaBackport.FluidUtilCompat;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(Entity.class)
-public interface EntityBackport {
+public abstract class EntityBackport {
 
-    @Accessor("portalEntrancePos")
-    void setPortalEntrancePos(BlockPos pos);
+    @Shadow
+    protected BlockPos portalEntrancePos;
 
-    @Accessor("portalEntrancePos")
-    BlockPos getPortalEntrancePos();
-
-    /**
-     * 自定义方法，判断实体是否在某流体中
-     */
     @Unique
-    default boolean isInFluid(Fluid fluid) {
-        Entity self = (Entity) this;
+    public void setPortalEntrancePos(BlockPos pos) {
+        this.portalEntrancePos = pos;
+    }
 
-        // 可以调用工具方法获取覆盖高度
-        double height = FluidUtilCompat.getFluidHeight(self, fluid);
-
-        // 逻辑：只要覆盖高度大于 0 即认为在流体中
-        return height > 0;
+    @Unique
+    public BlockPos getPortalEntrancePos() {
+        return this.portalEntrancePos;
     }
 }
+

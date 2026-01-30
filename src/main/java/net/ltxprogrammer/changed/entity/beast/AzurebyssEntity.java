@@ -2,6 +2,7 @@ package net.ltxprogrammer.changed.entity.beast;
 
 import net.ltxprogrammer.changed.ability.handler.DodgeAbilityInstance;
 import net.ltxprogrammer.changed.entity.*;
+import net.ltxprogrammer.changed.entity.latex.LatexType;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
@@ -9,6 +10,7 @@ import net.ltxprogrammer.changed.util.Color3;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -76,6 +78,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
 
     public static AttributeSupplier.Builder createAttributes() {
         AttributeSupplier.Builder builder = Mob.createMobAttributes();
+        builder = builder.add(ChangedAttributes.AIR_CAPACITY.get(), 60);
         builder = builder.add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 10D);
         builder = builder.add(Attributes.MOVEMENT_SPEED, 0.4);
         builder = builder.add(Attributes.ARMOR, 20);
@@ -102,6 +105,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
     }
 
     protected void setAttributes(AttributeMap attributes) {
+        Objects.requireNonNull(attributes.getInstance(ChangedAttributes.AIR_CAPACITY.get())).setBaseValue((60));
         Objects.requireNonNull(attributes.getInstance(ChangedAttributes.TRANSFUR_DAMAGE.get())).setBaseValue((10));
         Objects.requireNonNull(attributes.getInstance(Attributes.MAX_HEALTH)).setBaseValue((500));
         Objects.requireNonNull(attributes.getInstance(Attributes.FOLLOW_RANGE)).setBaseValue(64.0);
@@ -180,7 +184,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
 
     @Override
     public LatexType getLatexType() {
-        return LatexType.WHITE_LATEX;
+        return ChangedLatexTypes.WHITE_LATEX.get();
     }
 
     @Override
@@ -245,7 +249,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
 
     @Override
     public boolean isDamageSourceBlocked(@NotNull DamageSource pDamageSource) {
-        if (pDamageSource == ChangedDamageSources.ELECTROCUTION) {
+        if (pDamageSource.equals(ChangedDamageSources.ELECTROCUTION.source())) {
             return true;
         }
         return super.isDamageSourceBlocked(pDamageSource);

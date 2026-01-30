@@ -1,7 +1,7 @@
 package net.ltxprogrammer.changed.client.renderer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import com.mojang.math.Vector3f;
 import net.ltxprogrammer.changed.client.renderer.layers.ArmorStandArmorLayer;
 import net.ltxprogrammer.changed.client.renderer.model.BipedArmorStandModel;
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModelPicker;
@@ -15,13 +15,12 @@ import net.minecraft.util.Mth;
 import javax.annotation.Nullable;
 
 public class BipedArmorStandRenderer extends LivingEntityRenderer<BipedArmorStand, BipedArmorStandModel> {
-    public static final ResourceLocation DEFAULT_SKIN_LOCATION = ResourceLocation.withDefaultNamespace("textures/entity/armorstand/wood.png");
+    public static final ResourceLocation DEFAULT_SKIN_LOCATION = new ResourceLocation("textures/entity/armorstand/wood.png");
 
     public BipedArmorStandRenderer(EntityRendererProvider.Context context) {
         super(context, new BipedArmorStandModel(context.bakeLayer(BipedArmorStandModel.ARMOR_STAND)), 0.0F);
         this.addLayer(new ArmorStandArmorLayer<>(this,
-                ArmorModelPicker.basic(context.getModelSet(), BipedArmorStandModel.MODEL_SET),
-                context.getModelManager()));
+                ArmorModelPicker.basic(context.getModelSet(), BipedArmorStandModel.MODEL_SET)));
         //this.addLayer(new ItemInHandLayer<>(this, context.getItemInHandRenderer()));
         //this.addLayer(new ElytraLayer<>(this, context.getModelSet()));
         //this.addLayer(new CustomHeadLayer<>(this, context.getModelSet(), context.getItemInHandRenderer()));
@@ -32,10 +31,10 @@ public class BipedArmorStandRenderer extends LivingEntityRenderer<BipedArmorStan
     }
 
     protected void setupRotations(BipedArmorStand entity, PoseStack poseStack, float p_113802_, float p_113803_, float p_113804_) {
-        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - p_113803_));
-        float f = (float)(entity.level().getGameTime() - entity.lastHit) + p_113804_;
+        poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F - p_113803_));
+        float f = (float)(entity.level.getGameTime() - entity.lastHit) + p_113804_;
         if (f < 5.0F) {
-            poseStack.mulPose(Axis.YP.rotationDegrees(Mth.sin(f / 1.5F * (float)Math.PI) * 3.0F));
+            poseStack.mulPose(Vector3f.YP.rotationDegrees(Mth.sin(f / 1.5F * (float)Math.PI) * 3.0F));
         }
 
     }

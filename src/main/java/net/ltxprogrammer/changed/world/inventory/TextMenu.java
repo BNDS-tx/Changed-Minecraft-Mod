@@ -29,7 +29,7 @@ public abstract class TextMenu extends AbstractContainerMenu implements Updateab
 
     public TextMenu(MenuType<?> type, int id, Inventory inventory, BlockPos pos, BlockState state, TextEnterable textMenuBlockEntity) {
         super(type, id);
-        this.level = inventory.player.level();
+        this.level = inventory.player.level;
         this.player = inventory.player;
         this.blockPos = pos;
         this.blockState = state;
@@ -39,7 +39,7 @@ public abstract class TextMenu extends AbstractContainerMenu implements Updateab
 
     public TextMenu(MenuType<?> type, int id, Inventory inventory, FriendlyByteBuf extraData) {
         super(type, id);
-        this.level = inventory.player.level();
+        this.level = inventory.player.level;
         this.player = inventory.player;
         this.blockPos = null;
         this.blockState = Blocks.AIR.defaultBlockState();

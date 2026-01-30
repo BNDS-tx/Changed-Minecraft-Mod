@@ -17,7 +17,6 @@ import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
@@ -28,24 +27,15 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.HalfTransparentBlock;
-import net.minecraft.world.level.block.StainedGlassPaneBlock;
-import net.minecraftforge.client.event.ModelEvent;
+import net.minecraftforge.client.event.ModelBakeEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -55,7 +45,7 @@ import java.util.Random;
 import java.util.Set;
 
 public class AbilityRenderer implements ResourceManagerReloadListener {
-    public static final ResourceLocation ENCHANT_GLINT_LOCATION = ResourceLocation.parse("textures/misc/enchanted_item_glint.png");
+    public static final ResourceLocation ENCHANT_GLINT_LOCATION = new ResourceLocation("textures/misc/enchanted_item_glint.png");
     public static final Set<ResourceLocation> IGNORED = Sets.newHashSet(
             ChangedAbilities.SELECT_HAIRSTYLE.getId()
     );
@@ -85,18 +75,31 @@ public class AbilityRenderer implements ResourceManagerReloadListener {
         return fabulous ? Sheets.translucentCullBlockSheet() : Sheets.translucentItemSheet();
     }
 
-    public static void onRegisterModels(ModelEvent.RegisterAdditional event) {
-        for(ResourceLocation resourcelocation : ChangedRegistry.ABILITY.get().getKeys()) {
-            if (AbilityRenderer.IGNORED.contains(resourcelocation))
+//    public static void onRegisterModels(ModelEvent.RegisterAdditional event) {
+//        for(ResourceLocation resourcelocation : ChangedRegistry.ABILITY.get().getKeys()) {
+//            if (AbilityRenderer.IGNORED.contains(resourcelocation))
+//                continue;
+//
+//            ModelResourceLocation key = new ModelResourceLocation(resourcelocation, "ability");
+//            event.register(key);
+//        }
+//    }
+
+    @SubscribeEvent
+    public static void onRegisterModels(ModelBakeEvent event) {
+        for (ResourceLocation id : ChangedRegistry.ABILITY.get().getKeys()) {
+            if (AbilityRenderer.IGNORED.contains(id))
                 continue;
 
-            ModelResourceLocation key = new ModelResourceLocation(resourcelocation, "ability");
-            event.register(key);
+            ModelResourceLocation model = new ModelResourceLocation(id, "ability");
+
+            // 强制请求模型（否则不会加载）
+            event.getModelManager().getModel(model);
         }
     }
 
     public void renderModelLists(BakedModel model, AbstractAbilityInstance abilityInstance, int packedLight, int packedOverlay, PoseStack poseStack, VertexConsumer buffer, float redMul, float greenMul, float blueMul, float alpha) {
-        RandomSource random = RandomSource.create();
+        Random random = new Random();
         long seed = 42L;
 
         for(Direction direction : Direction.values()) {
@@ -108,7 +111,7 @@ public class AbilityRenderer implements ResourceManagerReloadListener {
         this.renderQuadList(poseStack, buffer, model.getQuads(null, null, random), abilityInstance, packedLight, packedOverlay, redMul, greenMul, blueMul, alpha);
     }
 
-    public void render(AbstractAbilityInstance abilityInstance, ItemDisplayContext transformType, boolean leftHand, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay, BakedModel model, float redMul, float greenMul, float blueMul, float alpha) {
+    public void render(AbstractAbilityInstance abilityInstance, ItemTransforms.TransformType transformType, boolean leftHand, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay, BakedModel model, float redMul, float greenMul, float blueMul, float alpha) {
         poseStack.pushPose();
 
         model = net.minecraftforge.client.ForgeHooksClient.handleCameraTransforms(poseStack, model, transformType, leftHand);
@@ -170,32 +173,32 @@ public class AbilityRenderer implements ResourceManagerReloadListener {
         return model;
     }
 
-    public void renderStatic(AbstractAbilityInstance abilityInstance, ItemDisplayContext transformType, int packedLight, int packedOverlay, PoseStack poseStack, MultiBufferSource bufferSource, int id) {
+    public void renderStatic(AbstractAbilityInstance abilityInstance, ItemTransforms.TransformType transformType, int packedLight, int packedOverlay, PoseStack poseStack, MultiBufferSource bufferSource, int id) {
         this.renderStatic(null, abilityInstance, transformType, false, poseStack, bufferSource, null, packedLight, packedOverlay, id);
     }
 
-    public void renderStatic(@Nullable LivingEntity entity, AbstractAbilityInstance abilityInstance, ItemDisplayContext transformType, boolean leftHand, PoseStack poseStack, MultiBufferSource bufferSource, @Nullable Level level, int packedLight, int packedOverlay, int id) {
+    public void renderStatic(@Nullable LivingEntity entity, AbstractAbilityInstance abilityInstance, ItemTransforms.TransformType transformType, boolean leftHand, PoseStack poseStack, MultiBufferSource bufferSource, @Nullable Level level, int packedLight, int packedOverlay, int id) {
         BakedModel model = this.getModel(abilityInstance, level, entity, id);
         this.render(abilityInstance, transformType, leftHand, poseStack, bufferSource, packedLight, packedOverlay, model, 1.0f, 1.0f, 1.0f, 1.0f);
     }
 
-    public void renderGuiAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y) {
-        this.renderGuiAbility(graphics, abilityInstance, x, y, 16,1.0f, false, this.getModel(abilityInstance, null, null, 0));
+    public void renderGuiAbility(AbstractAbilityInstance abilityInstance, int x, int y) {
+        this.renderGuiAbility(abilityInstance, x, y, 16,1.0f, false, this.getModel(abilityInstance, null, null, 0));
     }
 
-    public void renderGuiAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y, int scale) {
-        this.renderGuiAbility(graphics, abilityInstance, x, y, scale, 1.0f, false, this.getModel(abilityInstance, null, null, 0));
+    public void renderGuiAbility(AbstractAbilityInstance abilityInstance, int x, int y, int scale) {
+        this.renderGuiAbility(abilityInstance, x, y, scale, 1.0f, false, this.getModel(abilityInstance, null, null, 0));
     }
 
-    public void renderGuiAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha) {
-        this.renderGuiAbility(graphics, abilityInstance, x, y, scale, alpha, false, this.getModel(abilityInstance, null, null, 0));
+    public void renderGuiAbility(AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha) {
+        this.renderGuiAbility(abilityInstance, x, y, scale, alpha, false, this.getModel(abilityInstance, null, null, 0));
     }
 
-    public void renderGuiAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow) {
-        this.renderGuiAbility(graphics, abilityInstance, x, y, scale, alpha, shadow, this.getModel(abilityInstance, null, null, 0));
+    public void renderGuiAbility(AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow) {
+        this.renderGuiAbility(abilityInstance, x, y, scale, alpha, shadow, this.getModel(abilityInstance, null, null, 0));
     }
 
-    protected void renderGuiAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow, BakedModel model) {
+    protected void renderGuiAbility(AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow, BakedModel model) {
         this.textureManager.getTexture(TextureAtlas.LOCATION_BLOCKS).setFilter(false, false);
         RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
         RenderSystem.enableBlend();
@@ -204,6 +207,7 @@ public class AbilityRenderer implements ResourceManagerReloadListener {
         modelViewStack.pushPose();
         modelViewStack.translate((double)x, (double)y, (double)(100.0F + this.blitOffset));
         modelViewStack.translate(scale * 0.5D, scale * 0.5D, 0.0D);
+        PoseStack poseStack = new PoseStack();
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
         boolean flatLight = !model.usesBlockLight();
         if (flatLight) {
@@ -217,7 +221,7 @@ public class AbilityRenderer implements ResourceManagerReloadListener {
             modelViewStack.scale(1.0F, -1.0F, 1.0F);
             modelViewStack.scale(scale, scale, scale);
             RenderSystem.applyModelViewMatrix();
-            this.render(abilityInstance, ItemDisplayContext.GUI, false, graphics.pose(), bufferSource, 0, OverlayTexture.NO_OVERLAY, model, 0.0f, 0.0f, 0.0f, alpha * 0.5F);
+            this.render(abilityInstance, ItemTransforms.TransformType.GUI, false, poseStack, bufferSource, 0, OverlayTexture.NO_OVERLAY, model, 0.0f, 0.0f, 0.0f, alpha * 0.5F);
             bufferSource.endBatch();
 
             modelViewStack.popPose();
@@ -226,8 +230,8 @@ public class AbilityRenderer implements ResourceManagerReloadListener {
         modelViewStack.scale(1.0F, -1.0F, 1.0F);
         modelViewStack.scale(scale, scale, scale);
         RenderSystem.applyModelViewMatrix();
-        graphics.setColor(1.0F, 1.0F, 1.0F, alpha);
-        this.render(abilityInstance, ItemDisplayContext.GUI, false, graphics.pose(), bufferSource, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, model, 1.0f, 1.0f, 1.0f, alpha);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
+        this.render(abilityInstance, ItemTransforms.TransformType.GUI, false, poseStack, bufferSource, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, model, 1.0f, 1.0f, 1.0f, alpha);
 
         bufferSource.endBatch();
         RenderSystem.enableDepthTest();
@@ -239,60 +243,60 @@ public class AbilityRenderer implements ResourceManagerReloadListener {
         RenderSystem.applyModelViewMatrix();
     }
 
-    public void renderAndDecorateAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y) {
-        this.tryRenderGuiAbility(graphics, Minecraft.getInstance().player, abilityInstance, x, y, 16, 1.0f, false, 0);
+    public void renderAndDecorateAbility(AbstractAbilityInstance abilityInstance, int x, int y) {
+        this.tryRenderGuiAbility(Minecraft.getInstance().player, abilityInstance, x, y, 16, 1.0f, false, 0);
     }
 
-    public void renderAndDecorateAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y, int scale) {
-        this.tryRenderGuiAbility(graphics, Minecraft.getInstance().player, abilityInstance, x, y, scale, 1.0f, false, 0);
+    public void renderAndDecorateAbility(AbstractAbilityInstance abilityInstance, int x, int y, int scale) {
+        this.tryRenderGuiAbility(Minecraft.getInstance().player, abilityInstance, x, y, scale, 1.0f, false, 0);
     }
 
-    public void renderAndDecorateAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha) {
-        this.tryRenderGuiAbility(graphics, Minecraft.getInstance().player, abilityInstance, x, y, scale, 1.0f, false, 0);
+    public void renderAndDecorateAbility(AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha) {
+        this.tryRenderGuiAbility(Minecraft.getInstance().player, abilityInstance, x, y, scale, 1.0f, false, 0);
     }
 
-    public void renderAndDecorateAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow) {
-        this.tryRenderGuiAbility(graphics, Minecraft.getInstance().player, abilityInstance, x, y, scale, alpha, shadow, 0);
+    public void renderAndDecorateAbility(AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow) {
+        this.tryRenderGuiAbility(Minecraft.getInstance().player, abilityInstance, x, y, scale, alpha, shadow, 0);
     }
 
-    public void renderAndDecorateAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow, int id) {
-        this.tryRenderGuiAbility(graphics, Minecraft.getInstance().player, abilityInstance, x, y, scale, alpha, shadow, id);
+    public void renderAndDecorateAbility(AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow, int id) {
+        this.tryRenderGuiAbility(Minecraft.getInstance().player, abilityInstance, x, y, scale, alpha, shadow, id);
     }
 
-    public void renderAndDecorateAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow, int id, int zOffset) {
-        this.tryRenderGuiAbility(graphics, Minecraft.getInstance().player, abilityInstance, x, y, scale, alpha, shadow, id, zOffset);
+    public void renderAndDecorateAbility(AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow, int id, int zOffset) {
+        this.tryRenderGuiAbility(Minecraft.getInstance().player, abilityInstance, x, y, scale, alpha, shadow, id, zOffset);
     }
 
-    public void renderAndDecorateFakeAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y) {
-        this.tryRenderGuiAbility(graphics, null, abilityInstance, x, y, 16, 1.0f, false, 0);
+    public void renderAndDecorateFakeAbility(AbstractAbilityInstance abilityInstance, int x, int y) {
+        this.tryRenderGuiAbility(null, abilityInstance, x, y, 16, 1.0f, false, 0);
     }
 
-    public void renderAndDecorateFakeAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y, int scale) {
-        this.tryRenderGuiAbility(graphics, null, abilityInstance, x, y, scale, 1.0f, false, 0);
+    public void renderAndDecorateFakeAbility(AbstractAbilityInstance abilityInstance, int x, int y, int scale) {
+        this.tryRenderGuiAbility(null, abilityInstance, x, y, scale, 1.0f, false, 0);
     }
 
-    public void renderAndDecorateFakeAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha) {
-        this.tryRenderGuiAbility(graphics, null, abilityInstance, x, y, scale, alpha, false, 0);
+    public void renderAndDecorateFakeAbility(AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha) {
+        this.tryRenderGuiAbility(null, abilityInstance, x, y, scale, alpha, false, 0);
     }
 
-    public void renderAndDecorateFakeAbility(GuiGraphics graphics, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow) {
-        this.tryRenderGuiAbility(graphics, null, abilityInstance, x, y, scale, alpha, shadow, 0);
+    public void renderAndDecorateFakeAbility(AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow) {
+        this.tryRenderGuiAbility(null, abilityInstance, x, y, scale, alpha, shadow, 0);
     }
 
-    public void renderAndDecorateAbility(GuiGraphics graphics, LivingEntity entity, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow, int id) {
-        this.tryRenderGuiAbility(graphics, entity, abilityInstance, x, y, scale, alpha, shadow, id);
+    public void renderAndDecorateAbility(LivingEntity entity, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow, int id) {
+        this.tryRenderGuiAbility(entity, abilityInstance, x, y, scale, alpha, shadow, id);
     }
 
-    private void tryRenderGuiAbility(GuiGraphics graphics, @Nullable LivingEntity entity, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow, int id) {
-        this.tryRenderGuiAbility(graphics, entity, abilityInstance, x, y, scale, alpha, shadow, id, 0);
+    private void tryRenderGuiAbility(@Nullable LivingEntity entity, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow, int id) {
+        this.tryRenderGuiAbility(entity, abilityInstance, x, y, scale, alpha, shadow, id, 0);
     }
 
-    private void tryRenderGuiAbility(GuiGraphics graphics, @Nullable LivingEntity entity, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow, int id, int zOffset) {
+    private void tryRenderGuiAbility(@Nullable LivingEntity entity, AbstractAbilityInstance abilityInstance, int x, int y, int scale, float alpha, boolean shadow, int id, int zOffset) {
         BakedModel model = this.getModel(abilityInstance, null, entity, id);
         this.blitOffset = model.isGui3d() ? this.blitOffset + 50.0F + (float)zOffset : this.blitOffset + 50.0F;
 
         try {
-            this.renderGuiAbility(graphics, abilityInstance, x, y, scale, alpha, shadow, model);
+            this.renderGuiAbility(abilityInstance, x, y, scale, alpha, shadow, model);
         } catch (Throwable throwable) {
             CrashReport crashreport = CrashReport.forThrowable(throwable, "Rendering ability");
             CrashReportCategory crashreportcategory = crashreport.addCategory("Ability being rendered");
@@ -314,16 +318,16 @@ public class AbilityRenderer implements ResourceManagerReloadListener {
         this.blitOffset = model.isGui3d() ? this.blitOffset - 50.0F - (float)zOffset : this.blitOffset - 50.0F;
     }
 
-    public void renderGuiAbilityDecorations(GuiGraphics graphics, Font font, AbstractAbilityInstance abilityInstance, int x, int y) {
-        this.renderGuiAbilityDecorations(graphics, font, abilityInstance, x, y, null);
+    public void renderGuiAbilityDecorations(Font font, AbstractAbilityInstance abilityInstance, int x, int y) {
+        this.renderGuiAbilityDecorations(font, abilityInstance, x, y, null);
     }
 
-    public void renderGuiAbilityDecorations(GuiGraphics graphics, Font font, AbstractAbilityInstance abilityInstance, int x, int y, @Nullable String text) {
+    public void renderGuiAbilityDecorations(Font font, AbstractAbilityInstance abilityInstance, int x, int y, @Nullable String text) {
         PoseStack posestack = new PoseStack();
         if (text != null) {
             posestack.translate(0.0D, 0.0D, (double)(this.blitOffset + 200.0F));
             MultiBufferSource.BufferSource multibuffersource$buffersource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
-            graphics.drawString(font, text, x + 19 - 2 - font.width(text), y + 6 + 3, 16777215, true);
+            font.drawInBatch(text, (float)(x + 19 - 2 - font.width(text)), (float)(y + 6 + 3), 16777215, true, posestack.last().pose(), multibuffersource$buffersource, false, 0, 15728880);
             multibuffersource$buffersource.endBatch();
         }
     }

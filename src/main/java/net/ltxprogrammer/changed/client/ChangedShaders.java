@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.datafixers.util.Pair;
+import com.mojang.math.Vector3f;
 import net.ltxprogrammer.changed.Changed;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.GameRenderer;
@@ -15,7 +16,6 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceProvider;
-import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
 import java.io.IOException;

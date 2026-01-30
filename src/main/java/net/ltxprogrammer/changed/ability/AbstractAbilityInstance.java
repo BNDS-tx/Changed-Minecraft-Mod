@@ -6,6 +6,7 @@ import net.ltxprogrammer.changed.network.packet.AbilityPayloadPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -50,7 +51,7 @@ public abstract class AbstractAbilityInstance {
             if (level != null && level.isClientSide)
                 return getName.get();
             else
-                return Component.empty();
+                return TextComponent.EMPTY;
         }
 
         public boolean isDown(Level level) {

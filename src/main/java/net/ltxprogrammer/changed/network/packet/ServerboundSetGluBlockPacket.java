@@ -3,9 +3,11 @@ package net.ltxprogrammer.changed.network.packet;
 import net.ltxprogrammer.changed.block.entity.GluBlockEntity;
 import net.ltxprogrammer.changed.init.ChangedRegistry;
 import net.ltxprogrammer.changed.world.features.structures.facility.Zone;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.network.NetworkEvent;
@@ -54,7 +56,7 @@ public class ServerboundSetGluBlockPacket implements ChangedPacket {
     public CompletableFuture<Void> handle(NetworkEvent.Context context, CompletableFuture<Level> levelFuture, Executor sidedExecutor) {
         if (context.getDirection().getReceptionSide() == LogicalSide.SERVER) {
             if (!context.getSender().canUseGameMasterBlocks()) {
-                context.getSender().sendSystemMessage(Component.translatable("advMode.notAllowed"));
+                context.getSender().sendMessage(new TranslatableComponent("advMode.notAllowed"), Util.NIL_UUID);
                 return CompletableFuture.failedFuture(new IllegalArgumentException("Sender cannot use game master blocks"));
             }
 

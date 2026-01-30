@@ -16,7 +16,7 @@ import net.ltxprogrammer.changed.util.Cacheable;
 import net.ltxprogrammer.changed.util.EntityUtil;
 import net.ltxprogrammer.changed.util.ResourceUtil;
 import net.ltxprogrammer.changed.world.inventory.AccessoryAccessMenu;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -79,7 +79,7 @@ public class AccessoryEntities extends SimplePreparableReloadListener<List<Pair<
 
             final var slotsAfter = slots.getSlotTypes().collect(Collectors.toSet());
 
-            if (!entity.level().isClientSide) {
+            if (!entity.level.isClientSide) {
                 Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entity),
                         new AccessorySyncPacket(entity.getId(), slots));
 
@@ -103,11 +103,11 @@ public class AccessoryEntities extends SimplePreparableReloadListener<List<Pair<
         List<Pair<RegistryElementPredicate<EntityType<?>>, AccessorySlotType>> working = new ArrayList<>();
 
         root.getAsJsonArray("entities").forEach(entity -> {
-            final var predicate = RegistryElementPredicate.parseString(ForgeRegistries.ENTITY_TYPES, entity.getAsString());
+            final var predicate = RegistryElementPredicate.parseString(ForgeRegistries.ENTITIES, entity.getAsString());
             predicate.throwIfMissing();
 
             root.getAsJsonArray("slots").forEach(slot -> {
-                working.add(Pair.of(predicate, ChangedRegistry.ACCESSORY_SLOTS.get().getValue(ResourceLocation.parse(slot.getAsString()))));
+                working.add(Pair.of(predicate, ChangedRegistry.ACCESSORY_SLOTS.get().getValue(new ResourceLocation(slot.getAsString()))));
             });
         });
 
@@ -146,7 +146,7 @@ public class AccessoryEntities extends SimplePreparableReloadListener<List<Pair<
             buffer.readMap(FriendlyByteBuf::readInt, mapBuffer -> {
                 return mapBuffer.readCollection(HashSet::new, FriendlyByteBuf::readInt);
             }).forEach((key, slots) -> {
-                final EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.byId(key);
+                final EntityType<?> entityType = Registry.ENTITY_TYPE.byId(key);
                 for (var slotTypeId : slots) {
                     map.put(entityType, ChangedRegistry.ACCESSORY_SLOTS.getValue(slotTypeId));
                 }
@@ -158,7 +158,7 @@ public class AccessoryEntities extends SimplePreparableReloadListener<List<Pair<
         public void write(FriendlyByteBuf buffer) {
             var intMap = new HashMap<Integer, Set<Integer>>();
             this.map.forEach((entityType, slotType) -> {
-                intMap.computeIfAbsent(BuiltInRegistries.ENTITY_TYPE.getId(entityType), id -> new HashSet<>())
+                intMap.computeIfAbsent(Registry.ENTITY_TYPE.getId(entityType), id -> new HashSet<>())
                         .add(ChangedRegistry.ACCESSORY_SLOTS.getID(slotType));
             });
             buffer.writeMap(intMap, FriendlyByteBuf::writeInt,

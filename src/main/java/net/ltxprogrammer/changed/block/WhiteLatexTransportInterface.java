@@ -47,9 +47,9 @@ public interface WhiteLatexTransportInterface {
                 .map(grabAbility -> !grabAbility.suited && grabAbility.grabbedEntity != null).orElse(false))
             return;
 
-        ProcessTransfur.transfur(entity, entity.level(), ChangedTransfurVariants.PURE_WHITE_LATEX_WOLF.get(), false, TransfurContext.hazard(TransfurCause.WHITE_LATEX));
+        ProcessTransfur.transfur(entity, entity.level, ChangedTransfurVariants.PURE_WHITE_LATEX_WOLF.get(), false, TransfurContext.hazard(TransfurCause.WHITE_LATEX));
 
-        if (entity instanceof PlayerDataExtension ext && (!entity.level().isClientSide || UniversalDist.isLocalPlayer(entity)))
+        if (entity instanceof PlayerDataExtension ext && (!entity.level.isClientSide || UniversalDist.isLocalPlayer(entity)))
             ext.setPlayerMoverType(PlayerMover.LATEX_SWIM.get());
 
         entity.refreshDimensions();
@@ -58,7 +58,7 @@ public interface WhiteLatexTransportInterface {
         entity.playSound(ChangedSounds.ENTITY_ENTER_LATEX.get(), 1.0f, 1.0f);
         if (!UniversalDist.isClientRemotePlayer(entity)) {
             final Vec3 center = entity.position().subtract(Vec3.atLowerCornerOf(pos));
-            Vec3 surface = LatexCoverState.getAt(entity.level(), pos).findClosestSurface(center, null);
+            Vec3 surface = LatexCoverState.getAt(entity.level, pos).findClosestSurface(center, null);
             Vec3 delta = surface.subtract(center);
             final Direction closestDirection = center.equals(surface) ? null : Direction.getNearest(delta.x, delta.y, delta.z);
             final Vec3 surfaceNormal = closestDirection == null ? null : new Vec3(closestDirection.getNormal().getX(), closestDirection.getNormal().getY(), closestDirection.getNormal().getZ())
@@ -76,7 +76,7 @@ public interface WhiteLatexTransportInterface {
     static boolean isBoundingBoxInWhiteLatex(LivingEntity entity) {
         AABB testHitbox = entity.getBoundingBox().inflate(-0.05);
         return BlockPos.betweenClosedStream(testHitbox).anyMatch(blockPos -> {
-            final BlockState blockState = entity.level().getBlockState(blockPos);
+            final BlockState blockState = entity.level.getBlockState(blockPos);
             if (blockState.getBlock() instanceof WhiteLatexTransportInterface transportInterface)
                 return transportInterface.allowTransport(blockState);
 
@@ -85,7 +85,7 @@ public interface WhiteLatexTransportInterface {
     }
 
     static boolean isStandingOnLatex(LivingEntity entity) {
-        BlockPos blockPos = BlockPos.containing(entity.getPosition(1.0F));
+        BlockPos blockPos = new BlockPos(entity.getPosition(1.0F));
 
         BlockState blockAtFoot = entity.getCommandSenderWorld().getBlockState(blockPos);
 
@@ -104,13 +104,13 @@ public interface WhiteLatexTransportInterface {
                 return;
 
             if (isBoundingBoxInWhiteLatex(event.player) &&
-                    (LatexCoverState.getAt(event.player.level(), new BlockPos(event.player.getBlockX(), event.player.getBlockY(), event.player.getBlockZ()))
+                    (LatexCoverState.getAt(event.player.level, new BlockPos(event.player.getBlockX(), event.player.getBlockY(), event.player.getBlockZ()))
                             .getType() == ChangedLatexTypes.WHITE_LATEX.get()) || isStandingOnLatex(event.player)) {
                 ProcessTransfur.ifPlayerTransfurred(event.player, variant -> {
                     if (variant.getLatexType() == ChangedLatexTypes.WHITE_LATEX.get())
                         entityEnterLatex(event.player, new BlockPos(event.player.getBlockX(), event.player.getBlockY(), event.player.getBlockZ()));
                     else if (ChangedLatexTypes.WHITE_LATEX.get().isHostileTo(variant.getLatexType()))
-                        event.player.hurt(ChangedDamageSources.WHITE_LATEX.source(event.player.level().registryAccess()), 2.0f);
+                        event.player.hurt(ChangedDamageSources.WHITE_LATEX.source(event.player), 2.0f);
                 }, () -> {
                     if (ProcessTransfur.progressTransfur(event.player, 4.8f, ChangedTransfurVariants.PURE_WHITE_LATEX_WOLF.get(), TransfurContext.hazard(TransfurCause.WHITE_LATEX)))
                         entityEnterLatex(event.player, new BlockPos(event.player.getBlockX(), event.player.getBlockY(), event.player.getBlockZ()));

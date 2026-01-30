@@ -923,6 +923,9 @@
   "builtin_resources.changed:changed_pbr": "Changed PBR",
 
 
+  "item.minecraft.smithing_template.applies_to": "适用于：",
+  "item.minecraft.smithing_template.ingredients": "制造配方：",
+
   "entity.changed.azurebyss": "Azurebyss",
 
   "item.changed.azurebyss_spawn_egg": "Azurebyss 生成蛋",

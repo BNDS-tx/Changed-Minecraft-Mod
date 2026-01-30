@@ -10,7 +10,7 @@ import net.ltxprogrammer.changed.client.gui.VariantRadialScreen;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
 import net.minecraft.client.renderer.GameRenderer;
@@ -34,7 +34,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Mixin(Gui.class)
-public abstract class GuiMixin {
+public abstract class GuiMixin extends GuiComponent {
     @Final @Shadow protected Minecraft minecraft;
     @Shadow public int screenWidth;
 
@@ -43,13 +43,13 @@ public abstract class GuiMixin {
     @Shadow @Final protected static ResourceLocation WIDGETS_LOCATION;
     @Shadow public int screenHeight;
 
-    @Shadow protected abstract void renderSlot(GuiGraphics graphics, int p_168678_, int p_168679_, float p_168680_, Player p_168681_, ItemStack p_168682_, int p_168683_);
+    @Shadow protected abstract void renderSlot(int p_168678_, int p_168679_, float p_168680_, Player p_168681_, ItemStack p_168682_, int p_168683_);
 
     @Unique private static final ResourceLocation GUI_LATEX_HEARTS = Changed.modResource("textures/gui/latex_hearts.png");
     @Unique private static final ResourceLocation LATEX_INVENTORY_LOCATION = Changed.modResource("textures/gui/latex_inventory.png");
 
     @Inject(method = "renderHeart", at = @At("HEAD"), cancellable = true)
-    private void renderHeart(GuiGraphics graphics, Gui.HeartType type, int x, int y, int texY, boolean blinking, boolean half, CallbackInfo callback) {
+    private void renderHeart(PoseStack pose, Gui.HeartType type, int x, int y, int texY, boolean blinking, boolean half, CallbackInfo callback) {
         if (!Changed.config.client.useGoopyHearts.get())
             return;
         if (type != Gui.HeartType.CONTAINER && type != Gui.HeartType.NORMAL)
@@ -61,17 +61,19 @@ public abstract class GuiMixin {
             ProcessTransfur.ifPlayerTransfurred(player, variant -> {
                 var colors = VariantRadialScreen.getColors(variant);
                 var color = type == Gui.HeartType.NORMAL ? colors.background() : colors.foreground();
-                graphics.setColor(color.red(), color.green(), color.blue(), 1);
-                graphics.blit(GUI_LATEX_HEARTS, x, y, type.getX(half, blinking), texY, 9, 9);
-                graphics.setColor(1, 1, 1, 1);
-                graphics.blit(GUI_LATEX_HEARTS, x, y, type.getX(half, blinking), texY + 9, 9, 9);
+                RenderSystem.setShaderTexture(0, GUI_LATEX_HEARTS);
+                RenderSystem.setShaderColor(color.red(), color.green(), color.blue(), 1);
+                this.blit(pose, x, y, type.getX(half, blinking), texY, 9, 9);
+                RenderSystem.setShaderColor(1, 1, 1, 1);
+                this.blit(pose, x, y, type.getX(half, blinking), texY + 9, 9, 9);
+                RenderSystem.setShaderTexture(0, Gui.GUI_ICONS_LOCATION);
                 callback.cancel();
             });
         }
     }
 
     @Inject(method = "renderEffects", at = @At("HEAD"), cancellable = true)
-    protected void renderEffects(GuiGraphics graphics, CallbackInfo callback) {
+    protected void renderEffects(PoseStack poseStack, CallbackInfo callback) {
         if (!Changed.config.client.useGoopyInventory.get())
             return;
         ProcessTransfur.ifPlayerTransfurred(this.minecraft.player, variant -> {
@@ -95,12 +97,14 @@ public abstract class GuiMixin {
                 int k1 = 0;
                 MobEffectTextureManager mobeffecttexturemanager = this.minecraft.getMobEffectTextures();
                 List<Runnable> list = Lists.newArrayListWithExpectedSize(collection.size());
+                RenderSystem.setShaderTexture(0, LATEX_INVENTORY_LOCATION);
 
                 for (MobEffectInstance mobeffectinstance : Ordering.natural().reverse().sortedCopy(collection)) {
                     MobEffect mobeffect = mobeffectinstance.getEffect();
-                    var renderer = net.minecraftforge.client.extensions.common.IClientMobEffectExtensions.of(mobeffectinstance);
-                    if (!renderer.isVisibleInGui(mobeffectinstance)) continue;
+                    net.minecraftforge.client.EffectRenderer renderer = net.minecraftforge.client.RenderProperties.getEffectRenderer(mobeffectinstance);
+                    if (!renderer.shouldRenderHUD(mobeffectinstance)) continue;
                     // Rebind in case previous renderHUDEffect changed texture
+                    RenderSystem.setShaderTexture(0, LATEX_INVENTORY_LOCATION);
                     if (mobeffectinstance.showIcon()) {
                         int i = this.screenWidth;
                         int j = 1;
@@ -117,37 +121,38 @@ public abstract class GuiMixin {
                             j += 26;
                         }
 
-                        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+                        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                         float f = 1.0F;
                         if (mobeffectinstance.isAmbient()) {
-                            graphics.blit(LATEX_INVENTORY_LOCATION, i, j, 165 + 512, 166, 24, 24, 768, 256);
-                            graphics.setColor(colorPair.background().red(), colorPair.background().green(), colorPair.background().blue(), 1.0F);
-                            graphics.blit(LATEX_INVENTORY_LOCATION, i, j, 165, 166, 24, 24, 768, 256);
+                            blit(poseStack, i, j, 165 + 512, 166, 24, 24, 768, 256);
+                            RenderSystem.setShaderColor(colorPair.background().red(), colorPair.background().green(), colorPair.background().blue(), 1.0F);
+                            blit(poseStack, i, j, 165, 166, 24, 24, 768, 256);
                         } else {
-                            graphics.blit(LATEX_INVENTORY_LOCATION, i, j, 141 + 512, 166, 24, 24, 768, 256);
-                            graphics.setColor(colorPair.background().red(), colorPair.background().green(), colorPair.background().blue(), 1.0F);
-                            graphics.blit(LATEX_INVENTORY_LOCATION, i, j, 141, 166, 24, 24, 768, 256);
+                            blit(poseStack, i, j, 141 + 512, 166, 24, 24, 768, 256);
+                            RenderSystem.setShaderColor(colorPair.background().red(), colorPair.background().green(), colorPair.background().blue(), 1.0F);
+                            blit(poseStack, i, j, 141, 166, 24, 24, 768, 256);
                             if (mobeffectinstance.getDuration() <= 200) {
                                 int k = 10 - mobeffectinstance.getDuration() / 20;
                                 f = Mth.clamp((float) mobeffectinstance.getDuration() / 10.0F / 5.0F * 0.5F, 0.0F, 0.5F) + Mth.cos((float) mobeffectinstance.getDuration() * (float) Math.PI / 5.0F) * Mth.clamp((float) k / 10.0F * 0.25F, 0.0F, 0.25F);
                             }
                         }
-                        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+                        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
                         TextureAtlasSprite textureatlassprite = mobeffecttexturemanager.get(mobeffect);
                         int l = i;
                         int i1 = j;
                         float f1 = f;
                         list.add(() -> {
-                            graphics.setColor(1.0F, 1.0F, 1.0F, f1);
-                            graphics.blit(l + 3, i1 + 3, 0, 18, 18, textureatlassprite);
+                            RenderSystem.setShaderTexture(0, textureatlassprite.atlas().location());
+                            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, f1);
+                            blit(poseStack, l + 3, i1 + 3, this.getBlitOffset(), 18, 18, textureatlassprite);
                         });
-                        renderer.renderGuiIcon(mobeffectinstance, (Gui)(Object)this, graphics, i, j, 0, f);
+                        renderer.renderHUDEffect(mobeffectinstance, this, poseStack, i, j, this.getBlitOffset(), f);
                     }
                 }
 
                 list.forEach(Runnable::run);
-                graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             }
 
             callback.cancel();
@@ -155,23 +160,25 @@ public abstract class GuiMixin {
     }
 
     @Inject(method = "renderHotbar", at = @At("HEAD"), cancellable = true)
-    protected void renderHotbar(float partialTicks, GuiGraphics graphics, CallbackInfo callback) {
+    protected void renderHotbar(float partialTicks, PoseStack pose, CallbackInfo callback) {
         ProcessTransfur.ifPlayerTransfurred(this.minecraft.player, variant -> {
             if (!variant.getItemUseMode().showHotbar) {
                 callback.cancel();
                 
                 Player player = this.getCameraPlayer();
                 if (player != null) {
-                    graphics.setColor(1.0F, 1.0F, 1.0F, 0.25F);
+                    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 0.25F);
                     RenderSystem.setShader(GameRenderer::getPositionTexShader);
-                    graphics.blit(WIDGETS_LOCATION, (this.screenWidth / 2) - 91, this.screenHeight - 22, 0, 0, 182, 22);
+                    RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
+                    this.setBlitOffset(-90);
+                    this.blit(pose, (this.screenWidth / 2) - 91, this.screenHeight - 22, 0, 0, 182, 22);
                 }
             }
         });
     }
 
-    @Inject(method = "renderSelectedItemName(Lnet/minecraft/client/gui/GuiGraphics;I)V", at = @At("HEAD"), cancellable = true, remap = false)
-    public void renderSelectedItemName(GuiGraphics graphics, int yShift, CallbackInfo callback) {
+    @Inject(method = "renderSelectedItemName", at = @At("HEAD"), cancellable = true)
+    public void renderSelectedItemName(PoseStack pose, CallbackInfo callback) {
         ProcessTransfur.ifPlayerTransfurred(this.minecraft.player, variant -> {
             if (!variant.getItemUseMode().showHotbar)
                 callback.cancel();

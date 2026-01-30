@@ -1,16 +1,19 @@
 package net.ltxprogrammer.changed.datagen.ability_tree;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
 import net.ltxprogrammer.changed.ability.tree.AbilityTree;
 import net.ltxprogrammer.changed.data.RegistryElementPredicate;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
-import net.minecraft.data.CachedOutput;
+import net.minecraft.data.DataGenerator;
 import net.minecraft.data.DataProvider;
-import net.minecraft.data.PackOutput;
+import net.minecraft.data.HashCache;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,12 +23,82 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class AbilityTreeProvider implements DataProvider {
 
-    protected final PackOutput output;
+//    protected final PackOutput output;
+//    protected final String modid;
+//    private final Map<ResourceLocation, AbilityTreeBuilder> treeBuilders = new HashMap<>();
+//
+//    public AbilityTreeProvider(PackOutput output, String modid) {
+//        this.output = output;
+//        this.modid = modid;
+//    }
+//
+//    protected abstract void addTrees();
+//
+//    protected AbilityTreeBuilder addTree(ResourceLocation loc, List<RegistryElementPredicate<TransfurVariant<?>>> variants){
+//        return treeBuilders.computeIfAbsent(loc, l -> new AbilityTreeBuilder(variants));
+//    }
+//
+//    @Override
+//    public @NotNull CompletableFuture<?> run(@NotNull CachedOutput cache) {
+//        addTrees();
+//
+//        List<CompletableFuture<?>> futures = new ArrayList<>();
+//
+//        Path outFolder = output.getOutputFolder(), path;
+//        AbilityTree tree;
+//        JsonElement json;
+//        for (var entry : treeBuilders.entrySet()) {
+//            ResourceLocation loc = entry.getKey();
+//            tree = entry.getValue().build(loc);
+//
+//            path = outFolder.resolve("data/" + modid + "/ability_trees/" + loc.getPath() + ".json");
+//
+//            json = AbilityTree.CODEC.encodeStart(JsonOps.INSTANCE, tree)
+//                    .result()
+//                    .orElseThrow(() -> new IllegalStateException("Failed to encode AbilityTree: " + loc));
+//
+//            futures.add(DataProvider.saveStable(cache, json, path));
+//        }
+//
+//        return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
+//    }
+//
+//    @Override
+//    public @NotNull String getName() {
+//        return "Ability Tree Provider";
+//    }
+//
+//    public static final class AbilityTreeBuilder {
+//
+//        private final List<RegistryElementPredicate<TransfurVariant<?>>> variants;
+//        private final Map<ResourceLocation, AbilityTree.Node> nodes = new HashMap<>();
+//
+//        private AbilityTreeBuilder(List<RegistryElementPredicate<TransfurVariant<?>>> variants){
+//            this.variants = variants;
+//        }
+//
+//        public AbilityTreeBuilder withNode(ResourceLocation loc, AbilityTree.Node node){
+//            nodes.put(loc, node);
+//            return this;
+//        }
+//
+//        private AbilityTree build(ResourceLocation loc){
+//            AbilityTree tree = new AbilityTree(variants, nodes);
+//            tree.setTreeLocation(loc);
+//            return tree;
+//        }
+//    }
+
+    // 1.18.2 使用 DataGenerator 替代 PackOutput
+    protected final DataGenerator generator;
     protected final String modid;
     private final Map<ResourceLocation, AbilityTreeBuilder> treeBuilders = new HashMap<>();
 
-    public AbilityTreeProvider(PackOutput output, String modid) {
-        this.output = output;
+    // 定义 Gson 用于 JSON 格式化输出
+    private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().disableHtmlEscaping().create();
+
+    public AbilityTreeProvider(DataGenerator generator, String modid) {
+        this.generator = generator;
         this.modid = modid;
     }
 
@@ -36,28 +109,27 @@ public abstract class AbilityTreeProvider implements DataProvider {
     }
 
     @Override
-    public @NotNull CompletableFuture<?> run(@NotNull CachedOutput cache) {
+    public void run(@NotNull HashCache cache) throws IOException { // 1.18.2 返回 void，抛出 IOException
         addTrees();
 
-        List<CompletableFuture<?>> futures = new ArrayList<>();
-
-        Path outFolder = output.getOutputFolder(), path;
+        // 1.18.2 从 generator 获取路径
+        Path outFolder = generator.getOutputFolder();
         AbilityTree tree;
         JsonElement json;
+
         for (var entry : treeBuilders.entrySet()) {
             ResourceLocation loc = entry.getKey();
             tree = entry.getValue().build(loc);
 
-            path = outFolder.resolve("data/" + modid + "/ability_trees/" + loc.getPath() + ".json");
+            Path path = outFolder.resolve("data/" + modid + "/ability_trees/" + loc.getPath() + ".json");
 
             json = AbilityTree.CODEC.encodeStart(JsonOps.INSTANCE, tree)
                     .result()
                     .orElseThrow(() -> new IllegalStateException("Failed to encode AbilityTree: " + loc));
 
-            futures.add(DataProvider.saveStable(cache, json, path));
+            // 1.18.2 使用 DataProvider.save (同步方法)
+            DataProvider.save(GSON, cache, json, path);
         }
-
-        return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
     }
 
     @Override

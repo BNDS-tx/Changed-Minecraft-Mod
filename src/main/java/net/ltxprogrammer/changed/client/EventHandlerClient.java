@@ -33,7 +33,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -60,7 +59,7 @@ public class EventHandlerClient {
         var entityGrabAbility = AbstractAbility.getAbilityInstance(entity, ChangedAbilities.GRAB_ENTITY_ABILITY.get());
         if (entityGrabAbility != null && !entityGrabAbility.shouldRenderLatex())
             return false;
-        if (entity.isDeadOrDying() && entity.getLastDamageSource() != null && entity.getLastDamageSource().is(ChangedTags.DamageTypes.IS_TRANSFUR))
+        if (entity.isDeadOrDying() && entity.getLastDamageSource() != null && ChangedTags.DamageTypes.isTransfur(entity.getLastDamageSource()))
             return false;
         if (entity.vehicle instanceof SeatEntity seat && seat.shouldSeatedBeInvisible())
             return false;
@@ -78,11 +77,11 @@ public class EventHandlerClient {
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public void onRenderPlayerPre(RenderPlayerEvent.Pre event) {
-        Player player = event.getEntity();
+        Player player = event.getPlayer();
 
         if (event.isCanceled())
             return;
-        if (!this.shouldEntityBeRendered(event.getEntity())) {
+        if (!this.shouldEntityBeRendered(event.getEntityLiving())) {
             event.setCanceled(true);
             return;
         }
@@ -108,26 +107,34 @@ public class EventHandlerClient {
         Minecraft mc = Minecraft.getInstance();
         if(!mc.player.isRemoved()) //we need to cache this as the hand may be rendered even in the death screen.
         {
-            FormRenderHandler.lastPartialTick = event.getPartialTick();
+            FormRenderHandler.lastPartialTick = event.getPartialTicks();
         }
     }
 
-    @SubscribeEvent
-    public static void onRegisterParticles(RegisterParticleProvidersEvent event) {
-        event.registerSpriteSet(ChangedParticles.DRIPPING_LATEX.get(), LatexDripParticle.Provider::new);
-        event.registerSpriteSet(ChangedParticles.GAS.get(), GasParticle.Provider::new);
-        event.registerSpriteSet(ChangedParticles.EMOTE.get(), EmoteParticle.Provider::new);
-        event.registerSpriteSet(ChangedParticles.TSC_SWEEP_ATTACK.get(), TscSweepParticle.Provider::new);
-    }
+//    @SubscribeEvent
+//    public static void onRegisterParticles(RegisterParticleProvidersEvent event) {
+//        event.registerSpriteSet(ChangedParticles.DRIPPING_LATEX.get(), LatexDripParticle.Provider::new);
+//        event.registerSpriteSet(ChangedParticles.GAS.get(), GasParticle.Provider::new);
+//        event.registerSpriteSet(ChangedParticles.EMOTE.get(), EmoteParticle.Provider::new);
+//        event.registerSpriteSet(ChangedParticles.TSC_SWEEP_ATTACK.get(), TscSweepParticle.Provider::new);
+//    }
+//
+//    @SubscribeEvent
+//    public static void onRegisterModelRenderTypes(RegisterNamedRenderTypesEvent event) {
+//        event.register("emissive", RenderType.cutout(), RenderType.eyes(TextureAtlas.LOCATION_BLOCKS));
+//    }
 
     @SubscribeEvent
-    public static void onRegisterModelRenderTypes(RegisterNamedRenderTypesEvent event) {
-        event.register("emissive", RenderType.cutout(), RenderType.eyes(TextureAtlas.LOCATION_BLOCKS));
+    public static void onRegisterParticles(ParticleFactoryRegisterEvent event) {
+        Minecraft.getInstance().particleEngine.register(ChangedParticles.DRIPPING_LATEX.get(), LatexDripParticle.Provider::new);
+        Minecraft.getInstance().particleEngine.register(ChangedParticles.GAS.get(), GasParticle.Provider::new);
+        Minecraft.getInstance().particleEngine.register(ChangedParticles.EMOTE.get(), EmoteParticle.Provider::new);
+        Minecraft.getInstance().particleEngine.register(ChangedParticles.TSC_SWEEP_ATTACK.get(), TscSweepParticle.Provider::new);
     }
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
-    public void onRenderFog(ViewportEvent.RenderFog event) {
+    public void onRenderFog(EntityViewRenderEvent.RenderFogEvent event) {
         if (!(event.getCamera().getBlockAtCamera().getFluidState().getType() instanceof AbstractLatexFluid abstractLatexFluid)) return;
 
         event.setNearPlaneDistance(0.25F);
@@ -137,7 +144,7 @@ public class EventHandlerClient {
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
-    public void onFogColors(ViewportEvent.ComputeFogColor event) {
+    public void onFogColors(EntityViewRenderEvent.FogColors event) {
         if (!(event.getCamera().getBlockAtCamera().getFluidState().getType() instanceof AbstractLatexFluid abstractLatexFluid)) return;
 
         var color = IClientLatexTypeExtensions.of(abstractLatexFluid.getLatexType()).getColor();
@@ -148,13 +155,13 @@ public class EventHandlerClient {
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
-    public void onRespawn(ClientPlayerNetworkEvent.Clone event) {
+    public void onRespawn(ClientPlayerNetworkEvent.RespawnEvent event) {
         Changed.PACKET_HANDLER.sendToServer(QueryTransfurPacket.Builder.of(event.getNewPlayer()));
     }
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
-    public void onInputEvent(InputEvent.InteractionKeyMappingTriggered event) {
+    public void onInputEvent(InputEvent.ClickInputEvent event) {
         if (event.isAttack() || event.isUseItem()) {
             LocalPlayer localPlayer = Minecraft.getInstance().player;
 
@@ -189,8 +196,8 @@ public class EventHandlerClient {
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
-    public void onSetScreen(ScreenEvent.Opening event) {
-        if (event.getNewScreen() instanceof TitleScreen) {
+    public void onSetScreen(ScreenOpenEvent event) {
+        if (event.getScreen() instanceof TitleScreen) {
             if (GlUtil.getOpenGLVersion().contains("Mesa")) {
                 Changed.LOGGER.warn("Mesa graphics driver detected, certain visual features will be disabled");
                 Changed.config.client.renderDripParticlesWithNormal.set(false);
@@ -198,7 +205,7 @@ public class EventHandlerClient {
 
             if (Changed.config.client.showContentWarning.get()) {
                 // Comment this line out to disable the content warning screen
-                event.setNewScreen(new ContentWarningScreen());
+                event.setScreen(new ContentWarningScreen());
             }
         }
     }
@@ -219,7 +226,7 @@ public class EventHandlerClient {
     public static class ForgeEventHandler {
         @OnlyIn(Dist.CLIENT)
         @SubscribeEvent
-        public static void onNameFormat(RenderNameTagEvent event) {
+        public static void onNameFormat(RenderNameplateEvent event) {
             if (event.getEntity() instanceof ChangedEntity changedEntity && changedEntity.getUnderlyingPlayer() != null) {
                 if (!Changed.config.server.showTFNametags.get()) {
                     event.setResult(Event.Result.DENY);
@@ -240,13 +247,13 @@ public class EventHandlerClient {
 
         @SubscribeEvent
         public static void onChangedVariant(ProcessTransfur.EntityVariantAssigned.ChangedVariant event) {
-            if (event.livingEntity.level().isClientSide)
+            if (event.livingEntity.level.isClientSide)
                 return;
 
             if (event.oldVariant == event.newVariant || event.cause == null)
                 return;
 
-            final int duration = event.livingEntity.level().getGameRules().getBoolean(ChangedGameRules.RULE_DO_TRANSFUR_ANIMATION) ?
+            final int duration = event.livingEntity.level.getGameRules().getBoolean(ChangedGameRules.RULE_DO_TRANSFUR_ANIMATION) ?
                     (int)(event.cause.getDuration() * 20) : 40;
             event.livingEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, duration, 4, false, false));
 
@@ -263,26 +270,26 @@ public class EventHandlerClient {
             event.livingEntity.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, duration, 1, false, false));
         }
 
-        @SubscribeEvent
-        public static void onRenderBlockHighlight(RenderHighlightEvent.Block event) {
-            if (event.getTarget() instanceof LatexCoverHitResult)
-                event.setCanceled(true);
-
-            final var level = Minecraft.getInstance().level;
-            final var getter = LatexCoverGetter.wrap(level);
-            final var blockPos = event.getTarget().getBlockPos();
-
-            LatexCoverState state = LatexCoverState.getAt(level, blockPos);
-            if (!state.isAir() && level.getWorldBorder().isWithinBounds(blockPos)) {
-                VertexConsumer bufferBuilder = event.getMultiBufferSource().getBuffer(RenderType.lines());
-                Vec3 vec3 = event.getCamera().getPosition();
-                double d0 = vec3.x();
-                double d1 = vec3.y();
-                double d2 = vec3.z();
-
-                LevelRenderer.renderVoxelShape(event.getPoseStack(), bufferBuilder, state.getShape(getter, blockPos, CollisionContext.of(event.getCamera().getEntity())),
-                        (double)blockPos.getX() - d0, (double)blockPos.getY() - d1, (double)blockPos.getZ() - d2, 0.0F, 0.0F, 0.0F, 0.4F, false);
-            }
-        }
+//        @SubscribeEvent
+//        public static void onRenderBlockHighlight(RenderHighlightEvent.Block event) {
+//            if (event.getTarget() instanceof LatexCoverHitResult)
+//                event.setCanceled(true);
+//
+//            final var level = Minecraft.getInstance().level;
+//            final var getter = LatexCoverGetter.wrap(level);
+//            final var blockPos = event.getTarget().getBlockPos();
+//
+//            LatexCoverState state = LatexCoverState.getAt(level, blockPos);
+//            if (!state.isAir() && level.getWorldBorder().isWithinBounds(blockPos)) {
+//                VertexConsumer bufferBuilder = event.getMultiBufferSource().getBuffer(RenderType.lines());
+//                Vec3 vec3 = event.getCamera().getPosition();
+//                double d0 = vec3.x();
+//                double d1 = vec3.y();
+//                double d2 = vec3.z();
+//
+//                LevelRenderer.renderVoxelShape(event.getPoseStack(), bufferBuilder, state.getShape(getter, blockPos, CollisionContext.of(event.getCamera().getEntity())),
+//                        (double)blockPos.getX() - d0, (double)blockPos.getY() - d1, (double)blockPos.getZ() - d2, 0.0F, 0.0F, 0.0F, 0.4F, false);
+//            }
+//        }
     }
 }

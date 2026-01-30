@@ -53,7 +53,7 @@ public class LatexTippedArrowItem extends TippedArrowItem implements VariantHold
         if (event.getSource().getDirectEntity() instanceof Arrow arrow) {
             if (arrow.getPersistentData().contains(FORM_LOCATION)) {
                 final var variant = ChangedRegistry.TRANSFUR_VARIANT.get().getValue(TagUtil.getResourceLocation(arrow.getPersistentData(), FORM_LOCATION));
-                ProcessTransfur.progressTransfur(event.getEntity(), 8.0f, variant, TransfurContext.hazard(TransfurCause.GRAB_REPLICATE));
+                ProcessTransfur.progressTransfur(event.getEntityLiving(), 8.0f, variant, TransfurContext.hazard(TransfurCause.GRAB_REPLICATE));
                 arrow.remove(Entity.RemovalReason.DISCARDED);
             }
         }
@@ -92,14 +92,24 @@ public class LatexTippedArrowItem extends TippedArrowItem implements VariantHold
         return Items.ARROW;
     }
 
+//    @Override
+//    public void fillItemList(Predicate<TransfurVariant<?>> predicate, CreativeModeTab.ItemDisplayParameters parameters, CreativeModeTab.Output output) {
+//        TransfurVariant.getPublicTransfurVariants().filter(predicate).forEach(variant -> {
+//            output.accept(
+//                    Syringe.setOwner(
+//                            Syringe.setPureVariant(new ItemStack(this),
+//                                    variant.getFormId()),
+//                            UniversalDist.getLocalPlayer()));
+//        });
+//    }
+
     @Override
-    public void fillItemList(Predicate<TransfurVariant<?>> predicate, CreativeModeTab.ItemDisplayParameters parameters, CreativeModeTab.Output output) {
+    public void fillItemList(Predicate<TransfurVariant<?>> predicate, NonNullList<ItemStack> items) {
         TransfurVariant.getPublicTransfurVariants().filter(predicate).forEach(variant -> {
-            output.accept(
-                    Syringe.setOwner(
-                            Syringe.setPureVariant(new ItemStack(this),
-                                    variant.getFormId()),
-                            UniversalDist.getLocalPlayer()));
+            items.add(Syringe.setOwner(
+                    Syringe.setPureVariant(new ItemStack(this),
+                            variant.getFormId()),
+                    UniversalDist.getLocalPlayer()));
         });
     }
 }

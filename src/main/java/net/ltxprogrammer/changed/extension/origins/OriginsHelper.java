@@ -20,7 +20,7 @@ public abstract class OriginsHelper {
     }
 
     public static ResourceLocation modResource(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MODID, path);
+        return new ResourceLocation(MODID, path);
     }
 
     public static boolean doesOriginUsePlayer(Player player) {

@@ -42,7 +42,7 @@ public class QueryTransfurPacket implements ChangedPacket {
                 if (sender != null) {
                     SyncTransfurPacket.Builder builder = new SyncTransfurPacket.Builder();
                     changedForms.forEach(id -> {
-                        var entity = sender.level().getEntity(id);
+                        var entity = sender.level.getEntity(id);
                         if (entity instanceof Player player)
                             builder.addPlayer(player, false);
                     });

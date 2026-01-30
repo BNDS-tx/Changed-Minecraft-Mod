@@ -22,7 +22,7 @@ public class LatexOwnerHurtByTargetGoal<T extends ChangedEntity & TamableLatexEn
 
     public boolean canUse() {
         if (this.tameAnimal.isTame()) {
-            final LivingEntity owner = this.tameAnimal.getOwner();
+            final LivingEntity owner = (this.tameAnimal.getOwner() instanceof LivingEntity le) ? le : null;
             if (owner == null) {
                 return false;
             } else {
@@ -37,7 +37,7 @@ public class LatexOwnerHurtByTargetGoal<T extends ChangedEntity & TamableLatexEn
 
     public void start() {
         this.mob.setTarget(this.ownerLastHurtBy);
-        final LivingEntity owner = this.tameAnimal.getOwner();
+        final LivingEntity owner = (this.tameAnimal.getOwner() instanceof LivingEntity le) ? le : null;
         if (owner != null) {
             this.timestamp = owner.getLastHurtByMobTimestamp();
         }

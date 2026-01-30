@@ -95,8 +95,7 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
     public void aiStep(CallbackInfo ci) {
         var playerMover = getPlayerMover();
         if (playerMover != null) {
-            float f = Mth.clamp(0.3F + EnchantmentHelper.getSneakingSpeedBonus(this), 0.0F, 1.0F);
-            this.input.tick(this.isMovingSlowly(), f);
+            this.input.tick(this.isMovingSlowly());
             playerMover.aiStep((LocalPlayer)(Object)this, InputWrapper.from(this), LogicalSide.CLIENT);
             super.aiStep();
             ci.cancel();
@@ -104,30 +103,12 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
         }
 
         LocalPlayer player = (LocalPlayer)(Object)this;
-        if (!player.level().isClientSide) return;
+        if (!player.level.isClientSide) return;
 
         ProcessTransfur.ifPlayerTransfurred(player, variant -> {
             if (player.getAttributeBaseValue(ForgeMod.SWIM_SPEED.get()) >= 1.1F && variant.getEntityShape().isLegless() && player.isUnderWater())
                 player.setSprinting(true);
         });
-    }
-
-    @WrapOperation(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/Input;tick(ZF)V"))
-    public void adjustCrouchSpeed(Input instance, boolean movingSlowly, float crouchSpeed, Operation<Void> original) {
-        LocalPlayer player = (LocalPlayer)(Object)this;
-        ProcessTransfur.ifPlayerTransfurred(player, variant -> {
-            original.call(instance, movingSlowly, (float)(crouchSpeed * player.getAttributeValue(ChangedAttributes.SNEAK_SPEED.get())));
-        }, () -> {
-            original.call(instance, movingSlowly, crouchSpeed);
-        });
-    }
-
-    @WrapMethod(method = "canStartSprinting")
-    public boolean denySprintingOnZero(Operation<Boolean> original) {
-        LocalPlayer player = (LocalPlayer)(Object)this;
-        if (ProcessTransfur.isPlayerTransfurred(player) && player.getAttributeValue(ChangedAttributes.SPRINT_SPEED.get()) <= 0.0)
-            return false;
-        return original.call();
     }
     
     @Inject(method = "serverAiStep", at = @At("HEAD"), cancellable = true)

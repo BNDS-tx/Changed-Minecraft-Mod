@@ -5,6 +5,7 @@ import net.ltxprogrammer.changed.entity.ChangedEntity;
 import net.ltxprogrammer.changed.entity.TransfurMode;
 import net.ltxprogrammer.changed.entity.VisionType;
 import net.ltxprogrammer.changed.entity.beast.*;
+import net.ltxprogrammer.changed.entity.latex.LatexType;
 import net.ltxprogrammer.changed.entity.variant.GenderedPair;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.minecraft.world.entity.animal.AbstractGolem;
@@ -196,33 +197,6 @@ public class ChangedTransfurVariants {
 
     public static final RegistryObject<TransfurVariant<AzurebyssEntity>> AZUREBYSS_ENTITY = register("form_azurebyss_wolf",
             TransfurVariant.Builder.of(ChangedEntities.AZUREBYSS_ENTITY).absorbing()
-                    .abilities(List.of(
-                                    entityType -> ChangedAbilities.THUNDERBOLT.get(),
-                                    entityType -> ChangedAbilities.THUNDER_PATH.get(),
-                                    entityType -> ChangedAbilities.SHOCKWAVE.get(),
-                                    entityType -> ChangedAbilities.DODGE.get(),
-                                    entityType -> ChangedAbilities.UNDEATH.get()
-                            )
-                    )
-                    .transfurMode(TransfurMode.ABSORPTION)
-                    .scares(List.of(
-                                    Zombie.class,
-                                    WitherSkeleton.class,
-                                    AbstractVillager.class,
-                                    Skeleton.class,
-                                    AbstractGolem.class,
-                                    Spider.class,
-                                    Creeper.class
-                            )
-                    )
-                    .nightVision()
-                    .addAbility(ChangedAbilities.TOGGLE_NIGHT_VISION)
-                    .addAbility(ChangedAbilities.GRAB_ENTITY_ABILITY));
-
-    public static final RegistryObject<TransfurVariant<AzurebyssEntity>> AZUREBYSS_ENTITY = register("form_azurebyss_wolf",
-            TransfurVariant.Builder.of(ChangedEntities.AZUREBYSS_ENTITY).faction(LatexType.WHITE_LATEX)
-                    .reducedFall()
-                    .jumpStrength(1.5F)
                     .abilities(List.of(
                                     entityType -> ChangedAbilities.THUNDERBOLT.get(),
                                     entityType -> ChangedAbilities.THUNDER_PATH.get(),

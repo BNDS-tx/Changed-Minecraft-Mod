@@ -43,7 +43,11 @@ public interface LatexCoverGetter extends BlockGetter {
             return coverResult;
         }, (localContext) -> {
             Vec3 vec3 = localContext.getFrom().subtract(localContext.getTo());
-            return BlockHitResult.miss(localContext.getTo(), Direction.getNearest(vec3.x, vec3.y, vec3.z), BlockPos.containing(localContext.getTo()));
+            return BlockHitResult.miss(
+                    localContext.getTo(),
+                    Direction.getNearest(vec3.x, vec3.y, vec3.z),
+                    new BlockPos(localContext.getTo()) // 1.18.2 写法：直接 new BlockPos(Vec3)
+            );
         });
     }
 

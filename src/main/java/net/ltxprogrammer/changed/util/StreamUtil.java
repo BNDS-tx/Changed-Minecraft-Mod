@@ -1,17 +1,18 @@
 package net.ltxprogrammer.changed.util;
 
 import net.minecraft.Util;
-import net.minecraft.util.RandomSource;
+
 import net.minecraft.util.random.WeightedEntry;
 import net.minecraft.util.random.WeightedRandom;
 import net.minecraft.util.random.WeightedRandomList;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Stream;
 
 public class StreamUtil {
-    public static <T> Stream<T> shuffledStream(List<T> list, RandomSource random) {
+    public static <T> Stream<T> shuffledStream(List<T> list, Random random) {
         if (list.isEmpty()) {
             return Stream.empty();
         } else if (list.size() == 1) {
@@ -37,15 +38,15 @@ public class StreamUtil {
         }
     }
 
-    public static <T extends WeightedEntry> Stream<T> weightedShuffledStream(List<T> list, RandomSource random) {
+    public static <T extends WeightedEntry> Stream<T> weightedShuffledStream(List<T> list, Random random) {
         return weightedShuffledStream(list, random, WeightedRandom.getTotalWeight(list));
     }
 
-    public static <T extends WeightedEntry> Stream<T> weightedShuffledStream(WeightedRandomList<T> list, RandomSource random) {
+    public static <T extends WeightedEntry> Stream<T> weightedShuffledStream(WeightedRandomList<T> list, Random random) {
         return weightedShuffledStream(list.unwrap(), random, list.totalWeight);
     }
 
-    public static <T extends WeightedEntry> Stream<T> weightedShuffledStream(List<T> list, RandomSource random, int totalWeight) {
+    public static <T extends WeightedEntry> Stream<T> weightedShuffledStream(List<T> list, Random random, int totalWeight) {
         if (list.isEmpty() || totalWeight == 0) {
             return Stream.empty();
         } else if (list.size() == 1) {

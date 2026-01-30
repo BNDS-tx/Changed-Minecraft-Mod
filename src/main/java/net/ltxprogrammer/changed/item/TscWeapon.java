@@ -33,7 +33,7 @@ public abstract class TscWeapon extends Item implements Vanishable {
                 ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID, "Weapon modifier", attackDamage(), AttributeModifier.Operation.ADDITION));
                 builder.put(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_UUID, "Weapon modifier", attackSpeed(), AttributeModifier.Operation.ADDITION));
-                builder.put(ForgeMod.ENTITY_REACH.get(), new AttributeModifier("Weapon modifier", attackRange(), AttributeModifier.Operation.MULTIPLY_BASE));
+                builder.put(ForgeMod.ATTACK_RANGE.get(), new AttributeModifier("Weapon modifier", attackRange(), AttributeModifier.Operation.MULTIPLY_BASE));
                 return builder.build();
             }
         };
@@ -57,7 +57,7 @@ public abstract class TscWeapon extends Item implements Vanishable {
     public static void sweepWeapon(LivingEntity source, double attackRange) {
         double d0 = (double)(-Mth.sin(source.getYRot() * ((float)Math.PI / 180F))) * attackRange;
         double d1 = (double)Mth.cos(source.getYRot() * ((float)Math.PI / 180F)) * attackRange;
-        if (source.level() instanceof ServerLevel serverLevel)
+        if (source.level instanceof ServerLevel serverLevel)
             serverLevel.sendParticles(ChangedParticles.TSC_SWEEP_ATTACK.get(),
                     source.getX() + d0, source.getY(0.5D),
                     source.getZ() + d1, 0, d0, 0.0D, d1, 0.0D);

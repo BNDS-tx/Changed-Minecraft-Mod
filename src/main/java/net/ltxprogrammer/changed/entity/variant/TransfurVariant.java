@@ -23,6 +23,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.event.IModBusEvent;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -34,7 +35,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public class TransfurVariant<T extends ChangedEntity> {
+public class TransfurVariant<T extends ChangedEntity> extends ForgeRegistryEntry<TransfurVariant<?>> {
     public static final String NBT_PLAYER_ID = "changed:player_id";
     public static final ResourceLocation SPECIAL_LATEX = Changed.modResource("form_special");
     private static final List<ResourceLocation> SPECIAL_LATEX_FORMS = new ArrayList<>();
@@ -173,7 +174,7 @@ public class TransfurVariant<T extends ChangedEntity> {
         T entity = ctor.get().create(level);
         entity.setId(getNextEntId()); //to prevent ID collision
         entity.setSilent(true);
-        entity.goalSelector.removeAllGoals(goal -> true);
+        entity.goalSelector.removeAllGoals();
         return entity;
     }
 
@@ -195,11 +196,11 @@ public class TransfurVariant<T extends ChangedEntity> {
 
 
     public ChangedEntity spawnAtEntity(@NotNull LivingEntity entity) {
-        ChangedEntity newEntity = ctor.get().create(entity.level());
-        newEntity.finalizeSpawn((ServerLevelAccessor) entity.level(), entity.level().getCurrentDifficultyAt(newEntity.blockPosition()), MobSpawnType.MOB_SUMMONED, null,
+        ChangedEntity newEntity = ctor.get().create(entity.level);
+        newEntity.finalizeSpawn((ServerLevelAccessor) entity.level, entity.level.getCurrentDifficultyAt(newEntity.blockPosition()), MobSpawnType.MOB_SUMMONED, null,
                 null);
         newEntity.moveTo(entity.getX(), entity.getY(), entity.getZ(), entity.getYRot(), entity.getXRot());
-        entity.level().addFreshEntity(newEntity);
+        entity.level.addFreshEntity(newEntity);
         return newEntity;
     }
 
@@ -234,7 +235,7 @@ public class TransfurVariant<T extends ChangedEntity> {
                 var instance = ProcessTransfur.setPlayerTransfurVariant(player, this, TransfurContext.hazard(TransfurCause.GRAB_REPLICATE), 1.0f);
                 instance.willSurviveTransfur = true;
 
-                ProcessTransfur.forceNearbyToRetarget(player.level(), player);
+                ProcessTransfur.forceNearbyToRetarget(player.level, player);
 
                 ProcessTransfur.onNewlyTransfurred(IAbstractChangedEntity.forPlayer(player));
                 return IAbstractChangedEntity.forPlayer(player);
@@ -256,7 +257,7 @@ public class TransfurVariant<T extends ChangedEntity> {
             // Drop held items
             Arrays.stream(EquipmentSlot.values()).filter(slot -> slot.getType() == EquipmentSlot.Type.HAND).forEach(slot -> {
                 if (entity.getRandom().nextFloat() < 0.05f) // 5% Drop rate
-                    Block.popResource(entity.level(), entity.blockPosition(), entity.getItemBySlot(slot).copy());
+                    Block.popResource(entity.level, entity.blockPosition(), entity.getItemBySlot(slot).copy());
             });
 
             entity.discard();

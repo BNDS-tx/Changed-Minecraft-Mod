@@ -28,4 +28,9 @@ public abstract class StructurePiecesBuilderMixin implements StructurePiecesBuil
     public List<StructurePiece> getPieces() {
         return List.copyOf(pieces);
     }
+
+    @Override
+    public void clear() {
+        this.pieces.clear();
+    }
 }

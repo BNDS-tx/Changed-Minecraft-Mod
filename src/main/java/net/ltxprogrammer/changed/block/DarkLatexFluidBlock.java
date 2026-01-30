@@ -7,11 +7,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FlowingFluid;
+import net.minecraft.world.level.material.Material;
 import org.jetbrains.annotations.NotNull;
 
 public class DarkLatexFluidBlock extends AbstractLatexFluidBlock {
     public DarkLatexFluidBlock() {
-        super(ChangedFluids.DARK_LATEX, BlockBehaviour.Properties.of().replaceable().strength(100f));
+        super(ChangedFluids.DARK_LATEX, BlockBehaviour.Properties.of(Material.WATER).strength(100f));
     }
 
     @Override

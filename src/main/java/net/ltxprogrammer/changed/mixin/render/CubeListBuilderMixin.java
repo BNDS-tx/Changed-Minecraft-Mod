@@ -12,7 +12,7 @@ import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.UVPair;
 import net.minecraft.core.Direction;
-import org.joml.Vector3f;
+import repack.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -160,7 +160,7 @@ public abstract class CubeListBuilderMixin implements CubeListBuilderExtender {
 
     @Override
     public CubeListBuilderExtender addBox(float x, float y, float z, float width, float height, float depth, Set<Direction> visibleFaces) {
-        return (CubeListBuilderExtender)((CubeListBuilder)(Object)this).addBox(x, y, z, width, height, depth, visibleFaces);
+        return (CubeListBuilderExtender)((CubeListBuilder)(Object)this).addBox(x, y, z, width, height, depth);
     }
 
     @Override

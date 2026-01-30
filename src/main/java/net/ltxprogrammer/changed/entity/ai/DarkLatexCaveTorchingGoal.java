@@ -21,7 +21,7 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
@@ -42,7 +42,7 @@ public class DarkLatexCaveTorchingGoal extends MoveToBlockGoal {
     public DarkLatexCaveTorchingGoal(AbstractDarkLatexEntity entity, double speedModifier, int searchRange, int verticalSearchRange) {
         super(entity, speedModifier, searchRange, verticalSearchRange);
         this.entity = entity;
-        this.level = entity.level();
+        this.level = entity.level;
     }
 
     @Override
@@ -110,8 +110,8 @@ public class DarkLatexCaveTorchingGoal extends MoveToBlockGoal {
             this.entity.getOffhandItem().shrink(1);
 
             SoundType soundtype = Blocks.TORCH.defaultBlockState.getSoundType(level, torchPos, entity);
-            level.playSound(entity, torchPos, soundtype.getPlaceSound(), SoundSource.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
-            level.gameEvent(GameEvent.BLOCK_PLACE, torchPos, GameEvent.Context.of(entity, Blocks.TORCH.defaultBlockState));
+            level.playSound(entity.getUnderlyingPlayer(), torchPos, soundtype.getPlaceSound(), SoundSource.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
+            level.gameEvent(GameEvent.BLOCK_PLACE, torchPos);
 
             placed = true;
             this.nextStartTick = 10; // Shorter cooldown after placing a torch

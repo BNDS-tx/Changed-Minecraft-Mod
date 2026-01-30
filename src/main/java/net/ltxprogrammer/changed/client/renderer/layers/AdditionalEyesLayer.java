@@ -42,7 +42,7 @@ public class AdditionalEyesLayer<M extends AdvancedHumanoidModel<T>, T extends C
     private CustomEyesLayer.HeadShape headShape = CustomEyesLayer.HeadShape.NORMAL;
 
     private ResourceLocation getEyesTexture(EyeStyle style, String part) {
-        return ResourceLocation.fromNamespaceAndPath(additionalEyesId.getNamespace(), "textures/eyes/" + additionalEyesId.getPath() + "/" + style.getId().getNamespace() + "/" + style.getId().getPath() + "_" + part + ".png");
+        return new ResourceLocation(additionalEyesId.getNamespace(), "textures/eyes/" + additionalEyesId.getPath() + "/" + style.getId().getNamespace() + "/" + style.getId().getPath() + "_" + part + ".png");
     }
 
     private ResourceLocation getScleraTexture(EyeStyle style) {

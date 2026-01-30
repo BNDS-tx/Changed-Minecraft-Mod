@@ -1,10 +1,12 @@
 package net.ltxprogrammer.changed.entity.decoration;
 
 import net.minecraft.world.item.Item;
+import net.minecraftforge.registries.ForgeRegistryEntry;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 
 import java.util.function.Supplier;
 
-public class WallSignVariant {
+public class WallSignVariant extends ForgeRegistryEntry<WallSignVariant> {
     private final int width;
     private final int height;
 

@@ -2,7 +2,7 @@ package net.ltxprogrammer.changed.world.features.structures.facility;
 
 import com.google.common.collect.ImmutableList;
 import net.ltxprogrammer.changed.util.StreamUtil;
-import net.minecraft.util.RandomSource;
+
 import net.minecraft.util.random.WeightedRandom;
 
 import java.util.*;
@@ -29,11 +29,11 @@ public class FacilityPieceCollection {
         return pieces.stream();
     }
 
-    public Stream<ConfiguredFacilityPiece> shuffledStream(RandomSource random) {
+    public Stream<ConfiguredFacilityPiece> shuffledStream(Random random) {
         return StreamUtil.weightedShuffledStream(pieces, random, totalWeight);
     }
 
-    public Optional<ConfiguredFacilityPiece> findNextPiece(RandomSource random) {
+    public Optional<ConfiguredFacilityPiece> findNextPiece(Random random) {
         if (this.totalWeight == 0) {
             return Optional.empty();
         } else {

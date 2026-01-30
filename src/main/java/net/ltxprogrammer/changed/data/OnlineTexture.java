@@ -58,8 +58,8 @@ public class OnlineTexture extends AbstractTexture {
 
     protected SimpleTexture.TextureImage getTextureImage() throws IOException {
         SimpleTexture.TextureImage $$5;
-        try (NativeImage nativeimage = NativeImage.read(resource.open())) {
-            TextureMetadataSection texturemetadatasection = resource.metadata().getSection(TextureMetadataSection.SERIALIZER).orElse(null);
+        try (NativeImage nativeimage = NativeImage.read(resource.getInputStream())) {
+            TextureMetadataSection texturemetadatasection = resource.getMetadata(TextureMetadataSection.SERIALIZER);
             $$5 = new SimpleTexture.TextureImage(texturemetadatasection, nativeimage);
         }
 

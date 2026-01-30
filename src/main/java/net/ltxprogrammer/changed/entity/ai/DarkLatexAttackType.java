@@ -5,6 +5,7 @@ import net.ltxprogrammer.changed.entity.ChangedEntity;
 import net.ltxprogrammer.changed.entity.beast.AbstractDarkLatexEntity;
 import net.ltxprogrammer.changed.init.ChangedTags;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -43,7 +44,7 @@ public enum DarkLatexAttackType implements BiPredicate<AbstractDarkLatexEntity, 
     public static DataResult<DarkLatexAttackType> fromSerial(String serializedName) {
         return Arrays.stream(values()).filter(value -> value.serializedName.equals(serializedName))
                 .findAny().map(DataResult::success).orElse(DataResult.error(
-                        () -> "Invalid attack type " + serializedName
+                        "Invalid attack type " + serializedName
                 ));
     }
 
@@ -56,6 +57,6 @@ public enum DarkLatexAttackType implements BiPredicate<AbstractDarkLatexEntity, 
     }
 
     public Component getDisplayText() {
-        return Component.translatable("changed.tamed_dark_latex.attacking." + serializedName);
+        return new TranslatableComponent("changed.tamed_dark_latex.attacking." + serializedName);
     }
 }

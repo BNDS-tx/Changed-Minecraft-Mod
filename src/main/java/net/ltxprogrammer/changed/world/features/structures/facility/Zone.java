@@ -2,15 +2,16 @@ package net.ltxprogrammer.changed.world.features.structures.facility;
 
 import net.ltxprogrammer.changed.init.ChangedRegistry;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
-public class Zone {
+public class Zone extends ForgeRegistryEntry<Zone> {
     private final ResourceLocation name;
     private final boolean unique;
     private final int minimumLength;
@@ -29,7 +30,7 @@ public class Zone {
         return name -> new Zone(name, unique, minimumLength);
     }
 
-    public static Zone random(RandomSource r) {
+    public static Zone random(Random r) {
         var values = ChangedRegistry.FACILITY_ZONES.get().getValues();
         AtomicInteger index = new AtomicInteger(r.nextInt(values.size()));
 
@@ -49,7 +50,7 @@ public class Zone {
     }
 
     public Component getTranslatedName() {
-        return Component.translatable("facility.zone." + this.name);
+        return new TranslatableComponent("facility.zone." + this.name);
     }
 
     public boolean canConnectTo(Zone other) {

@@ -43,7 +43,7 @@ public class LimbExtensions {
 
     public static DataResult<LimbExtension> fromSerial(ResourceLocation name) {
         return EXTENSIONS.keySet().stream().filter(type -> type.equals(name))
-                .findFirst().map(EXTENSIONS::get).map(DataResult::success).orElseGet(() -> DataResult.error(() -> name + " is not a recognized LimbExtension"));
+                .findFirst().map(EXTENSIONS::get).map(DataResult::success).orElseGet(() -> DataResult.error(name + " is not a recognized LimbExtension"));
     }
 
     public static ResourceLocation toSerial(LimbExtension extension) {

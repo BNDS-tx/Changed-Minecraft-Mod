@@ -38,7 +38,7 @@ public class FormFittingEnchantment extends Enchantment {
             else
                 return null;
         }).filter(Objects::nonNull)
-                .filter(armorItem -> armorItem.getEquipmentSlot() == slot)
+                .filter(armorItem -> armorItem.getSlot() == slot)
                 .filter(armorItem -> armorItem.getMaterial().getName().equals(material.getName()));
     }
 
@@ -129,7 +129,7 @@ public class FormFittingEnchantment extends Enchantment {
     public static @NotNull ItemStack getFormFitted(LivingEntity wearer, ItemStack itemStack, EquipmentSlot slot) {
         if (slot.getType() != EquipmentSlot.Type.ARMOR)
             return itemStack;
-        if (EnchantmentHelper.getTagEnchantmentLevel(ChangedEnchantments.FORM_FITTING.get(), itemStack) <= 0)
+        if (EnchantmentHelper.getItemEnchantmentLevel(ChangedEnchantments.FORM_FITTING.get(), itemStack) <= 0)
             return itemStack;
 
         final ItemStack equivalent = EntityShape.getShapeOf(wearer)

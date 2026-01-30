@@ -106,7 +106,7 @@ public class UniversalDist {
 
     public static Level getLevel(NetworkEvent.Context context) {
         if (context.getSender() != null)
-            return context.getSender().level();
+            return context.getSender().level;
         else
             return DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> ClientDist::getLevel);
     }
@@ -135,7 +135,7 @@ public class UniversalDist {
 
     public static boolean isClientRemotePlayer(LivingEntity entity) {
         if (entity instanceof Player player) {
-            return player.level().isClientSide && !isLocalPlayer(player);
+            return player.level.isClientSide && !isLocalPlayer(player);
         }
 
         return false;

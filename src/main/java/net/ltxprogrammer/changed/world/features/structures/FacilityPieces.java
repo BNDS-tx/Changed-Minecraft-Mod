@@ -16,7 +16,6 @@ import net.ltxprogrammer.changed.util.ResourceUtil;
 import net.ltxprogrammer.changed.util.StreamUtil;
 import net.ltxprogrammer.changed.world.features.structures.facility.*;
 import net.ltxprogrammer.changed.world.features.structures.facility.types.PieceType;
-import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
@@ -26,8 +25,9 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
-import net.minecraft.world.level.levelgen.structure.Structure;
+import net.minecraft.world.level.levelgen.structure.pieces.PieceGenerator;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePiecesBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -119,12 +119,12 @@ public class FacilityPieces extends SimplePreparableReloadListener<Set<Configure
 
     public static class FacilityGenerationContext {
         public final StructurePiecesBuilder builder;
-        public final Structure.GenerationContext structureContext;
+        public final PieceGenerator.Context<NoneFeatureConfiguration> structureContext;
         public final Map<ConfiguredFacilityPiece, Integer> configuredPieceCounts = new HashMap<>();
         public final Map<Zone, List<PlacedFacilityPiece>> piecesByZone = new HashMap<>();
         public final Multimap<PlacedFacilityPiece, PlacedFacilityPiece> pieceDependents = HashMultimap.create();
 
-        public FacilityGenerationContext(StructurePiecesBuilder builder, Structure.GenerationContext structureContext) {
+        public FacilityGenerationContext(StructurePiecesBuilder builder, PieceGenerator.Context<NoneFeatureConfiguration> structureContext) {
             this.builder = builder;
             this.structureContext = structureContext;
         }
@@ -251,13 +251,13 @@ public class FacilityPieces extends SimplePreparableReloadListener<Set<Configure
             return INSTANCE.facilityPieceCollections.get(pieceType).shuffledStream(random)
                     .filter(hasNotReachedMaximum(facilityContext).and(pieceConnectsToZones(zone, nextZone))).map(nextConfiguredPiece -> {
                         var nextPiece = nextConfiguredPiece.getFacilityPiece();
-                        var nextStructure = nextPiece.createStructurePiece(facilityContext.structureContext.structureTemplateManager(), genDepth);
+                        var nextStructure = nextPiece.createStructurePiece(facilityContext.structureContext.structureManager(), genDepth);
                         if (!nextStructure.setupBoundingBox(facilityContext.builder, start.blockInfo(), random, allowedRegion))
                             return null;
 
                         var placed = new PlacedFacilityPiece(nextZone, nextConfiguredPiece, nextStructure);
 
-                        var startPos = gluNeighbor(start.blockInfo().pos(), start.blockInfo().state());
+                        var startPos = gluNeighbor(start.blockInfo().pos, start.blockInfo().state);
                         facilityContext.addPiece(placed);
 
                         int nextSpan = pieceType.shouldConsumeSpan() ? span - 1 : span;
@@ -266,12 +266,12 @@ public class FacilityPieces extends SimplePreparableReloadListener<Set<Configure
                         var genStack = new FacilityGenerationStack(stack, nextStructure.getBoundingBox(), facilityContext.structureContext, nextSpan);
                         ObjectArrayList<GenStep> starts = new ObjectArrayList<>();
                         nextStructure.addSteps(genStack, starts);
-                        Util.shuffle(starts, random);
+                        Collections.shuffle(starts, random);
 
                         boolean firstStart = true;
                         Set<PlacedFacilityPiece> directDependents = new HashSet<>();
                         for (var next : starts) {
-                            if (next.blockInfo().pos().equals(startPos))
+                            if (next.blockInfo().pos.equals(startPos))
                                 continue;
 
                             var childRoom = treeGenerate(facilityContext, stack, nextStructure, next, genDepth,
@@ -301,18 +301,18 @@ public class FacilityPieces extends SimplePreparableReloadListener<Set<Configure
         return placedPieceStream.findFirst();
     }
 
-    public static FacilityKeystone generateFacility(StructurePiecesBuilder builder, Structure.GenerationContext context, int genDepth, int span, BoundingBox allowedRegion) {
+    public static FacilityKeystone generateFacility(StructurePiecesBuilder builder, PieceGenerator.Context<NoneFeatureConfiguration> context, int genDepth, int span, BoundingBox allowedRegion) {
         BlockPos blockPos = new BlockPos(
                 context.chunkPos().getBlockX(8), 0,
                 context.chunkPos().getBlockZ(8));
         blockPos = blockPos.atY(context.chunkGenerator().getBaseHeight(blockPos.getX(), blockPos.getZ(),
-                Heightmap.Types.WORLD_SURFACE_WG, context.heightAccessor(), context.randomState()));
+                Heightmap.Types.WORLD_SURFACE_WG, context.heightAccessor()));
 
         Stack<ConfiguredFacilityPiece> stack = new Stack<>();
         List<GenStep> starts = new ArrayList<>();
         ConfiguredFacilityPiece entranceNew = INSTANCE.facilityPieceCollections.get(ChangedFacilityPieceTypes.ENTRANCE.get()).findNextPiece(context.random())
                 .orElseThrow();
-        FacilityPieceInstance entrancePiece = entranceNew.getFacilityPiece().createStructurePiece(context.structureTemplateManager(), genDepth);
+        FacilityPieceInstance entrancePiece = entranceNew.getFacilityPiece().createStructurePiece(context.structureManager(), genDepth);
 
         var directions = new ArrayList<>(Direction.Plane.HORIZONTAL.stream().toList());
         CollectionUtil.shuffle(directions, context.random());
@@ -322,10 +322,10 @@ public class FacilityPieces extends SimplePreparableReloadListener<Set<Configure
             entrancePiece.setupBoundingBoxOnBottomCenter(blockPos);
             BoundingBox entranceBB = entrancePiece.getBoundingBox();
 
-            int minXminZ = context.chunkGenerator().getBaseHeight(entranceBB.minX() + 1, entranceBB.minZ() + 1, Heightmap.Types.WORLD_SURFACE_WG, context.heightAccessor(), context.randomState());
-            int minXmaxZ = context.chunkGenerator().getBaseHeight(entranceBB.minX() + 1, entranceBB.maxZ() - 1, Heightmap.Types.WORLD_SURFACE_WG, context.heightAccessor(), context.randomState());
-            int maxXminZ = context.chunkGenerator().getBaseHeight(entranceBB.maxX() - 1, entranceBB.minZ() + 1, Heightmap.Types.WORLD_SURFACE_WG, context.heightAccessor(), context.randomState());
-            int maxXmaxZ = context.chunkGenerator().getBaseHeight(entranceBB.maxX() - 1, entranceBB.maxZ() - 1, Heightmap.Types.WORLD_SURFACE_WG, context.heightAccessor(), context.randomState());
+            int minXminZ = context.chunkGenerator().getBaseHeight(entranceBB.minX() + 1, entranceBB.minZ() + 1, Heightmap.Types.WORLD_SURFACE_WG, context.heightAccessor());
+            int minXmaxZ = context.chunkGenerator().getBaseHeight(entranceBB.minX() + 1, entranceBB.maxZ() - 1, Heightmap.Types.WORLD_SURFACE_WG, context.heightAccessor());
+            int maxXminZ = context.chunkGenerator().getBaseHeight(entranceBB.maxX() - 1, entranceBB.minZ() + 1, Heightmap.Types.WORLD_SURFACE_WG, context.heightAccessor());
+            int maxXmaxZ = context.chunkGenerator().getBaseHeight(entranceBB.maxX() - 1, entranceBB.maxZ() - 1, Heightmap.Types.WORLD_SURFACE_WG, context.heightAccessor());
             int min = Math.min(Math.min(minXminZ, minXmaxZ), Math.min(maxXminZ, maxXmaxZ));
             int max = Math.max(Math.max(minXminZ, minXmaxZ), Math.max(maxXminZ, maxXmaxZ));
 

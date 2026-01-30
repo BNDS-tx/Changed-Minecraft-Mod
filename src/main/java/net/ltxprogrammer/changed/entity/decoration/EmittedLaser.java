@@ -15,6 +15,7 @@ import net.ltxprogrammer.changed.util.TagUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -32,6 +33,7 @@ import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
@@ -147,16 +149,16 @@ public class EmittedLaser extends Entity {
     }
 
     public void checkShapeAndApplyEffects() {
-        if (this.level().isClientSide)
+        if (this.level.isClientSide)
             return;
 
-        BlockState emitterState = level().getBlockState(this.getEmitterPos());
+        BlockState emitterState = level.getBlockState(this.getEmitterPos());
         if (!emitterState.is(ChangedBlocks.LASER_EMITTER.get()) || !emitterState.getValue(LaserEmitterBlock.POWERED)) {
             this.discard();
             return;
         }
 
-        float length = this.traceLevel(level(), this.getEmitterPos(), this.getDirection(), this.getBeamRadius());
+        float length = this.traceLevel(level, this.getEmitterPos(), this.getDirection(), this.getBeamRadius());
         if (length <= 0.0f) {
             this.discard();
             return;
@@ -166,7 +168,7 @@ public class EmittedLaser extends Entity {
         this.recalculateBoundingBox();
 
         ObjectArrayList<LivingEntity> entities = new ObjectArrayList<>(0);
-        level().getEntities(EntityTypeTest.forClass(LivingEntity.class), this.getBoundingBox(), Objects::nonNull, entities);
+        entities.addAll(level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox(), Objects::nonNull));
         final BlockPos emitterPos = this.entityData.get(DATA_EMITTER_POS_ID);
 
         entities.sort(Comparator.comparingDouble(leftEntity -> leftEntity.distanceToSqr(emitterPos.getX(), emitterPos.getY(), emitterPos.getZ())));
@@ -293,5 +295,10 @@ public class EmittedLaser extends Entity {
         TagUtil.putBlockPos(tag, "emitterPos", this.entityData.get(DATA_EMITTER_POS_ID));
         tag.putString("beamDirection", this.entityData.get(DATA_DIRECTION_ID).getSerializedName());
         tag.putFloat("beamLength", this.entityData.get(DATA_LENGTH_ID));
+    }
+
+    @Override
+    public Packet<?> getAddEntityPacket() {
+        return NetworkHooks.getEntitySpawningPacket(this);
     }
 }

@@ -8,7 +8,7 @@ import net.ltxprogrammer.changed.init.ChangedItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
+
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
@@ -47,7 +47,7 @@ public class RoombaCharger extends AbstractCustomShapeBlock implements IRobotCha
     }
 
     @Override
-    public void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+    public void randomTick(BlockState state, ServerLevel level, BlockPos pos, Random random) {
         super.randomTick(state, level, pos, random);
         broadcastPosition(level, pos, !state.getValue(OCCUPIED));
     }
@@ -99,7 +99,7 @@ public class RoombaCharger extends AbstractCustomShapeBlock implements IRobotCha
     }
 
     @Override
-    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, Random random) {
         super.tick(state, level, pos, random);
         if (state.getValue(OCCUPIED)) {
             BlockPos spawnPos = pos.relative(state.getValue(FACING));

@@ -31,10 +31,10 @@ public abstract class MinecraftMixin {
         if (LatexType.getEntityLatexType(livingEntity) == ChangedLatexTypes.WHITE_LATEX.get())
             return original.call(entity);
 
-        BlockState standing = livingEntity.level().getBlockState(livingEntity.blockPosition().below());
+        BlockState standing = livingEntity.level.getBlockState(livingEntity.blockPosition().below());
         if (standing == null || standing.isAir())
             return original.call(entity);
-        if (AbstractLatexBlock.isSurfaceOfType(entity.level(), livingEntity.blockPosition(), Direction.DOWN, ChangedLatexTypes.WHITE_LATEX.get()))
+        if (AbstractLatexBlock.isSurfaceOfType(entity.level, livingEntity.blockPosition(), Direction.DOWN, ChangedLatexTypes.WHITE_LATEX.get()))
             return true;
         return original.call(entity);
     }
@@ -46,10 +46,10 @@ public abstract class MinecraftMixin {
         if (this.cameraEntity == null)
             return original.call(entity);
 
-        BlockState standing = livingEntity.level().getBlockState(livingEntity.blockPosition());
+        BlockState standing = livingEntity.level.getBlockState(livingEntity.blockPosition());
         if (standing.getBlock() instanceof AlertingPuddle alertingPuddle && alertingPuddle.shouldGlowLocally(livingEntity, this.cameraEntity))
             return true;
-        standing = livingEntity.level().getBlockState(livingEntity.blockPosition().below());
+        standing = livingEntity.level.getBlockState(livingEntity.blockPosition().below());
         if (standing.getBlock() instanceof AlertingPuddle alertingPuddle && alertingPuddle.shouldGlowLocally(livingEntity, this.cameraEntity))
             return true;
         return original.call(entity);

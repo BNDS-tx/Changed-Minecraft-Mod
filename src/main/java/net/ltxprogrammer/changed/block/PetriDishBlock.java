@@ -22,7 +22,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.material.PushReaction;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -34,12 +34,12 @@ public class PetriDishBlock extends Block implements SimpleWaterloggedBlock {
     public static final VoxelShape SHAPE = Block.box(6.0D, 0.0D, 6.0D, 10.0D, 1.0D, 10.0D);
 
     public PetriDishBlock(Properties properties) {
-        super(properties.offsetType(OffsetType.XZ).dynamicShape());
+        super(properties.dynamicShape());
         this.registerDefaultState(this.stateDefinition.any().setValue(WATERLOGGED, false));
     }
 
     @Override
-    public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
+    public List<ItemStack> getDrops(BlockState state, LootContext.Builder builder) {
         return List.of(new ItemStack(this));
     }
 

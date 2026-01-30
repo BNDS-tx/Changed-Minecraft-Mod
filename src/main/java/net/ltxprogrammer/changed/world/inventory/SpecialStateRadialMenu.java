@@ -5,6 +5,7 @@ import net.ltxprogrammer.changed.init.ChangedMenus;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -21,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SpecialStateRadialMenu extends AbstractContainerMenu {
-    public static final Component CONTAINER_TITLE = Component.translatable("container.changed.radial_special");
+    public static final Component CONTAINER_TITLE = new TranslatableComponent("container.changed.radial_special");
 
     public final Container container;
     public final ContainerData data;
@@ -40,7 +41,7 @@ public class SpecialStateRadialMenu extends AbstractContainerMenu {
         super(ChangedMenus.SPECIAL_RADIAL.get(), id);
         this.container = p_38971_;
         this.data = p_38972_;
-        this.world = inv.player.level();
+        this.world = inv.player.level;
         this.player = inv.player;
         this.variant = ProcessTransfur.getPlayerTransfurVariant(player);
         this.customSlots.put(0, this.addSlot(new Slot(p_38971_, 0, 9999, 9999) {

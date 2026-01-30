@@ -150,10 +150,10 @@ public class BloodSyringe extends Item implements SpecializedAnimations {
     public InteractionResult interactLivingEntity(ItemStack itemStack, Player player, LivingEntity livingEntity, InteractionHand hand) {
         return Changed.postModEvent(
                 new UsedOnEntity(livingEntity,
-                        player.level(),
+                        player.level,
                         player,
                         itemStack)) ?
-                InteractionResult.sidedSuccess(player.level().isClientSide) :
+                InteractionResult.sidedSuccess(player.level.isClientSide) :
                 super.interactLivingEntity(itemStack, player, livingEntity, hand);
     }
 }

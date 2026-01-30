@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.ltxprogrammer.changed.aaBackport.JomlConverter;
 import net.ltxprogrammer.changed.client.CubeExtender;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -12,7 +13,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.Rotation;
 import org.jetbrains.annotations.NotNull;
-import org.joml.*;
+import repack.joml.*;
 
 import javax.annotation.Nullable;
 import java.lang.Math;
@@ -245,7 +246,7 @@ public class EntityGeometry {
     public void translateAndRotate(PoseStack poseStack) {
         poseStack.translate(this.x / 16.0F, this.y / 16.0F, this.z / 16.0F);
         if (this.xRot != 0.0F || this.yRot != 0.0F || this.zRot != 0.0F) {
-            poseStack.mulPose((new Quaternionf()).rotationZYX(this.zRot, this.yRot, this.xRot));
+            poseStack.mulPose(new JomlConverter().toMojang((new Quaternionf()).rotationZYX(this.zRot, this.yRot, this.xRot)));
         }
     }
 
@@ -344,7 +345,7 @@ public class EntityGeometry {
         }
 
         public Vertex(ModelPart.Vertex copyFrom) {
-            this.pos = new Vector3f(copyFrom.pos);
+            this.pos = new Vector3f(copyFrom.pos.x(), copyFrom.pos.y(), copyFrom.pos.z());
             this.u = copyFrom.u;
             this.v = copyFrom.v;
         }
@@ -436,7 +437,7 @@ public class EntityGeometry {
             for (var poly : copyFrom.vertices) {
                 this.vertices[i++] = new Vertex(poly);
             }
-            this.normal = new Vector3f(copyFrom.normal);
+            this.normal = new Vector3f(copyFrom.normal.x(), copyFrom.normal.y(), copyFrom.normal.z());
         }
 
         public Polygon growEdge(@NotNull Edge edge, float offset) {
@@ -584,7 +585,7 @@ public class EntityGeometry {
         @Nullable
         public Polygon getFace(Direction normal) {
             for (Polygon poly : polygons) {
-                if (poly.normal.dot(normal.step()) >= 0.95f)
+                if (poly.normal.dot(new Vector3f(normal.step().x(), normal.step().y(), normal.step().z())) >= 0.95f)
                     return poly;
             }
             return null;
@@ -601,7 +602,7 @@ public class EntityGeometry {
 
         public void removeFace(Direction normal) {
             for (int i = 0; i < polygons.length; i++) {
-                if (polygons[i].normal.dot(normal.step()) >= 0.95f) {
+                if (polygons[i].normal.dot(new Vector3f(normal.step().x(), normal.step().y(), normal.step().z())) >= 0.95f) {
                     var replacement = new Polygon[polygons.length - 1];
 
                     for (int x = 0; x < replacement.length; x++) {
@@ -843,7 +844,7 @@ public class EntityGeometry {
 
             public Vector3f getCenter(Direction surface) {
                 var r = new Vector3f();
-                var size = this.getSize().mul(surface.step()).mul(0.5f);
+                var size = this.getSize().mul(new Vector3f(surface.step().x(), surface.step().y(), surface.step().z())).mul(0.5f);
                 return max.add(min, r).mul(0.5f).add(size);
             }
 
@@ -897,7 +898,7 @@ public class EntityGeometry {
                 if (face == null) continue;
 
                 if (normal == targetFace) {
-                    face.move(targetFace.step().mul(offset));
+                    face.move(new Vector3f(targetFace.step().x(), targetFace.step().y(), targetFace.step().z()).mul(offset));
                 } else {
                     var edge = Polygon.Edge.fromFaceAndDirection(normal, targetFace);
                     if (edge != null)
@@ -1022,8 +1023,8 @@ public class EntityGeometry {
         }
 
         public void compile(PoseStack.Pose pose, VertexConsumer vertexConsumer, int overlay, int lightCoords, float red, float green, float blue, float alpha) {
-            Matrix4f matrix4f = pose.pose();
-            Matrix3f matrix3f = pose.normal();
+            Matrix4f matrix4f = new JomlConverter().toJoml(pose.pose());
+            Matrix3f matrix3f = new JomlConverter().toJoml(pose.normal());
 
             for(Polygon polygon : this.polygons) {
                 Vector3f orientedNormal = matrix3f.transform(new Vector3f(polygon.normal));

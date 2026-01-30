@@ -60,7 +60,7 @@ public class TamedDarkLatexInventoryMenu extends AbstractContainerMenu {
     }
 
     public TamedDarkLatexInventoryMenu(int id, Inventory inventory, FriendlyByteBuf extra) {
-        this(id, inventory.player, (AbstractDarkLatexEntity) inventory.player.level().getEntity(extra.readInt()));
+        this(id, inventory.player, (AbstractDarkLatexEntity) inventory.player.level.getEntity(extra.readInt()));
     }
 
     public boolean canWear(ItemStack itemStack, EquipmentSlot slot) {

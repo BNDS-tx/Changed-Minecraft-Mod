@@ -2,6 +2,8 @@ package net.ltxprogrammer.changed.client.latexparticles;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Vector3f;
+import com.mojang.math.Vector4f;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.client.ModelPartStem;
 import net.ltxprogrammer.changed.client.PoseStackExtender;
@@ -33,8 +35,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 
 import java.util.List;
 
@@ -76,8 +76,8 @@ public class LatexDripParticle extends LatexParticle {
 
     public LatexDripParticle(SpriteSet spriteSet,
                              ChangedEntity attachedEntity, AdvancedHumanoidModel<?> attachedModel, ModelPartStem attachedPart, SurfacePoint surface, Color3 color, float alpha, int lifespan) {
-        super(attachedEntity.level(), lifespan);
-        this.maxTicksAttached = attachedEntity.level().random.nextInt(80, 2400);
+        super(attachedEntity.level, lifespan);
+        this.maxTicksAttached = attachedEntity.level.random.nextInt(80, 2400);
 
         this.spriteSet = spriteSet;
         this.attachedEntity = attachedEntity;
@@ -228,8 +228,8 @@ public class LatexDripParticle extends LatexParticle {
         y = worldSpace.y();
         z = worldSpace.z();
 
-        surfaceNormalRelativeCamera.set(surface.normal());
-        surfaceNormalRelativeCamera.mul(modelPose.normal());
+        surfaceNormalRelativeCamera.load(surface.normal());
+        surfaceNormalRelativeCamera.transform(modelPose.normal());
 
         this.preppedForTick = true;
     }
@@ -312,7 +312,7 @@ public class LatexDripParticle extends LatexParticle {
             lerpZ = (float) (Mth.lerp(partialTicks, this.zo, this.z) - vec3.z());
         }
         Vector3f vector3f1 = new Vector3f(-1.0F, -1.0F, 0.0F);
-        camera.rotation().transform(vector3f1);
+        vector3f1.transform(camera.rotation());
         float quadSize = this.getSpriteSize(partialTicks);
 
         float u0 = this.sprite.getU0();
@@ -323,7 +323,7 @@ public class LatexDripParticle extends LatexParticle {
         Vector3f[] genVec = new Vector3f[]{new Vector3f(-1.0F, -1.0F, 0.0F), new Vector3f(-1.0F, 1.0F, 0.0F), new Vector3f(1.0F, 1.0F, 0.0F), new Vector3f(1.0F, -1.0F, 0.0F)};
         for(int i = 0; i < 4; ++i) {
             Vector3f vector3f = genVec[i];
-            camera.rotation().transform(vector3f);
+            vector3f.transform(camera.rotation());
             vector3f.mul(quadSize);
             vector3f.add(lerpX, lerpY, lerpZ);
         }

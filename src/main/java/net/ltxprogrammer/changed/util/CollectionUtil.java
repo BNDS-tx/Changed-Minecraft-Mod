@@ -1,6 +1,6 @@
 package net.ltxprogrammer.changed.util;
 
-import net.minecraft.util.RandomSource;
+
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -66,7 +66,7 @@ public class CollectionUtil {
         reverseList.forEach(consumer);
     }
 
-    public static <T> Stream<T> shuffle(Stream<T> stream, RandomSource random) {
+    public static <T> Stream<T> shuffle(Stream<T> stream, Random random) {
         return stream.sorted((elemA, elemB) -> {
             return random.nextInt();
         });
@@ -79,7 +79,7 @@ public class CollectionUtil {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public static void shuffle(List<?> list, RandomSource rnd) {
+    public static void shuffle(List<?> list, Random rnd) {
         int size = list.size();
         if (size < 5 || list instanceof RandomAccess) {
             for (int i=size; i>1; i--)

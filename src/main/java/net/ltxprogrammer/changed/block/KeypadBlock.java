@@ -5,7 +5,7 @@ import net.ltxprogrammer.changed.init.ChangedSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
+
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
@@ -24,6 +24,8 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.material.MaterialColor;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -42,7 +44,7 @@ public class KeypadBlock extends AbstractCustomShapeEntityBlock {
     public static final VoxelShape SHAPE_WHOLE = Shapes.or(SHAPE_MAIN, SHAPE_PIPE1, SHAPE_PIPE2);
 
     public KeypadBlock() {
-        super(BlockBehaviour.Properties.of().sound(SoundType.METAL).strength(3.0F, 3.0F));
+        super(BlockBehaviour.Properties.of(Material.METAL, MaterialColor.COLOR_BLACK).sound(SoundType.METAL).strength(3.0F, 3.0F));
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(POWERED, Boolean.FALSE));
     }
 
@@ -142,7 +144,7 @@ public class KeypadBlock extends AbstractCustomShapeEntityBlock {
     }
 
     @Override
-    public void tick(BlockState blockState, ServerLevel level, BlockPos blockPos, RandomSource random) {
+    public void tick(BlockState blockState, ServerLevel level, BlockPos blockPos, Random random) {
         super.tick(blockState, level, blockPos, random);
         ChangedSounds.broadcastSound(level, ChangedSounds.KEYPAD_UNLOCK_SUCCESS, blockPos, 1, 1);
     }

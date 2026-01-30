@@ -1,8 +1,10 @@
 package net.ltxprogrammer.changed.entity.animation;
 
 import com.mojang.serialization.Codec;
+import net.minecraftforge.registries.ForgeRegistryEntry;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 
-public class AnimationEvent<T extends AnimationParameters> {
+public class AnimationEvent<T extends AnimationParameters> extends ForgeRegistryEntry<AnimationEvent<?>> {
     private final Codec<T> codec;
 
     public static final Codec<NoParameters> NO_PARAMETERS = Codec.unit(() -> NoParameters.INSTANCE);

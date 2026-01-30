@@ -11,7 +11,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.TagKey;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -29,6 +28,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.entity.EntityTypeTest;
+import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.phys.AABB;
@@ -36,6 +36,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Random;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -57,7 +58,7 @@ public class AlertingPuddle extends ChangedBlock {
     }
 
     public AlertingPuddle(Predicate<? super LivingEntity> toTarget, Predicate<? super LivingEntity> toAlert) {
-        super(BlockBehaviour.Properties.of().sound(SoundType.SLIME_BLOCK).strength(0.1F));
+        super(BlockBehaviour.Properties.of(Material.CLAY).sound(SoundType.SLIME_BLOCK).strength(0.1F));
         this.registerDefaultState(this.stateDefinition.any().setValue(OCCUPIED, false));
         this.toTarget = toTarget;
         this.toAlert = toAlert;
@@ -116,7 +117,7 @@ public class AlertingPuddle extends ChangedBlock {
     }
 
     @Override
-    public void tick(BlockState blockState, ServerLevel level, BlockPos blockPos, RandomSource random) {
+    public void tick(BlockState blockState, ServerLevel level, BlockPos blockPos, Random random) {
         super.tick(blockState, level, blockPos, random);
         if (blockState.getValue(OCCUPIED)) {
             if (level.getEntities(EntityTypeTest.forClass(LivingEntity.class), new AABB(blockPos), this.toTarget).isEmpty()) {
@@ -138,7 +139,7 @@ public class AlertingPuddle extends ChangedBlock {
     }
 
     @Override
-    public @Nullable BlockPathTypes getBlockPathType(BlockState state, BlockGetter level, BlockPos pos, @Nullable Mob mob) {
+    public @Nullable BlockPathTypes getAiPathNodeType(BlockState state, BlockGetter level, BlockPos pos, @Nullable Mob mob) {
         return BlockPathTypes.WALKABLE;
     }
 

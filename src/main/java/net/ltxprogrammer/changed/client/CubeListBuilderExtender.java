@@ -6,7 +6,7 @@ import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.UVPair;
 import net.minecraft.core.Direction;
-import org.joml.Vector3f;
+import repack.joml.Vector3f;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -28,7 +28,6 @@ public interface CubeListBuilderExtender {
      * @param to Face to copy UV to
      * @return this
      */
-    @Deprecated
     CubeListBuilderExtender copyLastFaceUVStart(Direction from, Direction to);
 
     /**

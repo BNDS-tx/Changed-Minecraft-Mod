@@ -4,12 +4,13 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.ltxprogrammer.changed.Changed;
-import net.ltxprogrammer.changed.ability.tree.condition.AbstractCondition;
+import net.ltxprogrammer.changed.aaBackport.CodecWrapperATNE;
 import net.ltxprogrammer.changed.data.RegistryElementPredicate;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.init.ChangedRegistry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -109,21 +109,25 @@ public class AbilityTree {
         }
 
         public Component getTitle() {
-            return Component.translatable(titleId);
+            return new TranslatableComponent(titleId);
         }
 
         public Component getDescription() {
-            return Component.translatable(descriptionId);
+            return new TranslatableComponent(descriptionId);
         }
     }
 
     public static abstract class NodeEffect {
+//        public static final Codec<NodeEffect> EFFECT_CODEC = ChangedRegistry.ABILITY_NODE_EFFECTS.get().getCodec().dispatch("type",
+//                NodeEffect::getCodec, Function.identity());
         public static final Codec<NodeEffect> EFFECT_CODEC = ChangedRegistry.ABILITY_NODE_EFFECTS.get().getCodec().dispatch("type",
-                NodeEffect::getCodec, Function.identity());
+        NodeEffect::getCodecWrapper, CodecWrapperATNE::getCodec);
 
         public abstract void applyEffect(AbilityCounter counter);
 
         public abstract Codec<? extends NodeEffect> getCodec();
+
+        public abstract CodecWrapperATNE<? extends NodeEffect> getCodecWrapper();
     }
 
     public static abstract class NodeEffectInstance {

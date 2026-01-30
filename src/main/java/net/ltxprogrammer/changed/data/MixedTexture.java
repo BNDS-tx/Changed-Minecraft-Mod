@@ -7,11 +7,9 @@ import net.ltxprogrammer.changed.Changed;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.metadata.animation.AnimationMetadataSection;
-import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
@@ -130,21 +128,22 @@ public class MixedTexture {
         return Math.max(min, Math.min(max, val));
     }
 
-    public static FrameSize imageSize(NativeImage image, @Nullable AnimationMetadataSection metadataSection) {
+    public static Pair<Integer, Integer> imageSize(NativeImage image, @Nullable AnimationMetadataSection metadataSection) {
         return metadataSection != null ?
-                metadataSection.calculateFrameSize(image.getWidth(), image.getHeight()) :
-                new FrameSize(image.getWidth(), image.getHeight());
+                metadataSection.getFrameSize(image.getWidth(), image.getHeight()) :
+                new Pair<>(image.getWidth(), image.getHeight());
     }
 
     public static RGBA sampleNearest(NativeImage image, @Nullable AnimationMetadataSection metadataSection, float u, float v) {
         var size = imageSize(image, metadataSection);
-        return RGBA.of(image.getPixelRGBA((int)(size.width() * frac(u)), (int)(size.height() * frac(v))));
+        return RGBA.of(image.getPixelRGBA((int)(size.getFirst() * frac(u)),
+                        (int)(size.getSecond() * frac(v))));
     }
 
     public static RGBA sampleLinear(NativeImage image, @Nullable AnimationMetadataSection metadataSection, float u, float v) {
         var size = imageSize(image, metadataSection);
-        float actualX = size.width() * frac(u);
-        float actualY = size.width() * frac(v);
+        float actualX = size.getFirst() * frac(u);
+        float actualY = size.getFirst() * frac(v);
         int floorX = Mth.floor(actualX);
         int ceilX = Mth.ceil(actualX);
         int floorY = Mth.floor(actualY);
@@ -153,10 +152,10 @@ public class MixedTexture {
         float lerpX = actualX - floorX;
         float lerpY = actualY - floorY;
 
-        int safeWrapFloorX = floorX < 0 ? floorX + size.width() : floorX;
-        int safeWrapFloorY = floorY < 0 ? floorY + size.height() : floorY;
-        int safeWrapCeilX = ceilX >= size.width() ? ceilX - size.width() : ceilX;
-        int safeWrapCeilY = ceilY >= size.height() ? ceilY - size.height() : ceilY;
+        int safeWrapFloorX = floorX < 0 ? floorX + size.getFirst() : floorX;
+        int safeWrapFloorY = floorY < 0 ? floorY + size.getSecond() : floorY;
+        int safeWrapCeilX = ceilX >= size.getFirst() ? ceilX - size.getFirst() : ceilX;
+        int safeWrapCeilY = ceilY >= size.getSecond() ? ceilY - size.getSecond() : ceilY;
 
         var corner1 = RGBA.of(image.getPixelRGBA(safeWrapFloorX, safeWrapFloorY));
         var corner2 = RGBA.of(image.getPixelRGBA(safeWrapCeilX, safeWrapFloorY));
@@ -170,7 +169,7 @@ public class MixedTexture {
     }
 
     public static ResourceLocation getResourceLocation(ResourceLocation location) {
-        return ResourceLocation.fromNamespaceAndPath(location.getNamespace(), String.format("textures/%s%s", location.getPath(), ".png"));
+        return new ResourceLocation(location.getNamespace(), String.format("textures/%s%s", location.getPath(), ".png"));
     }
 
     private static final AtomicBoolean ATOMIC_LOCK = new AtomicBoolean(false);
@@ -285,16 +284,14 @@ public class MixedTexture {
             if (Changed.config.client.memCacheBaseImages.get()) {
                 baseMetadata = IMAGE_META_CACHE.computeIfAbsent(getResourceLocation(baseLocation), loc -> {
                     try {
-                        final var resource = resourceManager.getResource(loc).orElse(null);
-                        final var metaOpt = Optional.ofNullable(resource == null ? null : resource.metadata());
-                        return metaOpt.flatMap(meta -> meta.getSection(AnimationMetadataSection.SERIALIZER)).orElse(null);
+                        return resourceManager.getResource(loc).getMetadata(AnimationMetadataSection.SERIALIZER);
                     } catch (RuntimeException | IOException e) {
                         return null;
                     }
                 });
                 baseImage = IMAGE_SETUP_CACHE.computeIfAbsent(getResourceLocation(baseLocation), loc -> {
                     try {
-                        return NativeImage.read(resourceManager.getResource(loc).orElseThrow().open());
+                        return NativeImage.read(resourceManager.getResource(loc).getInputStream());
                     } catch (IOException e) {
                         LOGGER.error(e);
                         return null;
@@ -302,14 +299,12 @@ public class MixedTexture {
                 });
             } else {
                 try {
-                    final var resource = resourceManager.getResource(getResourceLocation(baseLocation)).orElse(null);
-                    final var metaOpt = Optional.ofNullable(resource == null ? null : resource.metadata());
-                    baseMetadata =  metaOpt.flatMap(meta -> meta.getSection(AnimationMetadataSection.SERIALIZER)).orElse(null);
+                    baseMetadata = resourceManager.getResource(getResourceLocation(baseLocation)).getMetadata(AnimationMetadataSection.SERIALIZER);
                 } catch (RuntimeException | IOException e) {
                     baseMetadata = null;
                 }
                 try {
-                    baseImage = NativeImage.read(resourceManager.getResource(getResourceLocation(baseLocation)).orElseThrow().open());
+                    baseImage = NativeImage.read(resourceManager.getResource(getResourceLocation(baseLocation)).getInputStream());
                 } catch (IOException e) {
                     LOGGER.error(e);
                     baseImage = null;
@@ -319,7 +314,7 @@ public class MixedTexture {
             NativeImage overlayImage = IMAGE_SETUP_CACHE.computeIfAbsent(getResourceLocation(overlayLocation), loc ->
             {
                 try {
-                    return NativeImage.read(resourceManager.getResource(loc).orElseThrow().open());
+                    return NativeImage.read(resourceManager.getResource(loc).getInputStream());
                 } catch (IOException e) {
                     return null;
                 }
@@ -332,14 +327,14 @@ public class MixedTexture {
                 return null;
             }
 
-            FrameSize frameSize = imageSize(baseImage, baseMetadata);
+            Pair<Integer, Integer> frameSize = imageSize(baseImage, baseMetadata);
             var possibleCached = findCachedTexture(name, packSequenceHash);
             if (possibleCached.isPresent()) {
-                if (frameSize.width() == possibleCached.get().getWidth() && frameSize.height() == possibleCached.get().getHeight())
+                if (frameSize.getFirst() == possibleCached.get().getWidth() && frameSize.getSecond() == possibleCached.get().getHeight())
                     return possibleCached.get(); // Image already cached
             }
 
-            NativeImage newImage = new NativeImage(frameSize.width(), frameSize.height(), false);
+            NativeImage newImage = new NativeImage(frameSize.getFirst(), frameSize.getSecond(), false);
             float averageLevel = 0.0f;
             int averageLevelCounter = 0;
 

@@ -23,7 +23,8 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -38,7 +39,7 @@ public class Beaker extends Block implements SimpleWaterloggedBlock {
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public Beaker() {
-        super(Properties.of().offsetType(OffsetType.XZ).sound(SoundType.GLASS).instabreak().dynamicShape());
+        super(Properties.of(Material.GLASS).sound(SoundType.GLASS).instabreak().dynamicShape());
         this.registerDefaultState(this.stateDefinition.any().setValue(FILLED, LatexTypeOld.NEUTRAL).setValue(WATERLOGGED, false));
     }
 
@@ -49,7 +50,7 @@ public class Beaker extends Block implements SimpleWaterloggedBlock {
     }
 
     @Override
-    public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
+    public List<ItemStack> getDrops(BlockState state, LootContext.Builder builder) {
         List<ItemStack> items = new ArrayList<>();
         items.add(new ItemStack(ChangedBlocks.BEAKER.get()));
         var type = state.getValue(FILLED);

@@ -7,7 +7,7 @@ import net.ltxprogrammer.changed.util.CollectionUtil;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.core.Direction;
-import org.joml.Vector3f;
+import repack.joml.Vector3f;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;

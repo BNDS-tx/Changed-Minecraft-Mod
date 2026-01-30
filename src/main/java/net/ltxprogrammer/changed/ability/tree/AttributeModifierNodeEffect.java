@@ -3,9 +3,10 @@ package net.ltxprogrammer.changed.ability.tree;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
+import net.ltxprogrammer.changed.aaBackport.CodecWrapperATNE;
 import net.ltxprogrammer.changed.ability.tree.condition.AbstractCondition;
 import net.ltxprogrammer.changed.ability.tree.condition.TrueCondition;
+import net.ltxprogrammer.changed.init.ChangedAbilityTreeCodecs;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -39,7 +40,7 @@ public class AttributeModifierNodeEffect extends AbilityTree.NodeEffect {
 
         public static DataResult<Method> fromSerial(String name) {
             return Arrays.stream(values()).filter(type -> type.serialName.equals(name))
-                    .findFirst().map(DataResult::success).orElseGet(() -> DataResult.error(() -> name + " is not a valid Method"));
+                    .findFirst().map(DataResult::success).orElseGet(() -> DataResult.error(name + " is not a valid Method"));
         }
     }
 
@@ -68,5 +69,10 @@ public class AttributeModifierNodeEffect extends AbilityTree.NodeEffect {
     @Override
     public Codec<? extends AbilityTree.NodeEffect> getCodec() {
         return CODEC;
+    }
+
+    @Override
+    public CodecWrapperATNE<? extends AbilityTree.NodeEffect> getCodecWrapper() {
+        return ChangedAbilityTreeCodecs.ATTRIBUTE_MODIFIER_EFFECT.get();
     }
 }

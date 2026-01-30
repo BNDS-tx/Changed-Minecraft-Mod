@@ -20,7 +20,7 @@ import java.util.*;
 public class FacilityZoneEntities extends SimplePreparableReloadListener<List<FacilityZoneEntities.ZoneEntitiesDefinition>> {
     public record EntitySpawnDefinition(EntityType<?> entityType, int weight, int minimum, int maximum, int cost) {
         public static final Codec<EntitySpawnDefinition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                ForgeRegistries.ENTITY_TYPES.getCodec().fieldOf("type").forGetter(EntitySpawnDefinition::entityType),
+                ForgeRegistries.ENTITIES.getCodec().fieldOf("type").forGetter(EntitySpawnDefinition::entityType),
                 Codec.INT.fieldOf("weight").forGetter(EntitySpawnDefinition::weight),
                 Codec.INT.fieldOf("minimum").forGetter(EntitySpawnDefinition::minimum),
                 Codec.INT.fieldOf("maximum").forGetter(EntitySpawnDefinition::maximum),

@@ -9,6 +9,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
@@ -38,7 +39,7 @@ public class CompactDisc extends ItemNameBlockItem {
             CompoundTag tag = stack.getTag();
             String s = DiscData.getName(tag);
             if (!StringUtil.isNullOrEmpty(s)) {
-                hoverText.add((Component.translatable("text.changed.compact_disc.title", s)).withStyle(ChatFormatting.GRAY));
+                hoverText.add((new TranslatableComponent("text.changed.compact_disc.title", s)).withStyle(ChatFormatting.GRAY));
             }
         }
     }

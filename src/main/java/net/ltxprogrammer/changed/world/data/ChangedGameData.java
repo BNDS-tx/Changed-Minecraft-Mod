@@ -59,7 +59,7 @@ public class ChangedGameData {
                 }
             }
 
-            int i = NbtUtils.getDataVersion(compoundtag, 1343);
+            int i = compoundtag.contains("DataVersion", 99) ? compoundtag.getInt("DataVersion") : 1343;
             Changed.dataFixer.updateCompoundTag(DataFixTypes.SAVED_DATA, compoundtag);
         } catch (IOException e) {
             throw new RuntimeException(e);

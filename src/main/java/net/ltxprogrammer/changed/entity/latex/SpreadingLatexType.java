@@ -25,7 +25,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -34,6 +33,7 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
@@ -225,7 +225,7 @@ public abstract class SpreadingLatexType extends LatexType {
     }
 
     @Override
-    public void randomTick(LatexCoverState state, ServerLevel level, BlockPos blockPos, RandomSource random) {
+    public void randomTick(LatexCoverState state, ServerLevel level, BlockPos blockPos, Random random) {
         if (this.shouldDecay(state, level, blockPos)) {
             LatexCoverState.setAtAndUpdate(level, blockPos, ChangedLatexTypes.NONE.get().defaultCoverState());
             return;
@@ -350,8 +350,8 @@ public abstract class SpreadingLatexType extends LatexType {
     @Override
     public InteractionResult use(LatexCoverState state, Level level, Player player, InteractionHand hand, BlockHitResult hitVec) {
         final ItemStack itemStack = player.getItemInHand(hand);
-        if (itemStack.is(ItemTags.SHOVELS)) {
-            if (UniversalDist.getLevelExtension(player.level()).destroyLatexCover(level, hitVec.getBlockPos(), true, player)) {
+        if (itemStack.getItem() instanceof ShovelItem) {
+            if (UniversalDist.getLevelExtension(player.level).destroyLatexCover(level, hitVec.getBlockPos(), true, player)) {
                 itemStack.hurtAndBreak(1, player, (p_43122_) -> {
                     p_43122_.broadcastBreakEvent(hand);
                 });
@@ -497,12 +497,12 @@ public abstract class SpreadingLatexType extends LatexType {
         }
 
         @Override
-        public EntityType<?> getPupEntityType(RandomSource random) {
+        public EntityType<?> getPupEntityType(Random random) {
             return ChangedEntities.DARK_LATEX_WOLF_PUP.get();
         }
 
         @Override
-        public TransfurVariant<?> getTransfurVariant(TransfurCause cause, RandomSource random) {
+        public TransfurVariant<?> getTransfurVariant(TransfurCause cause, Random random) {
             return cause == TransfurCause.LATEX_CONTAINER_FELL ?
                     ChangedTransfurVariants.DARK_LATEX_WOLF_PARTIAL.get() : Util.getRandom(VARIANTS, random).get();
         }
@@ -546,7 +546,7 @@ public abstract class SpreadingLatexType extends LatexType {
         }
 
         @Override
-        public void randomTick(LatexCoverState state, ServerLevel level, BlockPos blockPos, RandomSource random) {
+        public void randomTick(LatexCoverState state, ServerLevel level, BlockPos blockPos, Random random) {
             super.randomTick(state, level, blockPos, random);
 
             if (level.getGameRules().getInt(ChangedGameRules.RULE_LATEX_GROWTH_RATE) == 0 ||
@@ -637,12 +637,12 @@ public abstract class SpreadingLatexType extends LatexType {
         }
 
         @Override
-        public @Nullable EntityType<?> getPupEntityType(RandomSource random) {
+        public @Nullable EntityType<?> getPupEntityType(Random random) {
             return ChangedEntities.PURE_WHITE_LATEX_WOLF_PUP.get();
         }
 
         @Override
-        public @Nullable TransfurVariant<?> getTransfurVariant(TransfurCause cause, RandomSource random) {
+        public @Nullable TransfurVariant<?> getTransfurVariant(TransfurCause cause, Random random) {
             return Util.getRandom(VARIANTS, random).get();
         }
 
@@ -682,7 +682,7 @@ public abstract class SpreadingLatexType extends LatexType {
         }
 
         @Override
-        public void randomTick(@NotNull LatexCoverState state, @NotNull ServerLevel level, @NotNull BlockPos position, @NotNull RandomSource random) {
+        public void randomTick(@NotNull LatexCoverState state, @NotNull ServerLevel level, @NotNull BlockPos position, @NotNull Random random) {
             super.randomTick(state, level, position, random);
 
             if (!level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING))
@@ -698,7 +698,7 @@ public abstract class SpreadingLatexType extends LatexType {
             BlockPos above = position.above();
             if (level.getBlockState(above).is(Blocks.AIR) && level.getBlockState(above.above()).is(Blocks.AIR)) {
                 if (level.getEntitiesOfClass(WhiteLatexEntity.class, new AABB(above).inflate(8)).size() < 8) {
-                    ChangedEntities.PURE_WHITE_LATEX_WOLF.get().spawn(level, (CompoundTag) null, null, above, MobSpawnType.NATURAL, true, true);
+                    ChangedEntities.PURE_WHITE_LATEX_WOLF.get().spawn(level, null, null, above, MobSpawnType.NATURAL, true, true);
                 }
             }
         }

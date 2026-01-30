@@ -19,7 +19,8 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -35,7 +36,7 @@ public class CannedSoup extends Block implements SimpleWaterloggedBlock {
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public CannedSoup() {
-        super(BlockBehaviour.Properties.of().offsetType(OffsetType.XZ).sound(SoundType.COPPER).strength(0.5F).dynamicShape());
+        super(BlockBehaviour.Properties.of(Material.METAL).sound(SoundType.COPPER).strength(0.5F).dynamicShape());
         this.registerDefaultState(this.stateDefinition.any().setValue(CANS, 1).setValue(WATERLOGGED, false));
     }
 
@@ -46,7 +47,7 @@ public class CannedSoup extends Block implements SimpleWaterloggedBlock {
     }
 
     @Override
-    public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
+    public List<ItemStack> getDrops(BlockState state, LootContext.Builder builder) {
         return List.of(new ItemStack(ChangedBlocks.CANNED_SOUP.get(), state.getValue(CANS)));
     }
 

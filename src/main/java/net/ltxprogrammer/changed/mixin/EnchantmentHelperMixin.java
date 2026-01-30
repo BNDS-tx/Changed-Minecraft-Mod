@@ -1,6 +1,5 @@
 package net.ltxprogrammer.changed.mixin;
 
-import com.google.common.collect.Iterables;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -11,9 +10,6 @@ import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.item.AccessoryItem;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.EntityUtil;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -21,7 +17,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -118,7 +113,7 @@ public abstract class EnchantmentHelperMixin {
         AccessorySlots.getForEntity(livingEntity).ifPresent(slots -> {
             slots.forEachSlot((slot, itemStack) -> {
                 if (!itemStack.isEmpty() && itemStack.getItem() instanceof AccessoryItem accessoryItem) {
-                    for (Map.Entry<Enchantment, Integer> entry : itemStack.getAllEnchantments().entrySet()) {
+                    for (Map.Entry<Enchantment, Integer> entry : EnchantmentHelper.getEnchantments(itemStack).entrySet()) {
                         if (accessoryItem.isConsideredByEnchantment(new AccessorySlotContext<>(livingEntity, slot, itemStack), entry.getKey()))
                             visitor.accept(entry.getKey(), entry.getValue());
                     }

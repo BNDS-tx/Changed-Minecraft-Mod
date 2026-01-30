@@ -7,14 +7,12 @@ import net.ltxprogrammer.changed.network.syncher.ChangedEntityDataSerializers;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
@@ -27,6 +25,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -164,7 +163,7 @@ public class WallSign extends HangingEntity {
     }
 
     public void dropItem(@Nullable Entity sourceEntity) {
-        if (this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
+        if (this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
             this.playSound(SoundEvents.PAINTING_BREAK, 1.0F, 1.0F);
             if (sourceEntity instanceof Player) {
                 Player player = (Player)sourceEntity;
@@ -193,13 +192,24 @@ public class WallSign extends HangingEntity {
         return Vec3.atLowerCornerOf(this.pos);
     }
 
-    public Packet<ClientGamePacketListener> getAddEntityPacket() {
-        return new ClientboundAddEntityPacket(this, this.direction.get3DDataValue(), this.getPos());
+    @Override
+    public @NotNull Packet<ClientGamePacketListener> getAddEntityPacket() {
+        int data = this.getDirection().get3DDataValue();
+        return new ClientboundAddEntityPacket(this, data);
     }
 
     public void recreateFromPacket(ClientboundAddEntityPacket packet) {
         super.recreateFromPacket(packet);
-        this.setDirection(Direction.from3DDataValue(packet.getData()));
+        // HangingEntity#setDirection only accepts horizontal directions.
+        // The add-entity packet data for hangings is a 2D (horizontal) facing (0..3).
+        Direction dir = Direction.from3DDataValue(packet.getData());
+
+        // Defensive fallback in case the packet data is malformed or not set.
+        if (!dir.getAxis().isHorizontal()) {
+            dir = Direction.NORTH;
+        }
+
+        this.setDirection(dir);
     }
 
     public ItemStack getPickResult() {

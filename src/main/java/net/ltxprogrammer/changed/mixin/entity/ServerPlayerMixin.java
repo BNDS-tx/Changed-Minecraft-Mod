@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.mojang.authlib.GameProfile;
 import net.ltxprogrammer.changed.Changed;
+import net.ltxprogrammer.changed.aaBackport.EntityBackportHelper;
 import net.ltxprogrammer.changed.ability.AbstractAbility;
 import net.ltxprogrammer.changed.data.AccessorySlots;
 import net.ltxprogrammer.changed.entity.PlayerDataExtension;
@@ -55,7 +56,7 @@ public abstract class ServerPlayerMixin extends Player implements PlayerDataExte
         if (player instanceof PlayerDataExtension ext)
             setBasicPlayerInfo(ext.getBasicPlayerInfo());
 
-        if (player.level().getGameRules().getBoolean(ChangedGameRules.RULE_KEEP_FORM) || restore) {
+        if (player.level.getGameRules().getBoolean(ChangedGameRules.RULE_KEEP_FORM) || restore) {
             ProcessTransfur.ifPlayerTransfurred(player, oldVariant -> {
                 if (!oldVariant.willSurviveTransfur)
                     return;
@@ -78,7 +79,7 @@ public abstract class ServerPlayerMixin extends Player implements PlayerDataExte
         int oldSpawnInvulnerableTime = this.spawnInvulnerableTime;
 
         boolean wrapInvuln;
-        if (this.spawnInvulnerableTime > 0 && this.getTransfurVariant() != null && source.is(ChangedTags.DamageTypes.IS_TRANSFUR)) {
+        if (this.spawnInvulnerableTime > 0 && this.getTransfurVariant() != null && ChangedTags.DamageTypes.isTransfur(source)) {
             this.spawnInvulnerableTime = 0;
             wrapInvuln = true;
         }
@@ -106,6 +107,7 @@ public abstract class ServerPlayerMixin extends Player implements PlayerDataExte
             if (ability.grabbedEntity == null)
                 return;
             ability.grabbedEntity.portalEntrancePos = this.portalEntrancePos;
+//            EntityBackportHelper.setEntityPortalEntrancePos(ability.grabbedEntity, this.portalEntrancePos);
             var newEntity = ability.grabbedEntity.changeDimension(newLevel, teleporter);
             if (ability.grabbedEntity != newEntity && newEntity instanceof LivingEntity newLivingEntity)
                 ability.replaceEntityReference(newLivingEntity);

@@ -2,7 +2,7 @@ package net.ltxprogrammer.changed.effect.particle;
 
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
+import net.ltxprogrammer.changed.aaBackport.JomlConverter;
 import net.ltxprogrammer.changed.entity.Emote;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -13,8 +13,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
+import repack.joml.Quaternionf;
+import repack.joml.Vector3f;
 
 public class EmoteParticle extends TextureSheetParticle {
     private final Entity track;
@@ -55,11 +55,11 @@ public class EmoteParticle extends TextureSheetParticle {
         float z = (float)(Mth.lerp(partialTicks, this.zo, this.z) - camPos.z());
         Quaternionf quat;
         if (this.roll == 0.0F) {
-            quat = camera.rotation();
+            quat = new JomlConverter().toJoml(camera.rotation());
         } else {
-            quat = new Quaternionf(camera.rotation());
+            quat = new Quaternionf(new JomlConverter().toJoml(camera.rotation()));
             float f3 = Mth.lerp(partialTicks, this.oRoll, this.roll);
-            quat.mul(Axis.ZP.rotation(f3));
+            quat.mul(new JomlConverter().toJoml(com.mojang.math.Vector3f.ZP.rotation(f3)));
         }
 
         Vector3f vector3f1 = new Vector3f(-1.0F, -1.0F, 0.0F);

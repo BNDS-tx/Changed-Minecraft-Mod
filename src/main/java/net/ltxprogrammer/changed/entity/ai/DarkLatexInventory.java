@@ -13,7 +13,7 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
@@ -246,7 +246,10 @@ public class DarkLatexInventory implements Container, Nameable {
                     }
 
                     if (slotIndex >= 0) {
-                        this.items.set(slotIndex, itemStack.copyAndClear());
+//                        this.items.set(slotIndex, itemStack.copyAndClear());
+                        ItemStack copy = itemStack.copy();
+                        itemStack.setCount(0);
+                        this.items.set(slotIndex, copy);
                         this.items.get(slotIndex).setPopTime(POP_TIME_DURATION);
                         return true;
                     } else {
@@ -470,7 +473,7 @@ public class DarkLatexInventory implements Container, Nameable {
     }
 
     public Component getName() {
-        return Component.translatable("container.inventory");
+        return new TranslatableComponent("container.inventory");
     }
 
     public ItemStack getArmor(int p_36053_) {
@@ -486,7 +489,7 @@ public class DarkLatexInventory implements Container, Nameable {
 
             for(int i : p_150075_) {
                 ItemStack itemstack = this.armor.get(i);
-                if ((!p_150073_.is(DamageTypeTags.IS_FIRE) || !itemstack.getItem().isFireResistant()) && itemstack.getItem() instanceof ArmorItem) {
+                if ((!p_150073_.isFire() || !itemstack.getItem().isFireResistant()) && itemstack.getItem() instanceof ArmorItem) {
                     itemstack.hurtAndBreak((int)p_150074_, this.entity, (p_35997_) -> {
                         p_35997_.broadcastBreakEvent(EquipmentSlot.byTypeAndIndex(EquipmentSlot.Type.ARMOR, i));
                     });

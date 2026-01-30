@@ -20,8 +20,7 @@ public abstract class CubeDefinitionMixin implements CubeDefinitionExtender {
     private Set<Pair<Direction, Direction>> copyUVStarts = null;
     @Unique
     private Map<Direction, Pair<Integer, Integer>> overrideFaceTexOffs = null;
-    @Mutable
-    @Shadow @Final private Set<Direction> visibleFaces;
+    private Set<Direction> visibleFaces = new HashSet<>();
 
     @Shadow @Final private UVPair texScale;
 

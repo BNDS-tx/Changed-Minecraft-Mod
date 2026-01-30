@@ -9,6 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
@@ -31,7 +32,7 @@ public class PurifierBlockEntity extends BaseContainerBlockEntity implements Sta
     }
 
     protected @NotNull Component getDefaultName() {
-        return Component.translatable("container.changed.purifier");
+        return new TranslatableComponent("container.changed.purifier");
     }
 
     protected @NotNull AbstractContainerMenu createMenu(int p_59293_, @NotNull Inventory p_59294_) {

@@ -26,7 +26,7 @@ import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.material.PushReaction;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -44,13 +44,13 @@ public abstract class TransfurCrystalBlock extends BushBlock {
     private final Supplier<? extends Item> crystal;
 
     public TransfurCrystalBlock(Supplier<? extends TransfurVariant<?>> variant, Supplier<? extends Item> crystal, Properties p_53514_) {
-        super(p_53514_.pushReaction(PushReaction.DESTROY));
+        super(p_53514_);
         this.variant = variant;
         this.crystal = crystal;
     }
 
     public TransfurCrystalBlock(Supplier<? extends Item> crystal, Properties properties) {
-        super(properties.pushReaction(PushReaction.DESTROY));
+        super(properties);
         this.variant = null;
         this.crystal = crystal;
     }
@@ -101,7 +101,7 @@ public abstract class TransfurCrystalBlock extends BushBlock {
     }
 
     @Override
-    public List<ItemStack> getDrops(BlockState blockState, LootParams.Builder lootBuilder) {
+    public List<ItemStack> getDrops(BlockState blockState, LootContext.Builder lootBuilder) {
         if (!shouldDrop(blockState))
             return List.of();
 

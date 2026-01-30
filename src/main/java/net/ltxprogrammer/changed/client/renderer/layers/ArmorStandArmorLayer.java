@@ -32,7 +32,6 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.armortrim.ArmorTrim;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -44,13 +43,11 @@ public class ArmorStandArmorLayer<T extends AbstractArmorStand, M extends Entity
     private static final Map<String, ResourceLocation> ARMOR_LOCATION_CACHE = Maps.newHashMap();
     final LivingEntityRenderer<T, M> parent;
     public final ArmorModelPicker<T, ArmorStandArmorModel<T>> modelPicker;
-    private final TextureAtlas armorTrimAtlas;
 
-    public ArmorStandArmorLayer(LivingEntityRenderer<T, M> parentModel, ArmorModelPicker<T, ArmorStandArmorModel<T>> modelPicker, ModelManager modelManager) {
+    public ArmorStandArmorLayer(LivingEntityRenderer<T, M> parentModel, ArmorModelPicker<T, ArmorStandArmorModel<T>> modelPicker) {
         super(parentModel);
         this.parent = parentModel;
         this.modelPicker = modelPicker;
-        this.armorTrimAtlas = modelManager.getAtlas(Sheets.ARMOR_TRIMS_SHEET);
     }
 
     public void render(PoseStack pose, MultiBufferSource buffers, int packedLight, T entity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
@@ -70,7 +67,7 @@ public class ArmorStandArmorLayer<T extends AbstractArmorStand, M extends Entity
         ItemStack itemstack = FormFittingEnchantment.getFormFitted(entity, entity.getItemBySlot(slot), slot);
         if (itemstack.getItem() instanceof ArmorItem) {
             ArmorItem armoritem = (ArmorItem)itemstack.getItem();
-            if (armoritem.getEquipmentSlot() == slot) {
+            if (armoritem.getEquipmentSlot(itemstack) == slot) {
                 var altModel = model;//net.minecraftforge.client.ForgeHooksClient.getArmorModel(entity, itemstack, slot, model);
                 if (altModel != model) {
                     boolean flag = this.usesInnerModel(slot);
@@ -88,9 +85,6 @@ public class ArmorStandArmorLayer<T extends AbstractArmorStand, M extends Entity
                                 altModel, 1.0F, 1.0F, 1.0F, this.getArmorResource(entity, itemstack, slot, null));
                     }
 
-                    ArmorTrim.getTrim(entity.level().registryAccess(), itemstack).ifPresent((trim) -> {
-                        this.renderTrim(armoritem.getMaterial(), pose, buffers, packedLight, trim, altModel, flag);
-                    });
                     if (itemstack.hasFoil()) {
                         this.renderGlint(pose, buffers, packedLight, altModel);
                     }
@@ -112,9 +106,6 @@ public class ArmorStandArmorLayer<T extends AbstractArmorStand, M extends Entity
                                 model, 1.0F, 1.0F, 1.0F, this.getArmorResource(entity, itemstack, slot, null));
                     }
 
-                    ArmorTrim.getTrim(entity.level().registryAccess(), itemstack).ifPresent((trim) -> {
-                        this.renderTrim(entity, itemstack, slot, armoritem.getMaterial(), pose, buffers, packedLight, trim, model, flag);
-                    });
                     if (itemstack.hasFoil()) {
                         this.renderGlint(entity, itemstack, slot, pose, buffers, packedLight, model);
                     }
@@ -136,35 +127,6 @@ public class ArmorStandArmorLayer<T extends AbstractArmorStand, M extends Entity
     private void renderModel(PoseStack pose, MultiBufferSource buffers, int packedLight, net.minecraft.client.model.Model model, float red, float green, float blue, ResourceLocation armorResource) {
         VertexConsumer vertexconsumer = buffers.getBuffer(RenderType.armorCutoutNoCull(armorResource));
         model.renderToBuffer(pose, vertexconsumer, packedLight, OverlayTexture.NO_OVERLAY, red, green, blue, 1.0F);
-    }
-
-    private void renderTrim(T entity, ItemStack stack, EquipmentSlot slot,
-                            ArmorMaterial material, PoseStack pose, MultiBufferSource buffers, int packedLight, ArmorTrim trim, ArmorStandArmorModel<T> model, boolean inner) {
-        model.prepareVisibility(slot, stack);
-
-        ResourceLocation trimTexture = switch (slot) {
-            case HEAD -> entity.getEntityShape().headShape.getTrimTexture(trim, material);
-            case CHEST -> entity.getEntityShape().torsoShape.getTrimTexture(trim, material);
-            case LEGS -> entity.getEntityShape().legsShape.getTrimTexture(trim, material);
-            case FEET -> entity.getEntityShape().feetShape.getTrimTexture(trim, material);
-            default -> null; // Failsafe below
-        };
-
-        if (trimTexture == null)
-            trimTexture = inner ? trim.innerTexture(material) : trim.outerTexture(material);
-
-        TextureAtlasSprite textureatlassprite = this.armorTrimAtlas.getSprite(trimTexture);
-        VertexConsumer vertexconsumer = textureatlassprite.wrap(buffers.getBuffer(Sheets.armorTrimsSheet()));
-        model.renderForSlot(entity, (RenderLayerParent) this.parent, stack, slot, pose,
-                vertexconsumer, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
-
-        model.prepareVisibility(slot, stack);
-    }
-
-    private void renderTrim(ArmorMaterial material, PoseStack pose, MultiBufferSource buffers, int packedLight, ArmorTrim trim, net.minecraft.client.model.Model model, boolean inner) {
-        TextureAtlasSprite textureatlassprite = this.armorTrimAtlas.getSprite(inner ? trim.innerTexture(material) : trim.outerTexture(material));
-        VertexConsumer vertexconsumer = textureatlassprite.wrap(buffers.getBuffer(Sheets.armorTrimsSheet()));
-        model.renderToBuffer(pose, vertexconsumer, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     private void renderGlint(T entity, ItemStack stack, EquipmentSlot slot,
@@ -215,7 +177,7 @@ public class ArmorStandArmorLayer<T extends AbstractArmorStand, M extends Entity
         ResourceLocation resourcelocation = ARMOR_LOCATION_CACHE.get(s1);
 
         if (resourcelocation == null) {
-            resourcelocation = ResourceLocation.parse(s1);
+            resourcelocation = new ResourceLocation(s1);
             ARMOR_LOCATION_CACHE.put(s1, resourcelocation);
         }
 

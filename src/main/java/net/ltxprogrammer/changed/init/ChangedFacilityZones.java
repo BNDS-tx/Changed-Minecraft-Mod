@@ -16,7 +16,7 @@ public class ChangedFacilityZones {
     public static final DeferredRegister<Zone> REGISTRY = ChangedRegistry.FACILITY_ZONES.createDeferred(Changed.MODID);
 
     private static RegistryObject<Zone> registerZone(String name, Function<ResourceLocation, Zone> ctor) {
-        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Changed.MODID, name);
+        ResourceLocation id = new ResourceLocation(Changed.MODID, name);
         return REGISTRY.register(name, () -> ctor.apply(id));
     }
 

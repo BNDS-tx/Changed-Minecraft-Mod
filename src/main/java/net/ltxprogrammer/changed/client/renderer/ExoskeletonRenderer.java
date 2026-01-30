@@ -1,7 +1,7 @@
 package net.ltxprogrammer.changed.client.renderer;
 
-import com.mojang.math.Axis;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Vector3f;
 import net.ltxprogrammer.changed.client.renderer.model.ExoskeletonModel;
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton;
 import net.minecraft.client.model.geom.EntityModelSet;
@@ -61,7 +61,7 @@ public class ExoskeletonRenderer extends MobRenderer<Exoskeleton, ExoskeletonMod
         }
 
         if (hurtTime > 0.0F) {
-            poseStack.mulPose(Axis.YP.rotationDegrees(Mth.sin(hurtTime) * hurtTime * damageTime / 10.0F * (float)exoskeleton.getHurtDir()));
+            poseStack.mulPose(Vector3f.YP.rotationDegrees(Mth.sin(hurtTime) * hurtTime * damageTime / 10.0F * (float)exoskeleton.getHurtDir()));
         }
 
         super.render(exoskeleton, yRot, partialTicks, poseStack, bufferSource, packedLight);

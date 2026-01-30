@@ -2,7 +2,10 @@ package net.ltxprogrammer.changed.client.tfanimations;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.datafixers.util.Pair;
+import com.mojang.math.Matrix3f;
+import com.mojang.math.Matrix4f;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import net.ltxprogrammer.changed.aaBackport.JomlConverter;
 import net.ltxprogrammer.changed.client.ClientLivingEntityExtender;
 import net.ltxprogrammer.changed.client.CubeExtender;
 import net.ltxprogrammer.changed.client.FormRenderHandler;
@@ -47,10 +50,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix3f;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector3fc;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -116,12 +115,12 @@ public abstract class TransfurAnimator {
         var max = left.getMax();
         var min = left.getMin();
         max.sub(min);
-        float leftMass = max.x * max.y * max.z;
+        float leftMass = max.x() * max.y() * max.z();
 
         max = right.getMax();
         min = right.getMin();
         max.sub(min);
-        float rightMass = max.x * max.y * max.z;
+        float rightMass = max.x() * max.y() * max.z();
 
         return Float.compare(rightMass, leftMass);
     };
@@ -375,15 +374,15 @@ public abstract class TransfurAnimator {
     }
 
     private static Matrix4f lerpMatrix(Matrix4f a, Matrix4f b, float lerp) {
-        Matrix4f out = new Matrix4f(a);
-        out.lerp(b, lerp);
-        return out;
+        repack.joml.Matrix4f out = new repack.joml.Matrix4f(new JomlConverter().toJoml(a));
+        out.lerp(new JomlConverter().toJoml(b), lerp);
+        return new JomlConverter().toMojang(out);
     }
 
     private static Matrix3f lerpMatrix(Matrix3f a, Matrix3f b, float lerp) {
-        Matrix3f out = new Matrix3f(a);
-        out.lerp(b, lerp);
-        return out;
+        repack.joml.Matrix3f out = new repack.joml.Matrix3f(new JomlConverter().toJoml(a));
+        out.lerp(new JomlConverter().toJoml(b), lerp);
+        return new JomlConverter().toMojang(out);
     }
 
     private static float wrapRadians(float angle) {

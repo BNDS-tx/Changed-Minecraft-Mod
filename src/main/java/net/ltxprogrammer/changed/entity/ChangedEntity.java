@@ -502,8 +502,8 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
     }
 
     @Override
-    public @NotNull Packet<ClientGamePacketListener> getAddEntityPacket() {
-        return (Packet<ClientGamePacketListener>) NetworkHooks.getEntitySpawningPacket(this);
+    public @NotNull Packet<?> getAddEntityPacket() {
+        return NetworkHooks.getEntitySpawningPacket(this);
     }
 
     protected static int getLevelBrightnessAt(Level level, BlockPos pos) {
@@ -758,7 +758,7 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
         if(entity instanceof Player)
             ChangedSounds.broadcastSound(entity, ChangedSounds.TRANSFUR_HURT, 1, entity.level.random.nextFloat() * 0.1F + 0.9F);
 
-        entity.hurt(ChangedDamageSources.entityTransfur(entity.level.registryAccess(), source), 0.0F);
+        entity.hurt(ChangedDamageSources.entityTransfur(source), 0.0F);
         boolean doesAbsorption = source.wantAbsorption();
         if (!possibleMobFusions.isEmpty())
             doesAbsorption = true;

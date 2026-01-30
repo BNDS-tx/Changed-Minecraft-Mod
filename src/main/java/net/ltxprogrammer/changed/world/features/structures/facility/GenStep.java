@@ -11,8 +11,8 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
  */
 public record GenStep(StructureTemplate.StructureBlockInfo blockInfo, WeightedRandomList<WeightedPieceNeighborSupplier> validTypes) {
     public Zone getZone() {
-        if (blockInfo.nbt() != null && blockInfo.nbt().contains(GluBlockEntity.ZONE))
-            return ChangedRegistry.FACILITY_ZONES.getValue(TagUtil.getResourceLocation(blockInfo.nbt(), GluBlockEntity.ZONE));
+        if (blockInfo.nbt != null && blockInfo.nbt.contains(GluBlockEntity.ZONE))
+            return ChangedRegistry.FACILITY_ZONES.getValue(TagUtil.getResourceLocation(blockInfo.nbt, GluBlockEntity.ZONE));
         return null;
     }
 }

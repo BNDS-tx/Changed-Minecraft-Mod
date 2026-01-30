@@ -198,7 +198,7 @@ public class DodgeAbilityInstance extends AbstractAbilityInstance {
     }
 
     public void executeDodgeAnimations(LevelAccessor levelAccessor, LivingEntity dodger) {
-        ChangedSounds.broadcastSound(dodger, ChangedSounds.BOW2, 2.5f, 1);
+        ChangedSounds.broadcastSound(dodger, ChangedSounds.CARDBOARD_BOX_OPEN, 2.5f, 1);
         if (this.getDodgeType().shouldPlayDodgeAnimation()) {
             int randomValue = levelAccessor.getRandom().nextInt(6);
             switch (randomValue) {

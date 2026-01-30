@@ -31,15 +31,15 @@ import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.BlockModelRotation;
+import net.minecraft.client.resources.model.SimpleBakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.FileToIdConverter;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.GsonHelper;
-import net.minecraft.util.RandomSource;
+
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -49,14 +49,13 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.NamedRenderTypeManager;
-import net.minecraftforge.client.model.IModelBuilder;
-import net.minecraftforge.client.model.data.ModelData;
-import net.minecraftforge.client.model.geometry.UnbakedGeometryHelper;
+import net.minecraftforge.client.model.data.EmptyModelData;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -70,9 +69,11 @@ import java.util.stream.Stream;
 public class LatexCoveredBlocksRenderer implements PreparableReloadListener {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final ResourceLocation BLOCK_ATLAS = InventoryMenu.BLOCK_ATLAS;
-    public static final FileToIdConverter MODEL_LISTER = FileToIdConverter.json("latex_cover_models");
-    public static final FileToIdConverter STATE_LISTER = FileToIdConverter.json("latex_cover_model_blockstates");
-    private static final ResourceLocation RENDERTYPE_SOLID = ResourceLocation.fromNamespaceAndPath(ResourceLocation.DEFAULT_NAMESPACE, "solid");
+//    public static final FileToIdConverter MODEL_LISTER = FileToIdConverter.json("latex_cover_models");
+//    public static final FileToIdConverter STATE_LISTER = FileToIdConverter.json("latex_cover_model_blockstates");
+    private static final String MODEL_PATH = "latex_cover_models";
+    private static final String STATE_PATH = "latex_cover_model_blockstates";
+    private static final ResourceLocation RENDERTYPE_SOLID = new ResourceLocation(ResourceLocation.DEFAULT_NAMESPACE, "solid");
 
     private static final LatexModelDefinition.Context LATEX_MODEL_DEFINITION_CONTEXT = new LatexModelDefinition.Context();
 
@@ -340,7 +341,7 @@ public class LatexCoveredBlocksRenderer implements PreparableReloadListener {
 
         @Nullable
         public TextureAtlasSprite getParticleIcon() {
-            return surfaceTop == null ? null : surfaceTop.getParticleIcon(ModelData.EMPTY);
+            return surfaceTop == null ? null : surfaceTop.getParticleIcon(EmptyModelData.INSTANCE);
         }
 
         @Nullable
@@ -382,7 +383,7 @@ public class LatexCoveredBlocksRenderer implements PreparableReloadListener {
             BlockAndTintGetter level, LatexCoverGetter latexCoverGetter,
             BlockPos blockPos, VertexConsumer bufferBuilder,
             BlockState blockState, LatexCoverState coverState,
-            RandomSource random) {
+            Random random) {
         final ModelSet modelSet = getModelSet(blockState, coverState);
 
         if (blockState.isCollisionShapeFullBlock(level, blockPos))
@@ -412,37 +413,37 @@ public class LatexCoveredBlocksRenderer implements PreparableReloadListener {
 
         if (surfaceTop && modelSet.surfaceTop != null) {
             modelRenderer.tesselateWithAO(level, modelSet.surfaceTop, blockState, blockPos, poseStack, bufferBuilder, true, random, seed, lightColor,
-                    ModelData.EMPTY, renderType);
+                    EmptyModelData.INSTANCE);
         }
 
         if (surfaceBottom && modelSet.surfaceBottom != null) {
             modelRenderer.tesselateWithAO(level, modelSet.surfaceBottom, blockState, blockPos, poseStack, bufferBuilder, true, random, seed, lightColor,
-                    ModelData.EMPTY, renderType);
+                    EmptyModelData.INSTANCE);
         }
 
         if (surfaceNorth && modelSet.surfaceNorth != null) {
             modelRenderer.tesselateWithAO(level, modelSet.surfaceNorth, blockState, blockPos, poseStack, bufferBuilder, true, random, seed, lightColor,
-                    ModelData.EMPTY, renderType);
+                    EmptyModelData.INSTANCE);
         }
 
         if (surfaceSouth && modelSet.surfaceSouth != null) {
             modelRenderer.tesselateWithAO(level, modelSet.surfaceSouth, blockState, blockPos, poseStack, bufferBuilder, true, random, seed, lightColor,
-                    ModelData.EMPTY, renderType);
+                    EmptyModelData.INSTANCE);
         }
 
         if (surfaceEast && modelSet.surfaceEast != null) {
             modelRenderer.tesselateWithAO(level, modelSet.surfaceEast, blockState, blockPos, poseStack, bufferBuilder, true, random, seed, lightColor,
-                    ModelData.EMPTY, renderType);
+                    EmptyModelData.INSTANCE);
         }
 
         if (surfaceWest && modelSet.surfaceWest != null) {
             modelRenderer.tesselateWithAO(level, modelSet.surfaceWest, blockState, blockPos, poseStack, bufferBuilder, true, random, seed, lightColor,
-                    ModelData.EMPTY, renderType);
+                    EmptyModelData.INSTANCE);
         }
 
         if (modelSet.extra != null) {
             modelRenderer.tesselateWithAO(level, modelSet.extra, blockState, blockPos, poseStack, bufferBuilder, true, random, seed, lightColor,
-                    ModelData.EMPTY, renderType);
+                    EmptyModelData.INSTANCE);
         }
 
         threadLocal.remove();
@@ -469,7 +470,7 @@ public class LatexCoveredBlocksRenderer implements PreparableReloadListener {
             BlockAndTintGetter level, LatexCoverGetter latexCoverGetter,
             BlockPos blockPos, VertexConsumer bufferBuilder,
             BlockState blockState, LatexCoverState coverState,
-            RandomSource random) {
+            Random random) {
         try {
             return this.wrappedTesselate(level, latexCoverGetter, blockPos, bufferBuilder, blockState, coverState, random);
         } catch (Throwable throwable) {
@@ -480,32 +481,63 @@ public class LatexCoveredBlocksRenderer implements PreparableReloadListener {
         }
     }
 
-    private static IModelBuilder<?> modelBuilderFor(TextureAtlasSprite particle) {
-        return IModelBuilder.of(true, true, true,
-                ItemTransforms.NO_TRANSFORMS, ItemOverrides.EMPTY,
-                particle,
-                NamedRenderTypeManager.get(RENDERTYPE_SOLID));
-    }
+//    private static IModelBuilder<?> modelBuilderFor(TextureAtlasSprite particle) {
+//        return IModelBuilder.of(true, true, true,
+//                ItemTransforms.NO_TRANSFORMS, ItemOverrides.EMPTY,
+//                particle,
+//                NamedRenderTypeManager.get(RENDERTYPE_SOLID));
+//    }
+
+//    private static CompletableFuture<Map<Block, LatexModelDefinition>> loadBlockStates(ResourceManager resources, Executor executor) {
+//        return CompletableFuture.supplyAsync(() -> {
+//            return STATE_LISTER.listMatchingResources(resources);
+//        }, executor).thenCompose((namedResources) -> {
+//            List<CompletableFuture<Pair<Block, LatexModelDefinition>>> list = new ArrayList<>(namedResources.size());
+//
+//            for (Map.Entry<ResourceLocation, Resource> entry : namedResources.entrySet()) {
+//                list.add(CompletableFuture.supplyAsync(() -> {
+//                    ResourceLocation blockId = STATE_LISTER.fileToId(entry.getKey());
+//                    Block block = ForgeRegistries.BLOCKS.getValue(blockId);
+//                    if (block == null) {
+//                        LOGGER.error("Skipping {} as it does not map to a block", blockId);
+//                        return null;
+//                    }
+//
+//                    try (Reader reader = entry.getValue().openAsReader()) {
+//                        return Pair.of(block, LatexModelDefinition.fromStream(LATEX_MODEL_DEFINITION_CONTEXT, reader));
+//                    } catch (Exception exception) {
+//                        LOGGER.error("Failed to load model definition {}", entry.getKey(), exception);
+//                        return null;
+//                    }
+//                }, executor));
+//            }
+//
+//            return Util.sequence(list).thenApply((result) -> {
+//                return result.stream().filter(Objects::nonNull).collect(Collectors.toUnmodifiableMap(Pair::getFirst, Pair::getSecond));
+//            });
+//        });
+//    }
 
     private static CompletableFuture<Map<Block, LatexModelDefinition>> loadBlockStates(ResourceManager resources, Executor executor) {
         return CompletableFuture.supplyAsync(() -> {
-            return STATE_LISTER.listMatchingResources(resources);
-        }, executor).thenCompose((namedResources) -> {
-            List<CompletableFuture<Pair<Block, LatexModelDefinition>>> list = new ArrayList<>(namedResources.size());
+            return resources.listResources(STATE_PATH, (filename) -> filename.endsWith(".json"));
+        }, executor).thenCompose((locations) -> {
+            List<CompletableFuture<Pair<Block, LatexModelDefinition>>> list = new ArrayList<>();
 
-            for (Map.Entry<ResourceLocation, Resource> entry : namedResources.entrySet()) {
+            for (ResourceLocation location : locations) {
                 list.add(CompletableFuture.supplyAsync(() -> {
-                    ResourceLocation blockId = STATE_LISTER.fileToId(entry.getKey());
-                    Block block = ForgeRegistries.BLOCKS.getValue(blockId);
-                    if (block == null) {
-                        LOGGER.error("Skipping {} as it does not map to a block", blockId);
-                        return null;
-                    }
+                    try {
+                        Resource resource = resources.getResource(location);
+                        String path = location.getPath();
+                        String idStr = path.substring(STATE_PATH.length() + 1, path.length() - ".json".length());
+                        ResourceLocation id = new ResourceLocation(location.getNamespace(), idStr);
+                        Block block = ForgeRegistries.BLOCKS.getValue(id);
 
-                    try (Reader reader = entry.getValue().openAsReader()) {
-                        return Pair.of(block, LatexModelDefinition.fromStream(LATEX_MODEL_DEFINITION_CONTEXT, reader));
-                    } catch (Exception exception) {
-                        LOGGER.error("Failed to load model definition {}", entry.getKey(), exception);
+                        try (Reader reader = new InputStreamReader(resource.getInputStream())) {
+                            return Pair.of(block, LatexModelDefinition.fromStream(LATEX_MODEL_DEFINITION_CONTEXT, reader));
+                        }
+                    } catch (IOException e) {
+                        LOGGER.error("Failed to load model {}", location, e);
                         return null;
                     }
                 }, executor));
@@ -591,25 +623,58 @@ public class LatexCoveredBlocksRenderer implements PreparableReloadListener {
         });
     }
 
+//    private static CompletableFuture<Map<ResourceLocation, BlockModel>> loadBlockModels(ResourceManager resources, Executor executor) {
+//        return CompletableFuture.supplyAsync(() -> {
+//            return MODEL_LISTER.listMatchingResources(resources);
+//        }, executor).thenCompose((namedResources) -> {
+//            List<CompletableFuture<Pair<ResourceLocation, BlockModel>>> list = new ArrayList<>(namedResources.size());
+//
+//            for (Map.Entry<ResourceLocation, Resource> entry : namedResources.entrySet()) {
+//                list.add(CompletableFuture.supplyAsync(() -> {
+//                    try (Reader reader = entry.getValue().openAsReader()) {
+//                        return Pair.of(MODEL_LISTER.fileToId(entry.getKey()), BlockModel.fromStream(reader));
+//                    } catch (Exception exception) {
+//                        LOGGER.error("Failed to load model {}", entry.getKey(), exception);
+//                        return null;
+//                    }
+//                }, executor));
+//            }
+//
+//            return Util.sequence(list).thenApply((result) -> {
+//                return result.stream().filter(Objects::nonNull).collect(Collectors.toUnmodifiableMap(Pair::getFirst, Pair::getSecond));
+//            });
+//        });
+//    }
+
     private static CompletableFuture<Map<ResourceLocation, BlockModel>> loadBlockModels(ResourceManager resources, Executor executor) {
         return CompletableFuture.supplyAsync(() -> {
-            return MODEL_LISTER.listMatchingResources(resources);
-        }, executor).thenCompose((namedResources) -> {
-            List<CompletableFuture<Pair<ResourceLocation, BlockModel>>> list = new ArrayList<>(namedResources.size());
+            // 1.18.2: listResources 第一个参数是文件夹，第二个是过滤器
+            return resources.listResources(MODEL_PATH, (filename) -> filename.endsWith(".json"));
+        }, executor).thenCompose((locations) -> {
+            List<CompletableFuture<Pair<ResourceLocation, BlockModel>>> list = new ArrayList<>();
 
-            for (Map.Entry<ResourceLocation, Resource> entry : namedResources.entrySet()) {
+            for (ResourceLocation location : locations) {
                 list.add(CompletableFuture.supplyAsync(() -> {
-                    try (Reader reader = entry.getValue().openAsReader()) {
-                        return Pair.of(MODEL_LISTER.fileToId(entry.getKey()), BlockModel.fromStream(reader));
+                    try {
+                        Resource resource = resources.getResource(location);
+                        // 1.18.2: 手动计算 ID (去掉前缀和后缀)
+                        String path = location.getPath();
+                        String idStr = path.substring(MODEL_PATH.length() + 1, path.length() - ".json".length());
+                        ResourceLocation id = new ResourceLocation(location.getNamespace(), idStr);
+
+                        // 1.18.2: 没有 openAsReader，需要用 InputStreamReader
+                        try (Reader reader = new InputStreamReader(resource.getInputStream())) {
+                            return Pair.of(id, BlockModel.fromStream(reader));
+                        }
                     } catch (Exception exception) {
-                        LOGGER.error("Failed to load model {}", entry.getKey(), exception);
+                        LOGGER.error("Failed to load model {}", location, exception);
                         return null;
                     }
                 }, executor));
             }
-
+            // ... 后续 Util.sequence 逻辑不变
             return Util.sequence(list).thenApply((result) -> {
-                return result.stream().filter(Objects::nonNull).collect(Collectors.toUnmodifiableMap(Pair::getFirst, Pair::getSecond));
+                return result.stream().filter(Objects::nonNull).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
             });
         });
     }
@@ -619,39 +684,97 @@ public class LatexCoveredBlocksRenderer implements PreparableReloadListener {
                 .filter(type -> type != ChangedLatexTypes.NONE.get());
     }
 
+//    private static CompletableFuture<Map<ResourceLocation, Map<LatexType, BakedModel>>> bakeModels(Function<ResourceLocation, TextureAtlasSprite> getSprite,
+//                                                                                                   Map<ResourceLocation, BlockModel> unbakedModels,
+//                                                                                                   Executor executor) {
+//        final var modelBakes = unbakedModels.entrySet().stream().map(entry -> {
+//            final var stateBake = getCoverTypes()
+//                    .map(type -> {
+//                        final var properties = IClientLatexTypeExtensions.of(type);
+//
+//                        return CompletableFuture.supplyAsync(() -> modelBuilderFor(getSprite.apply(properties.getTextureForParticle())), executor)
+//                                .thenApply(builder -> {
+//                                    entry.getValue().getElements().forEach(blockElement -> {
+//                                        blockElement.faces.forEach((side, face) -> {
+//                                            var sprite = getSprite.apply(properties.getTextureForFace(side));
+//                                            var quad = UnbakedGeometryHelper.bakeElementFace(blockElement, face, sprite, side, BlockModelRotation.X0_Y0, entry.getKey());
+//                                            if (face.cullForDirection == null)
+//                                                builder.addUnculledFace(quad);
+//                                            else
+//                                                builder.addCulledFace(face.cullForDirection, quad);
+//
+//                                        });
+//                                    });
+//
+//                                    return Pair.of(type, builder.build());
+//                                });
+//                    }).toList();
+//
+//            return Util.sequence(stateBake).thenApply((result) -> {
+//                return Pair.of(entry.getKey(), result.stream().filter(Objects::nonNull).collect(Collectors.toUnmodifiableMap(Pair::getFirst, Pair::getSecond)));
+//            });
+//        }).toList();
+//
+//        return Util.sequence(modelBakes).thenApply((result) -> {
+//            return result.stream().filter(Objects::nonNull).collect(Collectors.toUnmodifiableMap(Pair::getFirst, Pair::getSecond));
+//        });
+//    }
+
     private static CompletableFuture<Map<ResourceLocation, Map<LatexType, BakedModel>>> bakeModels(Function<ResourceLocation, TextureAtlasSprite> getSprite,
                                                                                                    Map<ResourceLocation, BlockModel> unbakedModels,
                                                                                                    Executor executor) {
+        // 1.18.2 需要实例化 FaceBakery
+        final FaceBakery faceBakery = new FaceBakery();
+
         final var modelBakes = unbakedModels.entrySet().stream().map(entry -> {
             final var stateBake = getCoverTypes()
                     .map(type -> {
                         final var properties = IClientLatexTypeExtensions.of(type);
 
-                        return CompletableFuture.supplyAsync(() -> modelBuilderFor(getSprite.apply(properties.getTextureForParticle())), executor)
-                                .thenApply(builder -> {
-                                    entry.getValue().getElements().forEach(blockElement -> {
-                                        blockElement.faces.forEach((side, face) -> {
-                                            var sprite = getSprite.apply(properties.getTextureForFace(side));
-                                            var quad = UnbakedGeometryHelper.bakeElementFace(blockElement, face, sprite, side, BlockModelRotation.X0_Y0, entry.getKey());
-                                            if (face.cullForDirection == null)
-                                                builder.addUnculledFace(quad);
-                                            else
-                                                builder.addCulledFace(face.cullForDirection, quad);
+                        return CompletableFuture.supplyAsync(() -> {
+                            // 1.18.2: 使用 SimpleBakedModel.Builder
+                            TextureAtlasSprite particleSprite = getSprite.apply(properties.getTextureForParticle());
+                            SimpleBakedModel.Builder builder = new SimpleBakedModel.Builder(
+                                    entry.getValue(),
+                                    ItemOverrides.EMPTY,
+                                    true // useBlockLight (通常方块模型为 true)
+                            );
+                            builder.particle(particleSprite);
+                            return builder;
+                        }, executor).thenApply(builder -> {
+                            entry.getValue().getElements().forEach(blockElement -> {
+                                blockElement.faces.forEach((side, face) -> {
+                                    var sprite = getSprite.apply(properties.getTextureForFace(side));
 
-                                        });
-                                    });
+                                    // 1.18.2: 核心修改 - 使用 FaceBakery 烘焙四边形
+                                    // 注意：BlockModelRotation.X0_Y0 是 modelState
+                                    var quad = faceBakery.bakeQuad(
+                                            blockElement.from, blockElement.to,
+                                            face, sprite, side,
+                                            BlockModelRotation.X0_Y0,
+                                            blockElement.rotation,
+                                            true, // uvlock
+                                            entry.getKey() // location
+                                    );
 
-                                    return Pair.of(type, builder.build());
+                                    if (face.cullForDirection == null)
+                                        builder.addUnculledFace(quad);
+                                    else
+                                        builder.addCulledFace(Direction.rotate(BlockModelRotation.X0_Y0.getRotation().getMatrix(), face.cullForDirection), quad);
                                 });
+                            });
+                            return Pair.of(type, builder.build());
+                        });
                     }).toList();
-
+            // ... 后续 Util.sequence 保持不变
             return Util.sequence(stateBake).thenApply((result) -> {
-                return Pair.of(entry.getKey(), result.stream().filter(Objects::nonNull).collect(Collectors.toUnmodifiableMap(Pair::getFirst, Pair::getSecond)));
+                return Pair.of(entry.getKey(), result.stream().filter(Objects::nonNull).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
             });
         }).toList();
 
+        // ...
         return Util.sequence(modelBakes).thenApply((result) -> {
-            return result.stream().filter(Objects::nonNull).collect(Collectors.toUnmodifiableMap(Pair::getFirst, Pair::getSecond));
+            return result.stream().filter(Objects::nonNull).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
         });
     }
 

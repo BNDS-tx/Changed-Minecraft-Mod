@@ -1,6 +1,7 @@
 package net.ltxprogrammer.changed.item;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
@@ -9,7 +10,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 public class SimpleSpawnEggItem extends ForgeSpawnEggItem {
     private static final String baseText = "item.changed.simple_spawn_egg";
-    private static final Component AWAITING = Component.translatable("item.changed.simple_spawn_egg.loading");
+    private static final Component AWAITING = new TranslatableComponent("item.changed.simple_spawn_egg.loading");
     private final RegistryObject<? extends EntityType<? extends Mob>> type;
     private Component name = AWAITING;
 
@@ -21,7 +22,7 @@ public class SimpleSpawnEggItem extends ForgeSpawnEggItem {
     @Override
     public Component getName(ItemStack stack) {
         if (name == AWAITING && type.isPresent())
-            name = Component.translatable(baseText, type.get().getDescription());
+            name = new TranslatableComponent(baseText, type.get().getDescription());
         return name;
     }
 }

@@ -7,7 +7,7 @@ import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.init.ChangedAttributes;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
+
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -15,7 +15,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 @OnlyIn(Dist.CLIENT)
 public class LocalTransfurVariantInstance<T extends ChangedEntity> extends ClientTransfurVariantInstance<T> {
@@ -37,7 +39,7 @@ public class LocalTransfurVariantInstance<T extends ChangedEntity> extends Clien
         }
     }
 
-    public final UUID sprintSpeedModifier = Mth.createInsecureUUID(RandomSource.createNewThreadLocalInstance());
+    public final UUID sprintSpeedModifier = Mth.createInsecureUUID(ThreadLocalRandom.current());
     private static final UUID ENTITY_SPEED_MODIFIER_SPRINTING_UUID = UUID.fromString("662A6B8D-DA3E-4C1C-8813-96EA6097278D");
 
     public void handleSprintModifier(AttributeInstance movementSpeed) {

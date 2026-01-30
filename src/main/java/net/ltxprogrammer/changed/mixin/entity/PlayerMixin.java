@@ -36,7 +36,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ForgeMod;
-import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
@@ -72,7 +71,7 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
     protected void tryToStartFallFlying(CallbackInfoReturnable<Boolean> ci) {
         Player player = (Player)(Object)this;
         if (latexVariant != null && latexVariant.getParent().canGlide) {
-            if (!player.onGround() && !player.isFallFlying() && !player.isInWater() && !player.hasEffect(MobEffects.LEVITATION)) {
+            if (!player.isOnGround() && !player.isFallFlying() && !player.isInWater() && !player.hasEffect(MobEffects.LEVITATION)) {
                 player.startFallFlying();
                 ci.setReturnValue(true);
                 ci.cancel();
@@ -102,14 +101,14 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
 
     @Inject(method = "getHurtSound", at = @At("HEAD"), cancellable = true)
     protected void getHurtSound(DamageSource source, CallbackInfoReturnable<SoundEvent> ci) {
-        if (source.is(ChangedTags.DamageTypes.IS_TRANSFUR))
+        if (ChangedTags.DamageTypes.isTransfur(source))
             ci.setReturnValue(ChangedSounds.TRANSFUR_HURT.get());
     }
 
     @Inject(method = "getSwimSound", at = @At("HEAD"), cancellable = true)
     protected void getSwimSound(CallbackInfoReturnable<SoundEvent> ci) {
         if (WhiteLatexTransportInterface.isEntityInWhiteLatex(this)) {
-            ci.setReturnValue(ForgeRegistries.SOUND_EVENTS.getValue(ResourceLocation.parse("block.slime_block.step")));
+            ci.setReturnValue(ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("block.slime_block.step")));
             ci.cancel();
         }
     }
@@ -147,7 +146,7 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
 
     @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;doPostDamageEffects(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/Entity;)V"))
     public void accessoryAttack(Entity target, CallbackInfo ci) {
-        if (!level().isClientSide)
+        if (!level.isClientSide)
             AccessorySlots.getForEntity((LivingEntity)(Object)this).ifPresent(slots -> slots.onEntityAttack(InteractionHand.MAIN_HAND, target));
     }
 
@@ -297,7 +296,7 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
         this.playerMover = playerMover;
         if (this.playerMover != null)
             this.playerMover.onAdd((Player)(Object)this);
-        if (!level().isClientSide)
+        if (!level.isClientSide)
             Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> this), SyncMoversPacket.Builder.of((Player)(Object)this, false));
     }
 
@@ -316,19 +315,19 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
         return abilityTree;
     }
 
-    @WrapOperation(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;isEmpty()Z"))
-    public boolean canSwimInAir(FluidState instance, Operation<Boolean> original) {
-        return !(this.getTransfurVariant() != null && this.getTransfurVariant().getChangedEntity().canSwimInFluidType(instance.getFluidType())) &&
-                original.call(instance);
-    }
-
-    @Override
-    public boolean canStartSwimming() {
-        return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().canStartSwimming() : super.canStartSwimming();
-    }
-
-    @Override
-    public boolean canSwimInFluidType(FluidType type) {
-        return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().canSwimInFluidType(type) : super.canSwimInFluidType(type);
-    }
+//    @WrapOperation(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;isEmpty()Z"))
+//    public boolean canSwimInAir(FluidState instance, Operation<Boolean> original) {
+//        return !(this.getTransfurVariant() != null && this.getTransfurVariant().getChangedEntity().canSwimInFluidType(instance.getFluidType())) &&
+//                original.call(instance);
+//    }
+//
+//    @Override
+//    public boolean canStartSwimming() {
+//        return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().canStartSwimming() : super.canStartSwimming();
+//    }
+//
+//    @Override
+//    public boolean canSwimInFluidType(FluidType type) {
+//        return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().canSwimInFluidType(type) : super.canSwimInFluidType(type);
+//    }
 }

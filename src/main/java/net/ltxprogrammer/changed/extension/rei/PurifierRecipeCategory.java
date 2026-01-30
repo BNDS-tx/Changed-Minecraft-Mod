@@ -15,6 +15,7 @@ import me.shedaniel.rei.api.common.entry.InputIngredient;
 import me.shedaniel.rei.api.common.util.EntryStacks;
 import net.ltxprogrammer.changed.init.ChangedBlocks;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public class PurifierRecipeCategory implements DisplayCategory<PurifierRecipeDis
 
     public PurifierRecipeCategory() {
         icon = EntryStacks.of(ChangedBlocks.PURIFIER.get());
-        localizedName = Component.translatable("container.changed.purifier");
+        localizedName = new TranslatableComponent("container.changed.purifier");
     }
 
     @Override

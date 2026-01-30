@@ -1,7 +1,7 @@
 package net.ltxprogrammer.changed.client.renderer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import com.mojang.math.Vector3f;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.client.renderer.layers.ArmorStandArmorLayer;
 import net.ltxprogrammer.changed.client.renderer.model.CentaurArmorStandModel;
@@ -23,8 +23,7 @@ public class CentaurArmorStandRenderer extends LivingEntityRenderer<CentaurArmor
     public CentaurArmorStandRenderer(EntityRendererProvider.Context context) {
         super(context, new CentaurArmorStandModel(context.bakeLayer(CentaurArmorStandModel.ARMOR_STAND)), 0.0F);
         this.addLayer(new ArmorStandArmorLayer<>(this,
-                ArmorModelPicker.centaur(context.getModelSet(), CentaurArmorStandModel.MODEL_SET_UPPER, CentaurArmorStandModel.MODEL_SET_LOWER),
-                context.getModelManager()));
+                ArmorModelPicker.centaur(context.getModelSet(), CentaurArmorStandModel.MODEL_SET_UPPER, CentaurArmorStandModel.MODEL_SET_LOWER)));
         //this.addLayer(new ItemInHandLayer<>(this, context.getItemInHandRenderer()));
         //this.addLayer(new ElytraLayer<>(this, context.getModelSet()));
         //this.addLayer(new CustomHeadLayer<>(this, context.getModelSet(), context.getItemInHandRenderer()));
@@ -35,10 +34,10 @@ public class CentaurArmorStandRenderer extends LivingEntityRenderer<CentaurArmor
     }
 
     protected void setupRotations(CentaurArmorStand entity, PoseStack poseStack, float p_113802_, float p_113803_, float p_113804_) {
-        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - p_113803_));
-        float f = (float)(entity.level().getGameTime() - entity.lastHit) + p_113804_;
+        poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F - p_113803_));
+        float f = (float)(entity.level.getGameTime() - entity.lastHit) + p_113804_;
         if (f < 5.0F) {
-            poseStack.mulPose(Axis.YP.rotationDegrees(Mth.sin(f / 1.5F * (float)Math.PI) * 3.0F));
+            poseStack.mulPose(Vector3f.YP.rotationDegrees(Mth.sin(f / 1.5F * (float)Math.PI) * 3.0F));
         }
 
     }

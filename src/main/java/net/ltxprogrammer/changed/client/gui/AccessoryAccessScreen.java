@@ -9,10 +9,10 @@ import net.ltxprogrammer.changed.data.AccessorySlots;
 import net.ltxprogrammer.changed.item.AccessoryItem;
 import net.ltxprogrammer.changed.world.inventory.AccessoryAccessMenu;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
@@ -51,14 +51,14 @@ public class AccessoryAccessScreen extends EffectRenderingInventoryScreen<Access
     private static final ResourceLocation texture = Changed.modResource("textures/gui/accessories.png");
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(graphics);
-        super.render(graphics, mouseX, mouseY, partialTicks);
+    public void render(PoseStack ms, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(ms);
+        super.render(ms, mouseX, mouseY, partialTicks);
 
         this.xMouse = (float)mouseX;
         this.yMouse = (float)mouseY;
 
-        this.renderTooltip(graphics, mouseX, mouseY);
+        this.renderTooltip(ms, mouseX, mouseY);
 
         if (toolTip != null) {
             if (this.menu.getCarried().isEmpty()) {
@@ -69,12 +69,13 @@ public class AccessoryAccessScreen extends EffectRenderingInventoryScreen<Access
     }
 
     @Override
-    protected void renderBg(GuiGraphics graphics, float partialTicks, int gx, int gy) {
-        graphics.setColor(1, 1, 1, 1);
+    protected void renderBg(PoseStack ms, float partialTicks, int gx, int gy) {
+        RenderSystem.setShaderColor(1, 1, 1, 1);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
 
-        graphics.blit(texture, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, this.textureWidth, this.textureHeight);
+        RenderSystem.setShaderTexture(0, texture);
+        blit(ms, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, this.textureWidth, this.textureHeight);
 
         AtomicInteger slotIndex = new AtomicInteger(0);
         menu.getBuiltSlots().forEach(slotType -> {
@@ -93,17 +94,17 @@ public class AccessoryAccessScreen extends EffectRenderingInventoryScreen<Access
                     }).filter(Objects::nonNull).toList();
 
             if (conflictingItems.isEmpty())
-                graphics.blit(texture, this.leftPos + slot.x - 1, this.topPos + slot.y - 1, this.imageWidth, 0, 18, 18, this.textureWidth, this.textureHeight);
+                blit(ms, this.leftPos + slot.x - 1, this.topPos + slot.y - 1, this.imageWidth, 0, 18, 18, this.textureWidth, this.textureHeight);
             else {
-                graphics.blit(texture, this.leftPos + slot.x - 1, this.topPos + slot.y - 1, this.imageWidth, 18, 18, 18, this.textureWidth, this.textureHeight);
+                blit(ms, this.leftPos + slot.x - 1, this.topPos + slot.y - 1, this.imageWidth, 18, 18, 18, this.textureWidth, this.textureHeight);
 
                 if (slot == this.hoveredSlot) {
                     setToolTip(() -> {
                         final var rows = new ArrayList<Component>();
-                        rows.add(Component.translatable("changed.accessory.slot_disabled_by"));
+                        rows.add(new TranslatableComponent("changed.accessory.slot_disabled_by"));
                         conflictingItems.forEach(stack -> rows.add(stack.getHoverName()));
 
-                        graphics.renderTooltip(this.font, rows, Optional.empty(), gx, gy);
+                        this.renderTooltip(ms, rows, Optional.empty(), gx, gy);
                     });
                 }
             }
@@ -113,7 +114,7 @@ public class AccessoryAccessScreen extends EffectRenderingInventoryScreen<Access
 
         int i = this.leftPos;
         int j = this.topPos;
-        InventoryScreen.renderEntityInInventoryFollowsMouse(graphics, i + 51, j + 75, 30, (float)(i + 51) - this.xMouse, (float)(j + 75 - 50) - this.yMouse, this.minecraft.player);
+        InventoryScreen.renderEntityInInventory(i + 51, j + 75, 30, (float)(i + 51) - this.xMouse, (float)(j + 75 - 50) - this.yMouse, this.minecraft.player);
     }
 
     @Override
@@ -142,6 +143,17 @@ public class AccessoryAccessScreen extends EffectRenderingInventoryScreen<Access
     }
 
     @Override
-    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+    protected void renderLabels(PoseStack poseStack, int mouseX, int mouseY) {
+    }
+
+    @Override
+    public void onClose() {
+        super.onClose();
+        Minecraft.getInstance().keyboardHandler.setSendRepeatsToGui(false);
+    }
+
+    @Override
+    public void init() {
+        super.init();
     }
 }

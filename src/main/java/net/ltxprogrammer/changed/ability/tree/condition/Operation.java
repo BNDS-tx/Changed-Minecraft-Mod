@@ -33,7 +33,7 @@ public enum Operation implements StringRepresentable, BiPredicate<Integer, Integ
 
     public static DataResult<Operation> fromSerial(String name) {
         return Arrays.stream(values()).filter(type -> type.serialName.equals(name))
-                .findFirst().map(DataResult::success).orElseGet(() -> DataResult.error(() -> name + " is not a valid Operation"));
+                .findFirst().map(DataResult::success).orElseGet(() -> DataResult.error(name + " is not a valid Operation"));
     }
 
     @Override

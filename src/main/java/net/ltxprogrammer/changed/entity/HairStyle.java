@@ -6,6 +6,8 @@ import net.ltxprogrammer.changed.init.ChangedRegistry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.IExtensibleEnum;
 import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistryEntry;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 import net.minecraftforge.registries.RegistryObject;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,7 +17,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class HairStyle {
+public class HairStyle extends ForgeRegistryEntry<HairStyle> {
     public enum Collection implements IExtensibleEnum {
         MALE("male"),
         FEMALE("female");

@@ -8,6 +8,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -16,7 +17,7 @@ public class Generator extends AbstractLargePanel {
     public static final VoxelShape SHAPE_WHOLE = Block.box(-14.0D, 0.0D, 8.0D, 30.0D, 45.0D, 16.0D);
 
     public Generator() {
-        super(Properties.of().sound(SoundType.METAL).requiresCorrectToolForDrops().strength(6.5F, 7.0F));
+        super(Properties.of(Material.METAL).sound(SoundType.METAL).requiresCorrectToolForDrops().strength(6.5F, 7.0F));
         this.registerDefaultState(this.stateDefinition.any()
                 .setValue(POWERED, false));
     }

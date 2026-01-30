@@ -2,8 +2,10 @@ package net.ltxprogrammer.changed.ability.tree.condition;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.ltxprogrammer.changed.aaBackport.CodecWrapperAC;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.data.RegistryElementPredicate;
+import net.ltxprogrammer.changed.init.ChangedAbilityTreeCodecs;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -28,5 +30,10 @@ public class NthTickCondition extends AbstractCondition {
     @Override
     public Codec<? extends AbstractCondition> getCodec() {
         return CODEC;
+    }
+
+    @Override
+    public CodecWrapperAC<? extends AbstractCondition> getCodecWrapper() {
+        return ChangedAbilityTreeCodecs.NTH_TICK_CONDITION.get();
     }
 }

@@ -25,13 +25,13 @@ public class LatexCoverUpdatePacket implements ChangedPacket {
 
     public LatexCoverUpdatePacket(FriendlyByteBuf buffer) {
         this.pos = buffer.readBlockPos();
-        this.latexCoverState = buffer.readById(ChangedLatexTypes.getLatexCoverStateIDMap());
+        this.latexCoverState = ChangedLatexTypes.getLatexCoverStateIDMap().byId(buffer.readVarInt());
     }
 
     @Override
     public void write(FriendlyByteBuf buffer) {
         buffer.writeBlockPos(this.pos);
-        buffer.writeId(ChangedLatexTypes.getLatexCoverStateIDMap(), this.latexCoverState);
+        buffer.writeVarInt(ChangedLatexTypes.getLatexCoverStateIDMap().getId(this.latexCoverState));
     }
 
     @Override

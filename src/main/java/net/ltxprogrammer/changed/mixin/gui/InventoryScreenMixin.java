@@ -7,7 +7,6 @@ import net.ltxprogrammer.changed.client.gui.AbstractRadialScreen;
 import net.ltxprogrammer.changed.data.AccessorySlots;
 import net.ltxprogrammer.changed.network.packet.AccessorySyncPacket;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -47,7 +46,7 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
     }
 
     @Inject(method = "renderLabels", at = @At("HEAD"), cancellable = true)
-    protected void renderLabels(GuiGraphics graphics, int p_98890_, int p_98891_, CallbackInfo callback) {
+    protected void renderLabels(PoseStack p_98889_, int p_98890_, int p_98891_, CallbackInfo callback) {
         if (this.minecraft == null)
             return;
         if (!Changed.config.client.useGoopyInventory.get())
@@ -64,13 +63,13 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
             if (Mth.abs(secondary.brightness() - primary.brightness()) > 0.1f)
                 textColor = secondary.toInt();
 
-            graphics.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, textColor, false);
+            this.font.draw(p_98889_, this.title, (float) this.titleLabelX, (float) this.titleLabelY, textColor);
             callback.cancel();
         });
     }
 
     @Inject(method = "renderBg", at = @At("HEAD"), cancellable = true)
-    protected void renderBg(GuiGraphics graphics, float p_98871_, int p_98872_, int p_98873_, CallbackInfo callback) {
+    protected void renderBg(PoseStack pose, float p_98871_, int p_98872_, int p_98873_, CallbackInfo callback) {
         if (this.minecraft == null)
             return;
         if (!Changed.config.client.useGoopyInventory.get())
@@ -90,13 +89,12 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
             RenderSystem.setShader(GameRenderer::getPositionTexShader);
             RenderSystem.setShaderTexture(0, LATEX_INVENTORY_LOCATION);
 
-            graphics.setColor(secondary.red(), secondary.green(), secondary.blue(), 1.0F);
-            graphics.blit(LATEX_INVENTORY_LOCATION, i, j, 256, 0, this.imageWidth, this.imageHeight, 768, 256);
-            graphics.setColor(primary.red(), primary.green(), primary.blue(), 1.0F);
-            graphics.blit(LATEX_INVENTORY_LOCATION, i, j, 0, 0, this.imageWidth, this.imageHeight, 768, 256);
-            graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+            RenderSystem.setShaderColor(secondary.red(), secondary.green(), secondary.blue(), 1.0F);
+            blit(pose, i, j, 256, 0, this.imageWidth, this.imageHeight, 768, 256);
+            RenderSystem.setShaderColor(primary.red(), primary.green(), primary.blue(), 1.0F);
+            blit(pose, i, j, 0, 0, this.imageWidth, this.imageHeight, 768, 256);
 
-            InventoryScreen.renderEntityInInventoryFollowsMouse(graphics, i + 51, j + 75, 30, (float)(i + 51) - this.xMouse, (float)(j + 75 - 50) - this.yMouse, this.minecraft.player);
+            InventoryScreen.renderEntityInInventory(i + 51, j + 75, 30, (float)(i + 51) - this.xMouse, (float)(j + 75 - 50) - this.yMouse, this.minecraft.player);
 
             callback.cancel();
         });

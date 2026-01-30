@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
@@ -21,7 +22,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
+import net.minecraftforge.client.IItemRenderProperties;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -57,7 +58,7 @@ public class WallSignItem extends Item {
                 if (wallSign.survives()) {
                     if (!level.isClientSide) {
                         wallSign.playPlacementSound();
-                        level.gameEvent(player, GameEvent.ENTITY_PLACE, wallSign.position());
+                        level.gameEvent(player, GameEvent.ENTITY_PLACE, new BlockPos(wallSign.position()));
                         level.addFreshEntity(wallSign);
                     }
 
@@ -74,19 +75,28 @@ public class WallSignItem extends Item {
         return !direction.getAxis().isVertical() && player.mayUseItemAt(blockPos, direction, itemStack);
     }
 
-    public static void fillItemList(Predicate<WallSignVariant> predicate, CreativeModeTab.ItemDisplayParameters parameters, CreativeModeTab.Output output) {
+//    public static void fillItemList(Predicate<WallSignVariant> predicate, CreativeModeTab.ItemDisplayParameters parameters, CreativeModeTab.Output output) {
+//        ChangedRegistry.WALL_SIGN_VARIANT.get().getValues().stream()
+//                .filter(predicate).forEach(variant -> {
+//                    output.accept(variant.getItem());
+//                });
+//    }
+
+    public static void fillItemList(Predicate<WallSignVariant> predicate, NonNullList<ItemStack> list) {
         ChangedRegistry.WALL_SIGN_VARIANT.get().getValues().stream()
-                .filter(predicate).forEach(variant -> {
-                    output.accept(variant.getItem());
+                .filter(predicate)
+                .forEach(variant -> {
+                    // 1.18.2 中需要手动将 Item 包装成 ItemStack 并加入列表
+                    list.add(new ItemStack(variant.getItem()));
                 });
     }
 
     @Override
-    public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+    public void initializeClient(Consumer<IItemRenderProperties> consumer) {
         super.initializeClient(consumer);
-        consumer.accept(new IClientItemExtensions() {
+        consumer.accept(new IItemRenderProperties() {
             @Override
-            public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+            public BlockEntityWithoutLevelRenderer getItemStackRenderer() {
                 return ChangedClient.itemEntityRenderer.get();
             }
         });

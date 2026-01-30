@@ -9,6 +9,7 @@ import net.ltxprogrammer.changed.init.ChangedRegistry;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
@@ -70,8 +71,8 @@ public class AccessoryAccessMenu extends AbstractContainerMenu {
 
         final ItemStack resolvedCarryRequest = carryRequest;
 
-        NetworkHooks.openScreen(player,
-                new SimpleMenuProvider((id, inv, accessor) -> new AccessoryAccessMenu(id, accessor, slots.getOrderedSlots(), resolvedCarryRequest), Component.empty()),
+        NetworkHooks.openGui(player,
+                new SimpleMenuProvider((id, inv, accessor) -> new AccessoryAccessMenu(id, accessor, slots.getOrderedSlots(), resolvedCarryRequest), TextComponent.EMPTY),
                 extra -> {
                     extra.writeCollection(slots.getOrderedSlots(), ChangedRegistry.ACCESSORY_SLOTS::writeRegistryObject);
                 });

@@ -6,7 +6,7 @@ import net.ltxprogrammer.changed.init.ChangedBlockStateProviders;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.RandomSource;
+
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
@@ -33,7 +33,7 @@ public class DeferredStateProvider extends BlockStateProvider {
         return ChangedBlockStateProviders.DEFERRED_STATE_PROVIDER.get();
     }
 
-    public BlockState getState(RandomSource p_68806_, BlockPos p_68807_) {
+    public BlockState getState(Random p_68806_, BlockPos p_68807_) {
         return this.state.get().defaultBlockState();
     }
 

@@ -7,7 +7,6 @@ import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.util.Color3;
 import net.ltxprogrammer.changed.util.SingleRunnable;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -26,7 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 public abstract class AbstractRadialScreen<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> {
-    static final ResourceLocation ICON_OVERLAY_LOCATION = ResourceLocation.parse("textures/gui/resource_packs.png");
+    static final ResourceLocation ICON_OVERLAY_LOCATION = new ResourceLocation("textures/gui/resource_packs.png");
 
     public final T menu;
     private int tickCount = 0;
@@ -129,25 +128,25 @@ public abstract class AbstractRadialScreen<T extends AbstractContainerMenu> exte
     public abstract @Nullable List<Component> tooltipsFor(int section);
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        Changed.postModEvent(new ContainerScreenEvent.Render.Background(this, graphics, mouseX, mouseY));
-        this.renderBackground(graphics);
-        Changed.postModEvent(new ContainerScreenEvent.Render.Foreground(this, graphics, mouseX, mouseY));
-        this.renderBg(graphics, partialTicks, mouseX, mouseY);
+    public void render(PoseStack ms, int mouseX, int mouseY, float partialTicks) {
+        Changed.postModEvent(new ContainerScreenEvent.DrawBackground(this, ms, mouseX, mouseY));
+        this.renderBackground(ms);
+        Changed.postModEvent(new ContainerScreenEvent.DrawForeground(this, ms, mouseX, mouseY));
+        this.renderBg(ms, partialTicks, mouseX, mouseY);
 
-        graphics.setColor(1, 1, 1, 1);
+        RenderSystem.setShaderColor(1, 1, 1, 1);
         getSectionAt(mouseX, mouseY).ifPresent(section -> {
             var toolTips = tooltipsFor(section);
             if (toolTips != null)
-                graphics.renderTooltip(this.font, toolTips, Optional.empty(), mouseX, mouseY);
+                this.renderTooltip(ms, toolTips, Optional.empty(), mouseX, mouseY);
         });
     }
 
-    public abstract void renderSectionBackground(GuiGraphics graphics,int section, double x, double y, float partialTicks, int mouseX, int mouseY, float red, float green, float blue);
-    public abstract void renderSectionForeground(GuiGraphics graphics,int section, double x, double y, float partialTicks, int mouseX, int mouseY, float red, float green, float blue, float alpha);
+    public abstract void renderSectionBackground(PoseStack pose, int section, double x, double y, float partialTicks, int mouseX, int mouseY, float red, float green, float blue);
+    public abstract void renderSectionForeground(PoseStack pose, int section, double x, double y, float partialTicks, int mouseX, int mouseY, float red, float green, float blue, float alpha);
 
     @Override
-    protected void renderBg(GuiGraphics graphics, float partialTicks, int gx, int gy) {
+    protected void renderBg(PoseStack ms, float partialTicks, int gx, int gy) {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
 
@@ -157,7 +156,7 @@ public abstract class AbstractRadialScreen<T extends AbstractContainerMenu> exte
             int x = (int)(Math.sin(dbl * Math.PI * 2.0) * RADIAL_DISTANCE);
             int y = -(int)(Math.cos(dbl * Math.PI * 2.0) * RADIAL_DISTANCE);
 
-            renderSectionBackground(graphics, sect, x, y, partialTicks, gx, gy, primaryColor.red(), primaryColor.green(), primaryColor.blue());
+            renderSectionBackground(ms, sect, x, y, partialTicks, gx, gy, primaryColor.red(), primaryColor.green(), primaryColor.blue());
         }
 
         double off = getViewOffset();
@@ -178,11 +177,11 @@ public abstract class AbstractRadialScreen<T extends AbstractContainerMenu> exte
             int x = (int)(Math.sin(dbl * Math.PI * 2.0) * RADIAL_DISTANCE);
             int y = -(int)(Math.cos(dbl * Math.PI * 2.0) * RADIAL_DISTANCE * anim);
 
-            renderSectionForeground(graphics, sect, x, y, partialTicks, gx, gy, secondaryColor.red(), secondaryColor.green(), secondaryColor.blue(), (float)anim);
+            renderSectionForeground(ms, sect, x, y, partialTicks, gx, gy, secondaryColor.red(), secondaryColor.green(), secondaryColor.blue(), (float)anim);
         }
 
-        graphics.setColor(1, 1, 1, 1);
-        InventoryScreen.renderEntityInInventoryFollowsMouse(graphics, this.leftPos, this.topPos + 50, 38, (float)(this.leftPos) - gx, (float)(this.topPos) - gy, centerEntity);
+        RenderSystem.setShaderColor(1, 1, 1, 1);
+        InventoryScreen.renderEntityInInventory(this.leftPos, this.topPos + 50, 38, (float)(this.leftPos) - gx, (float)(this.topPos) - gy, centerEntity);
 
         RenderSystem.disableBlend();
     }

@@ -93,13 +93,13 @@ public class ChangedDataFixer {
     });
 
     private final HashMap<ResourceLocation, ResourceLocation> ZONE_REMAP = Util.make(new HashMap<>(), map -> {
-       map.put(ResourceLocation.parse("red_zone"), ChangedFacilityZones.OFFICE_ZONE.getId());
-       map.put(ResourceLocation.parse("gray_zone"), ChangedFacilityZones.GENERAL_ZONE.getId());
-       map.put(ResourceLocation.parse("library_zone"), ChangedFacilityZones.LIBRARY_ZONE.getId());
-       map.put(ResourceLocation.parse("vent_zone"), ChangedFacilityZones.VENT_ZONE.getId());
-       map.put(ResourceLocation.parse("maintenance_zone"), ChangedFacilityZones.MAINTENANCE_ZONE.getId());
-       map.put(ResourceLocation.parse("greenhouse_zone"), ChangedFacilityZones.GREENHOUSE_ZONE.getId());
-       map.put(ResourceLocation.parse("blue_zone"), ChangedFacilityZones.ENTRANCE_ZONE.getId());
+       map.put(new ResourceLocation("red_zone"), ChangedFacilityZones.OFFICE_ZONE.getId());
+       map.put(new ResourceLocation("gray_zone"), ChangedFacilityZones.GENERAL_ZONE.getId());
+       map.put(new ResourceLocation("library_zone"), ChangedFacilityZones.LIBRARY_ZONE.getId());
+       map.put(new ResourceLocation("vent_zone"), ChangedFacilityZones.VENT_ZONE.getId());
+       map.put(new ResourceLocation("maintenance_zone"), ChangedFacilityZones.MAINTENANCE_ZONE.getId());
+       map.put(new ResourceLocation("greenhouse_zone"), ChangedFacilityZones.GREENHOUSE_ZONE.getId());
+       map.put(new ResourceLocation("blue_zone"), ChangedFacilityZones.ENTRANCE_ZONE.getId());
     });
 
     private final HashMap<ResourceLocation, ResourceLocation> VARIANT_ID_REMAP = Util.make(new HashMap<>(), map -> {

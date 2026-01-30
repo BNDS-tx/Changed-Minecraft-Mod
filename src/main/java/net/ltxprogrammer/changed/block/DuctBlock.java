@@ -385,7 +385,7 @@ public class DuctBlock extends ChangedBlock implements SimpleWaterloggedBlock {
                 BlockPos currentPos = player.blockPosition();
                 BlockPos nextPos = currentPos.relative(moveDir);
 
-                BlockState nextState = player.level().getBlockState(nextPos);
+                BlockState nextState = player.level.getBlockState(nextPos);
                 if (!nextState.is(ductBlock) && !nextState.is(ChangedTags.Blocks.DUCT_EXIT))
                     return;
 
@@ -408,7 +408,7 @@ public class DuctBlock extends ChangedBlock implements SimpleWaterloggedBlock {
 
             @Override
             public boolean shouldRemoveMover(Player player, InputWrapper input, LogicalSide side) {
-                return !player.level().getBlockState(player.blockPosition()).is(ductBlock);
+                return !player.level.getBlockState(player.blockPosition()).is(ductBlock);
             }
 
             @Override

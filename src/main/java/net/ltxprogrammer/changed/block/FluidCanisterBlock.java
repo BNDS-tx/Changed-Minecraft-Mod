@@ -7,7 +7,6 @@ import net.ltxprogrammer.changed.item.GasCanister;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -26,12 +25,12 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.material.*;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.fluids.ForgeFlowingFluid;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -44,7 +43,7 @@ import static net.ltxprogrammer.changed.item.GasCanister.CAPACITY;
 public class FluidCanisterBlock extends AbstractCustomShapeTallEntityBlock {
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
     public static final VoxelShape SHAPE_WHOLE = Block.box(4.0D, 0.0D, 4.0D, 12.0D, 28.0D, 12.0D);
-    private final @Nullable Supplier<? extends Gas> gas;
+    private final @Nullable Supplier<? extends ForgeFlowingFluid> gas;
     private FluidState stateOpen;
     private FluidState stateClosed;
 
@@ -55,8 +54,8 @@ public class FluidCanisterBlock extends AbstractCustomShapeTallEntityBlock {
             stateClosed = Fluids.EMPTY.defaultFluidState();
     }
 
-    public FluidCanisterBlock(@Nullable Supplier<? extends Gas> gas) {
-        super(BlockBehaviour.Properties.of().sound(SoundType.METAL).strength(0.7F));
+    public FluidCanisterBlock(@Nullable Supplier<? extends ForgeFlowingFluid> gas) {
+        super(BlockBehaviour.Properties.of(Material.METAL, MaterialColor.COLOR_GRAY).sound(SoundType.METAL).strength(0.7F));
         this.registerDefaultState(this.stateDefinition.any().setValue(HALF, DoubleBlockHalf.LOWER).setValue(OPEN, false));
         this.gas = gas;
     }
@@ -81,7 +80,7 @@ public class FluidCanisterBlock extends AbstractCustomShapeTallEntityBlock {
     }
 
     @Override
-    public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
+    public List<ItemStack> getDrops(BlockState state, LootContext.Builder builder) {
         var blockEntity = builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
         var canisterEntity = blockEntity instanceof GasCanisterBlockEntity ? (GasCanisterBlockEntity)blockEntity : null;
         return super.getDrops(state, builder).stream().peek(itemStack -> {
@@ -141,7 +140,7 @@ public class FluidCanisterBlock extends AbstractCustomShapeTallEntityBlock {
     }
 
     @Override
-    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, Random random) {
         super.tick(state, level, pos, random);
         var beBottom = level.getBlockEntity(state.getValue(HALF) == DoubleBlockHalf.LOWER ? pos : pos.below(), ChangedBlockEntities.GAS_CANISTER.get());
         var beTop = level.getBlockEntity(state.getValue(HALF) == DoubleBlockHalf.LOWER ? pos.above() : pos, ChangedBlockEntities.GAS_CANISTER.get());

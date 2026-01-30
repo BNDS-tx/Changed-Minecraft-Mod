@@ -45,9 +45,15 @@ public class AbstractArmorStandItem extends Item {
          AABB aabb = entityType.get().getDimensions().makeBoundingBox(vec3.x(), vec3.y(), vec3.z());
          if (level.noCollision((Entity)null, aabb) && level.getEntities((Entity)null, aabb).isEmpty()) {
             if (level instanceof ServerLevel serverLevel) {
-               ArmorStand armorstand = entityType.get().create(serverLevel, itemstack.getTag(),
-                       EntityType.createDefaultStackConfig(serverLevel, itemstack, context.getPlayer()),
-                       blockpos, MobSpawnType.SPAWN_EGG, true, true);
+               ArmorStand armorstand = (ArmorStand) entityType.get().spawn(
+                       serverLevel,
+                       itemstack,           // 传入 ItemStack，自动应用 NBT 和名字
+                       context.getPlayer(), // 传入 Player
+                       blockpos,
+                       MobSpawnType.SPAWN_EGG,
+                       true,
+                       true
+               );
                if (armorstand == null) {
                   return InteractionResult.FAIL;
                }

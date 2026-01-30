@@ -8,7 +8,6 @@ import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.init.ChangedEntities;
 import net.ltxprogrammer.changed.init.ChangedTags;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
@@ -43,12 +42,13 @@ public abstract class VariantRadialScreen<T extends AbstractContainerMenu> exten
     }
 
     @Override
-    public void renderSectionBackground(GuiGraphics graphics, int section, double x, double y, float partialTicks, int mouseX, int mouseY, float red, float green, float blue) {
+    public void renderSectionBackground(PoseStack pose, int section, double x, double y, float partialTicks, int mouseX, int mouseY, float red, float green, float blue) {
         var hovered = getSectionAt(mouseX, mouseY);
         boolean anyHovered = hovered.isPresent();
         boolean thisHovered = anyHovered && hovered.get() == section;
-        graphics.setColor(red, green, blue, 1);
-        graphics.blit(getTextureForSection(TransfurVariant.getEntityVariant((LivingEntity) Minecraft.getInstance().getCameraEntity()), section, thisHovered, anyHovered),
-                (int)x - 32 + this.leftPos, (int)y - 32 + this.topPos, 0, 0, 64, 64, 64, 64);
+        RenderSystem.setShaderColor(red, green, blue, 1);
+        RenderSystem.setShaderTexture(0,
+                getTextureForSection(TransfurVariant.getEntityVariant((LivingEntity) Minecraft.getInstance().getCameraEntity()), section, thisHovered, anyHovered));
+        blit(pose, (int)x - 32 + this.leftPos, (int)y - 32 + this.topPos, 0, 0, 64, 64, 64, 64);
     }
 }

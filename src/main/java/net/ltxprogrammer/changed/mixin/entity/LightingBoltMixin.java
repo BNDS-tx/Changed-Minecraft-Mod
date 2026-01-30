@@ -27,7 +27,7 @@ public abstract class LightingBoltMixin extends Entity {
     @Inject(method = "spawnFire", at = @At("HEAD"), cancellable = true)
     private void latexCoverIsStruckByLighting(CallbackInfo ci) {
         BlockPos strikePosition = this.getStrikePosition();
-        Level level = level();
+        Level level = this.level;
         LatexCoverState strikePositionCoverState = LatexCoverState.getAt(level, strikePosition);
         LightningBolt self = (LightningBolt) (Object) this;
         if (!strikePositionCoverState.isAir()) {

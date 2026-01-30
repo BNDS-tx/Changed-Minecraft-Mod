@@ -47,7 +47,7 @@ public class LatexSiren extends AbstractAquaticGenderedEntity {
         if (getTarget() == null)
             return false;
         var target = getTarget();
-        return !target.isEyeInFluidType(Fluids.WATER.getFluidType());
+        return !target.isEyeInFluid(FluidTags.WATER);
     }
 
     @Override

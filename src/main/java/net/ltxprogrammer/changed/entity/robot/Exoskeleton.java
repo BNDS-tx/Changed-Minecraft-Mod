@@ -166,11 +166,11 @@ public class Exoskeleton extends AbstractRobot {
     public LivingEntity getActiveAttackTarget() {
         if (!this.hasActiveAttackTarget()) {
             return null;
-        } else if (this.level().isClientSide) {
+        } else if (this.level.isClientSide) {
             if (this.clientSideCachedAttackTarget != null) {
                 return this.clientSideCachedAttackTarget;
             } else {
-                Entity entity = this.level().getEntity(this.entityData.get(DATA_ID_ATTACK_TARGET));
+                Entity entity = this.level.getEntity(this.entityData.get(DATA_ID_ATTACK_TARGET));
                 if (entity instanceof LivingEntity) {
                     this.clientSideCachedAttackTarget = (LivingEntity)entity;
                     return this.clientSideCachedAttackTarget;
@@ -228,9 +228,9 @@ public class Exoskeleton extends AbstractRobot {
         boolean moved = AccessorySlots.getForEntity(player).map(slots ->
                 slots.moveToSlot(ChangedAccessorySlots.FULL_BODY.get(), this.getDropItem())).orElse(false);
         if (moved) {
-            if (!this.level().isClientSide)
+            if (!this.level.isClientSide)
                 this.discard();
-            return InteractionResult.sidedSuccess(this.level().isClientSide);
+            return InteractionResult.sidedSuccess(this.level.isClientSide);
         }
         return super.mobInteract(player, hand);
     }
@@ -245,7 +245,7 @@ public class Exoskeleton extends AbstractRobot {
         super.tick();
 
         if (this.isCharging() && this.getSleepingPos().isPresent()) {
-            final var panel = level().getBlockState(this.getSleepingPos().get());
+            final var panel = level.getBlockState(this.getSleepingPos().get());
             if (panel.getBlock() instanceof AbstractLargePanel) {
                 final var section = panel.getValue(AbstractLargePanel.SECTION);
                 final var facing = panel.getValue(AbstractLargePanel.FACING);
@@ -254,14 +254,14 @@ public class Exoskeleton extends AbstractRobot {
                 this.setPos(entityPos.getX() + 0.5D, entityPos.getY(), entityPos.getZ() + 0.5D);
                 this.setOldPosAndRot();
             } else {
-                if (this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
+                if (this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
                     this.spawnAtLocation(this.getDropItem());
                 }
 
                 this.discard();
             }
         } else if (this.isCharging()) {
-            if (this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
+            if (this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
                 this.spawnAtLocation(this.getDropItem());
             }
 
@@ -469,7 +469,7 @@ public class Exoskeleton extends AbstractRobot {
                             ChangedSounds.broadcastSound(exoskeleton, ChangedSounds.LASER_FIRE, 1, 1);
                         }
                     } else if (this.attackTime >= this.exoskeleton.getAttackDuration()) {
-                        float amount = ProcessTransfur.difficultyAdjustTransfurAmount(exoskeleton.level().getDifficulty(), 11.0f);
+                        float amount = ProcessTransfur.difficultyAdjustTransfurAmount(exoskeleton.level.getDifficulty(), 11.0f);
 
                         ItemUtil.isWearingItem(target, ChangedItems.BENIGN_SHORTS.get()).ifPresent(slottedItem -> {
                             if (ProcessTransfur.progressTransfur(target, amount, BenignShorts.getBenignTransfurVariant(target), TransfurContext.hazard(TransfurCause.BENIGN_SHORTS)))

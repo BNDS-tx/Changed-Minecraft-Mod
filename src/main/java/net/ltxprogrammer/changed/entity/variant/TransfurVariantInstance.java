@@ -43,7 +43,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.*;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -149,12 +149,12 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
         ticksFlying = tag.getInt("ticksFlying");
 
         TagUtil.readMap(tag.getCompound("previousAttributes"), (key, map) ->
-                Util.ifElse(Optional.ofNullable(ForgeRegistries.ATTRIBUTES.getValue(ResourceLocation.parse(key))), attribute ->
+                Util.ifElse(Optional.ofNullable(ForgeRegistries.ATTRIBUTES.getValue(new ResourceLocation(key))), attribute ->
                         previousAttributes.put(attribute, map.getDouble(key)),
                         () -> TagUtil.LOGGER.warn("Missing registered attribute {}", key))
         );
         TagUtil.readMap(tag.getCompound("newAttributes"), (key, map) ->
-                Util.ifElse(Optional.ofNullable(ForgeRegistries.ATTRIBUTES.getValue(ResourceLocation.parse(key))), attribute ->
+                Util.ifElse(Optional.ofNullable(ForgeRegistries.ATTRIBUTES.getValue(new ResourceLocation(key))), attribute ->
                         newAttributes.put(attribute, map.getDouble(key)),
                         () -> TagUtil.LOGGER.warn("Missing registered attribute {}", key))
         );
@@ -178,7 +178,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
         willSurviveTransfur = tag.getBoolean("willSurviveTransfur");
         isTemporaryFromSuit = tag.getBoolean("isTemporaryFromSuit");
 
-        transfurContext = TransfurContext.fromTag(tag.getCompound("transfurContext"), host.level());
+        transfurContext = TransfurContext.fromTag(tag.getCompound("transfurContext"), host.level);
 
         this.loadAbilities(tag.getCompound("abilities"));
 
@@ -226,7 +226,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
 
     public TransfurVariantInstance(TransfurVariant<T> parent, Player host) {
         this.parent = parent;
-        this.entity = parent.generateForm(host, host.level());
+        this.entity = parent.generateForm(host, host.level);
         this.host = host;
 
         this.transfurMode = parent.transfurMode;
@@ -327,7 +327,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
             return;
         }
 
-        ProcessTransfur.ifPlayerTransfurred(event.getEntity(), variant -> {
+        ProcessTransfur.ifPlayerTransfurred(event.getPlayer(), variant -> {
             if (!variant.getItemUseMode().canUseHand(event.getHand()))
                 event.setCanceled(true);
         });
@@ -340,7 +340,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
             return;
         }
 
-        ProcessTransfur.ifPlayerTransfurred(event.getEntity(), variant -> {
+        ProcessTransfur.ifPlayerTransfurred(event.getPlayer(), variant -> {
             if (!variant.getItemUseMode().canUseHand(event.getHand()))
                 event.setCanceled(true);
         });
@@ -353,7 +353,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
             return;
         }
 
-        ProcessTransfur.ifPlayerTransfurred(event.getEntity(), variant -> {
+        ProcessTransfur.ifPlayerTransfurred(event.getPlayer(), variant -> {
             if (!variant.getItemUseMode().interactWithBlocks)
                 event.setCanceled(true);
         });
@@ -371,15 +371,16 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
             return;
         }
 
-        ProcessTransfur.ifPlayerTransfurred(event.getEntity(), variant -> {
-            if (!variant.getItemUseMode().breakBlocks && !event.getEntity().getAbilities().instabuild)
+        ProcessTransfur.ifPlayerTransfurred(event.getPlayer(), variant -> {
+            if (!variant.getItemUseMode().breakBlocks && !event.getPlayer().getAbilities().instabuild)
                 event.setCanceled(true);
         });
     }
 
     @SubscribeEvent
     public static void onLivingFallEvent(LivingFallEvent event) {
-        var attributes = event.getEntity().getAttributes();
+        if (!(event.getEntity() instanceof Player player)) return;
+        var attributes = player.getAttributes();
         if (attributes.hasAttribute(ChangedAttributes.FALL_RESISTANCE.get())) {
             event.setDistance(event.getDistance() / (float) attributes.getValue(ChangedAttributes.FALL_RESISTANCE.get()));
         }
@@ -441,9 +442,9 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
 
             instance.tick();
             if (!event.player.isSpectator()) {
-                if (!instance.entity.level().isClientSide)
+                if (!instance.entity.level.isClientSide)
                     instance.entity.tickLeash();
-                instance.getChangedEntity().variantTick(event.player.level());
+                instance.getChangedEntity().variantTick(event.player.level);
             }
         });
     }
@@ -460,16 +461,16 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
 
     @SubscribeEvent
     public static void onPlayerSpawn(PlayerEvent.PlayerRespawnEvent event) {
-        ProcessTransfur.ifPlayerTransfurred(event.getEntity(), instance -> {
-            if (instance.isDead() && !event.getEntity().level().getGameRules().getBoolean(ChangedGameRules.RULE_KEEP_FORM))
-                ProcessTransfur.removePlayerTransfurVariant(event.getEntity());
+        ProcessTransfur.ifPlayerTransfurred(event.getPlayer(), instance -> {
+            if (instance.isDead() && !event.getEntity().level.getGameRules().getBoolean(ChangedGameRules.RULE_KEEP_FORM))
+                ProcessTransfur.removePlayerTransfurVariant(event.getPlayer());
         });
 
-        AccessoryEntities.INSTANCE.forceReloadAccessories(event.getEntity());
+        AccessoryEntities.INSTANCE.forceReloadAccessories(event.getPlayer());
     }
 
     @SubscribeEvent
-    public static void onPlayerJoin(EntityJoinLevelEvent event) {
+    public static void onPlayerJoin(EntityJoinWorldEvent event) {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             serverPlayer.connection.send(
                     Changed.PACKET_HANDLER.toVanillaPacket(BasicPlayerInfoPacket.EMPTY, NetworkDirection.PLAY_TO_CLIENT)
@@ -613,7 +614,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
     public static void syncInventory(ChangedEntity living, Player player, boolean reset) {
         for (EquipmentSlot value : EquipmentSlot.values()) {
             boolean shouldReset = reset && (value == EquipmentSlot.MAINHAND || value == EquipmentSlot.OFFHAND);
-            if(!ItemStack.isSameItem(living.getItemBySlot(value), shouldReset ? ItemStack.EMPTY : player.getItemBySlot(value))) {
+            if(!(living.getItemBySlot(value) == (shouldReset ? ItemStack.EMPTY : player.getItemBySlot(value)))) {
                 living.setItemSlot(value, shouldReset ? ItemStack.EMPTY : player.getItemBySlot(value).copy());
             }
         }
@@ -728,12 +729,12 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
         transfurProgressionO = transfurProgression;
         if (transfurProgression < 1f) {
             transfurProgression += (1.0f / transfurContext.cause.getDuration()) * 0.05f;
-            if (!host.level().getGameRules().getBoolean(ChangedGameRules.RULE_DO_TRANSFUR_ANIMATION)) {
+            if (!host.level.getGameRules().getBoolean(ChangedGameRules.RULE_DO_TRANSFUR_ANIMATION)) {
                 transfurProgressionO = 1f;
                 transfurProgression = 1f;
             }
 
-            if (host.level().getGameRules().getBoolean(ChangedGameRules.RULE_KEEP_BRAIN)) {
+            if (host.level.getGameRules().getBoolean(ChangedGameRules.RULE_KEEP_BRAIN)) {
                 willSurviveTransfur = true;
             }
 
@@ -784,7 +785,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
     }
 
     @SubscribeEvent
-    public static void onLivingBreathe(LivingBreatheEvent event) {
+    public static void onLivingBreathe(LivingEvent.LivingUpdateEvent event) {
         ProcessTransfur.ifPlayerTransfurred(EntityUtil.playerOrNull(event.getEntity()), variant -> {
             if (!variant.shouldApplyAbilities())
                 return;
@@ -793,21 +794,25 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
         });
     }
 
-    protected void tickBreathing(LivingBreatheEvent event) {
+    protected void tickBreathing(LivingEvent.LivingUpdateEvent event) {
         if (!shouldApplyAbilities())
             return;
 
         if (breatheMode == TransfurVariant.BreatheMode.NONE) {
             this.ticksBreathingUnderwater = 0;
 
-            event.setCanBreathe(true);
-            event.setCanRefillAir(false);
-        } else if (host.isEyeInFluidType(Fluids.WATER.getFluidType())) {
+//            event.setCanBreathe(true);
+            event.getEntity().setAirSupply(1);
+//            event.setCanRefillAir(false);
+
+//        } else if (host.isEyeInFluidType(Fluids.WATER.getFluidType())) {
+        } else if (host.isEyeInFluid(FluidTags.WATER)) {
             if (breatheMode.canBreatheWater()) {
                 this.ticksBreathingUnderwater++;
 
-                event.setCanBreathe(true);
-                event.setCanRefillAir(true);
+//                event.setCanBreathe(true);
+                event.getEntity().setAirSupply(host.getMaxAirSupply());
+//                event.setCanRefillAir(true);
             }
 
             else {
@@ -815,8 +820,9 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
             }
         } else {
             if (!breatheMode.canBreatheAir()) {
-                event.setCanBreathe(false);
-                event.setCanRefillAir(false);
+//                event.setCanBreathe(false);
+                event.getEntity().setAirSupply(0);
+//                event.setCanRefillAir(false);
             }
 
             this.ticksBreathingUnderwater = 0;
@@ -886,7 +892,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
         this.tickTransfurProgress();
 
         host.refreshDimensions();
-        if (host.onGround())
+        if (host.isOnGround())
             jumpCharges = parent.extraJumpCharges;
 
         this.tickFlying();
@@ -1037,7 +1043,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
     public float getFoodEfficiency() {
         if (host.isSwimming() || host.isEyeInFluid(FluidTags.WATER) || host.isInWater()) {
             return getSwimEfficiency();
-        } else if (host.onGround() && host.isSprinting()) {
+        } else if (host.isOnGround() && host.isSprinting()) {
             return getSprintEfficiency();
         }
 

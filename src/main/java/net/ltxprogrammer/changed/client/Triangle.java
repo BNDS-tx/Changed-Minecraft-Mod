@@ -2,9 +2,10 @@ package net.ltxprogrammer.changed.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.ltxprogrammer.changed.aaBackport.JomlConverter;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.builders.UVPair;
-import org.joml.*;
+import repack.joml.*;
 
 import javax.annotation.Nullable;
 
@@ -18,8 +19,8 @@ public class Triangle {
     }
 
     public void compile(PoseStack.Pose pose, VertexConsumer consumer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-        Matrix4f matrix4f = pose.pose();
-        Matrix3f matrix3f = pose.normal();
+        Matrix4f matrix4f = new JomlConverter().toJoml(pose.pose());
+        Matrix3f matrix3f = new JomlConverter().toJoml(pose.normal());
 
         Vector3f vector3f = new Vector3f(this.normal);
         vector3f.mul(matrix3f);
@@ -59,9 +60,9 @@ public class Triangle {
 
         public Triangle bake(int textureWidth, int textureHeight) {
             ModelPart.Vertex[] vertices = new ModelPart.Vertex[]{
-                    new ModelPart.Vertex(p1, uv1.u() / (float)textureWidth, uv1.v() / (float)textureHeight),
-                    new ModelPart.Vertex(p2, uv2.u() / (float)textureWidth, uv2.v() / (float)textureHeight),
-                    new ModelPart.Vertex(p3, uv3.u() / (float)textureWidth, uv3.v() / (float)textureHeight)
+                    new ModelPart.Vertex(new JomlConverter().toMojang(p1), uv1.u() / (float)textureWidth, uv1.v() / (float)textureHeight),
+                    new ModelPart.Vertex(new JomlConverter().toMojang(p2), uv2.u() / (float)textureWidth, uv2.v() / (float)textureHeight),
+                    new ModelPart.Vertex(new JomlConverter().toMojang(p3), uv3.u() / (float)textureWidth, uv3.v() / (float)textureHeight)
             };
 
             Vector3f p1p2 = new Vector3f(p2);

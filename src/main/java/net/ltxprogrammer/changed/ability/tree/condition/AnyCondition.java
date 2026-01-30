@@ -2,7 +2,9 @@ package net.ltxprogrammer.changed.ability.tree.condition;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.ltxprogrammer.changed.aaBackport.CodecWrapperAC;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
+import net.ltxprogrammer.changed.init.ChangedAbilityTreeCodecs;
 
 import java.util.List;
 
@@ -25,5 +27,10 @@ public class AnyCondition extends AbstractCondition {
     @Override
     public Codec<? extends AbstractCondition> getCodec() {
         return CODEC;
+    }
+
+    @Override
+    public CodecWrapperAC<? extends AbstractCondition> getCodecWrapper() {
+        return ChangedAbilityTreeCodecs.ANY_CONDITION.get();
     }
 }

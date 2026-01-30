@@ -38,7 +38,7 @@ public class Caffeinated extends MobEffect {
 
         int downsideAmplifier = Mth.clamp(amplifier, 3, 5) - 3;
         if (amplifier > 2 && duration % (3 - downsideAmplifier) * 40 == 0) {
-            entity.hurt(ChangedDamageSources.HEART_ATTACK.source(entity.level().registryAccess()), 1);
+            entity.hurt(ChangedDamageSources.HEART_ATTACK.source(entity), 1);
         }
     }
 

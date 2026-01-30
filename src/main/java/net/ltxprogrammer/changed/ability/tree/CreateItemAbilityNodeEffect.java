@@ -2,10 +2,12 @@ package net.ltxprogrammer.changed.ability.tree;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.ltxprogrammer.changed.aaBackport.CodecWrapperATNE;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.ability.SimpleCreateItemAbility;
 import net.ltxprogrammer.changed.ability.tree.condition.AbstractCondition;
 import net.ltxprogrammer.changed.ability.tree.condition.TrueCondition;
+import net.ltxprogrammer.changed.init.ChangedAbilityTreeCodecs;
 import net.minecraft.world.item.ItemStack;
 
 public class CreateItemAbilityNodeEffect extends AbilityTree.NodeEffect {
@@ -45,5 +47,10 @@ public class CreateItemAbilityNodeEffect extends AbilityTree.NodeEffect {
     @Override
     public Codec<? extends AbilityTree.NodeEffect> getCodec() {
         return CODEC;
+    }
+
+    @Override
+    public CodecWrapperATNE<? extends AbilityTree.NodeEffect> getCodecWrapper() {
+        return ChangedAbilityTreeCodecs.CREATE_ITEM_ABILITY_EFFECT.get();
     }
 }

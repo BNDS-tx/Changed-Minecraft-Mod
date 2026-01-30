@@ -37,7 +37,9 @@ public interface IAbstractChangedEntity {
     @Nullable TransfurVariant<?> getTransfurVariant();
     @Nullable TransfurVariantInstance<?> getTransfurVariantInstance();
     @NotNull Level getLevel();
+    @Deprecated
     @NotNull UUID getUUID();
+    int getId();
     @NotNull TransfurMode getTransfurMode();
     @Nullable <T extends AbstractAbilityInstance> T getAbilityInstance(AbstractAbility<T> ability);
     @Nullable AbstractContainerMenu getContainerMenu();
@@ -75,6 +77,8 @@ public interface IAbstractChangedEntity {
         boolean doesAbsorption;
         if (getEntity() instanceof TamableLatexEntity tamableLatex && tamableLatex.isTame())
             doesAbsorption = true;
+        else if (getEntity() instanceof AzurebyssEntity azurebyss)
+            doesAbsorption = azurebyss.getTransfurMode() == TransfurMode.ABSORPTION;
         else if (getEntity() instanceof ChangedEntity changedEntity)
             doesAbsorption = changedEntity.getTransfurMode() == TransfurMode.ABSORPTION;
         else if (getTransfurVariantInstance() != null)
@@ -82,8 +86,6 @@ public interface IAbstractChangedEntity {
         else if (getSelfVariant() != null)
             doesAbsorption = getSelfVariant().transfurMode() == TransfurMode.ABSORPTION;
         else if (getTransfurVariant() != null && getTransfurVariant().transfurMode() == TransfurMode.ABSORPTION)
-            doesAbsorption = true;
-        else if (getTransfurVariant() != null && getTransfurVariant().getEntityType() == ChangedEntities.SPECIAL_LATEX.get())
             doesAbsorption = true;
         else
             doesAbsorption = false;
@@ -107,8 +109,15 @@ public interface IAbstractChangedEntity {
     }
 
     static IAbstractChangedEntity forPlayer(Player player) {
+        return forPlayerWithVariant(player, null);
+    }
+
+    static IAbstractChangedEntity forPlayerWithVariant(Player player, @Nullable TransfurVariantInstance<?> variant) {
         Cacheable<TransfurVariantInstance<?>> instance = Cacheable.of(() -> ProcessTransfur.getPlayerTransfurVariant(player));
         Cacheable<ChangedEntity> latex = Cacheable.of(() -> instance.get().getChangedEntity());
+
+        if (variant != null)
+            instance.forceValue(variant);
 
         return new IAbstractChangedEntity() {
             @Override
@@ -150,6 +159,11 @@ public interface IAbstractChangedEntity {
             @Override
             public @NotNull UUID getUUID() {
                 return player.getUUID();
+            }
+
+            @Override
+            public int getId() {
+                return player.getId();
             }
 
             @Override
@@ -285,6 +299,9 @@ public interface IAbstractChangedEntity {
     }
 
     static IAbstractChangedEntity forEntity(ChangedEntity entity) {
+        if (entity.getUnderlyingPlayer() != null)
+            return forPlayer(entity.getUnderlyingPlayer());
+
         Cacheable<ChangedEntity> cached = Cacheable.of(() -> entity);
 
         return new IAbstractChangedEntity() {
@@ -328,6 +345,11 @@ public interface IAbstractChangedEntity {
             @Override
             public @NotNull UUID getUUID() {
                 return cached.get().getUUID();
+            }
+
+            @Override
+            public int getId() {
+                return cached.get().getId();
             }
 
             @Override
@@ -416,6 +438,11 @@ public interface IAbstractChangedEntity {
 
             @Override
             public boolean addItem(ItemStack item) {
+                if (cached.get() instanceof AbstractDarkLatexEntity darkLatexEntity) {
+                    var inv = darkLatexEntity.getInventory();
+                    if (inv != null)
+                        return darkLatexEntity.getInventory().add(item);
+                }
                 return false;
             }
 
@@ -426,7 +453,7 @@ public interface IAbstractChangedEntity {
 
             @Override
             public void setTransfurMode(TransfurMode mode) {
-                
+
             }
 
             @Override

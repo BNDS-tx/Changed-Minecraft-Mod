@@ -40,7 +40,7 @@ public abstract class WhiteLatexEntity extends WhiteLatexWolfMale {
 
         double d0 = this.getAttributeValue(Attributes.FOLLOW_RANGE);
         AABB aabb = AABB.unitCubeFromLowerCorner(this.position()).inflate(d0, 10.0D, d0);
-        this.level().getEntitiesOfClass(WhiteLatexEntity.class, aabb, EntitySelector.NO_SPECTATORS).forEach(nearby -> {
+        this.level.getEntitiesOfClass(WhiteLatexEntity.class, aabb, EntitySelector.NO_SPECTATORS).forEach(nearby -> {
             if (nearby.getTarget() == null && !nearby.isAlliedTo(source))
                 nearby.setTarget(source);
         });
@@ -52,15 +52,15 @@ public abstract class WhiteLatexEntity extends WhiteLatexWolfMale {
     }
 
     public static final Predicate<WhiteLatexEntity> IS_STANDING_ON_WHITE_LATEX = whiteLatexEntity -> {
-        if (!whiteLatexEntity.onGround())
+        if (!whiteLatexEntity.isOnGround())
             return false;
-        return AbstractLatexBlock.isSurfaceOfType(whiteLatexEntity.level(), whiteLatexEntity.blockPosition(), Direction.DOWN, ChangedLatexTypes.WHITE_LATEX.get());
+        return AbstractLatexBlock.isSurfaceOfType(whiteLatexEntity.level, whiteLatexEntity.blockPosition(), Direction.DOWN, ChangedLatexTypes.WHITE_LATEX.get());
     };
 
     @Override
     public void tick() {
         super.tick();
-        if (this.level().isClientSide)
+        if (this.level.isClientSide)
             return;
         if (this.isDeadOrDying())
             return;
@@ -68,15 +68,15 @@ public abstract class WhiteLatexEntity extends WhiteLatexWolfMale {
         if (this.tickCount % 20 != 0)
             return;
 
-        var entities = this.level().getEntitiesOfClass(WhiteLatexEntity.class, new AABB(blockPosition()).inflate(2.0), IS_STANDING_ON_WHITE_LATEX);
+        var entities = this.level.getEntitiesOfClass(WhiteLatexEntity.class, new AABB(blockPosition()).inflate(2.0), IS_STANDING_ON_WHITE_LATEX);
         if (entities.size() <= 12)
             return;
 
-        var behemoth = ChangedEntities.BEHEMOTH_HEAD.get().create(this.level());
+        var behemoth = ChangedEntities.BEHEMOTH_HEAD.get().create(this.level);
         if (behemoth == null)
             return;
         behemoth.moveTo(position());
-        if (!this.level().addFreshEntity(behemoth))
+        if (!this.level.addFreshEntity(behemoth))
             return;
         entities.forEach(Entity::discard);
         ChangedSounds.broadcastSound(behemoth, ChangedSounds.ENTITY_ENTER_LATEX, 1.0f, 1.0f);

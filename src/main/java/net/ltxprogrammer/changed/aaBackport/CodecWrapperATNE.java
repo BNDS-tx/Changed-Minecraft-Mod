@@ -5,13 +5,13 @@ import net.ltxprogrammer.changed.ability.tree.AbilityTree;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.registries.IForgeRegistryEntry;
 
-public class CodecWrapper<T extends AbilityTree.NodeEffect> implements IForgeRegistryEntry<CodecWrapper<? extends AbilityTree.NodeEffect>> {
+public class CodecWrapperATNE<T extends AbilityTree.NodeEffect> implements IForgeRegistryEntry<CodecWrapperATNE<? extends AbilityTree.NodeEffect>> {
     // 关键点1：这里用 ? extends T，允许存储子类的 Codec
     private final Codec<? extends AbilityTree.NodeEffect> codec;
     private ResourceLocation registryName;
 
     // 关键点2：构造函数接收 ? extends T
-    public CodecWrapper(Codec<? extends AbilityTree.NodeEffect> codec) {
+    public CodecWrapperATNE(Codec<? extends AbilityTree.NodeEffect> codec) {
         this.codec = codec;
     }
 
@@ -21,7 +21,7 @@ public class CodecWrapper<T extends AbilityTree.NodeEffect> implements IForgeReg
     }
 
     @Override
-    public CodecWrapper<? extends AbilityTree.NodeEffect> setRegistryName(ResourceLocation name) {
+    public CodecWrapperATNE<? extends AbilityTree.NodeEffect> setRegistryName(ResourceLocation name) {
         this.registryName = name;
         return this;
     }
@@ -32,7 +32,7 @@ public class CodecWrapper<T extends AbilityTree.NodeEffect> implements IForgeReg
     }
 
     @Override
-    public Class<CodecWrapper<? extends AbilityTree.NodeEffect>> getRegistryType() {
-        return (Class<CodecWrapper<? extends AbilityTree.NodeEffect>>) (Class<?>) CodecWrapper.class;
+    public Class<CodecWrapperATNE<? extends AbilityTree.NodeEffect>> getRegistryType() {
+        return (Class<CodecWrapperATNE<? extends AbilityTree.NodeEffect>>) (Class<?>) CodecWrapperATNE.class;
     }
 }

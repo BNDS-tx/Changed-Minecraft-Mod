@@ -35,10 +35,21 @@ public class LatexFlask extends PotionItem implements VariantHoldingBase {
         return ChangedBlocks.ERLENMEYER_FLASK.get().asItem();
     }
 
+//    @Override
+//    public void fillItemList(Predicate<TransfurVariant<?>> predicate, CreativeModeTab.ItemDisplayParameters parameters, CreativeModeTab.Output output) {
+//        TransfurVariant.getPublicTransfurVariants().filter(predicate).forEach(variant -> {
+//            output.accept(
+//                    Syringe.setOwner(
+//                            Syringe.setPureVariant(new ItemStack(this),
+//                                    variant.getFormId()),
+//                            UniversalDist.getLocalPlayer()));
+//        });
+//    }
+
     @Override
-    public void fillItemList(Predicate<TransfurVariant<?>> predicate, CreativeModeTab.ItemDisplayParameters parameters, CreativeModeTab.Output output) {
+    public void fillItemList(Predicate<TransfurVariant<?>> predicate, NonNullList<ItemStack> items) {
         TransfurVariant.getPublicTransfurVariants().filter(predicate).forEach(variant -> {
-            output.accept(
+            items.add(
                     Syringe.setOwner(
                             Syringe.setPureVariant(new ItemStack(this),
                                     variant.getFormId()),
@@ -75,7 +86,7 @@ public class LatexFlask extends PotionItem implements VariantHoldingBase {
             }
 
             else if (tag != null && tag.contains("form")) {
-                ResourceLocation formLocation = ResourceLocation.parse(tag.getString("form"));
+                ResourceLocation formLocation = new ResourceLocation(tag.getString("form"));
                 if (formLocation.equals(TransfurVariant.SPECIAL_LATEX))
                     formLocation = Changed.modResource("special/form_" + entity.getUUID());
                 ProcessTransfur.transfur(entity, level, ChangedRegistry.TRANSFUR_VARIANT.get().getValue(formLocation), false,

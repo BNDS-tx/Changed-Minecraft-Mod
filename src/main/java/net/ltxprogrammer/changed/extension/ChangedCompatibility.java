@@ -17,6 +17,7 @@ import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 import org.slf4j.Logger;
 
 import java.lang.reflect.Field;
@@ -253,7 +254,7 @@ public class ChangedCompatibility {
         });
     }
 
-    private static <T> Cacheable<T> findRegistryObject(IForgeRegistry<T> registry, ResourceLocation name) {
+    private static <T extends IForgeRegistryEntry<T>> Cacheable<T> findRegistryObject(IForgeRegistry<T> registry, ResourceLocation name) {
         return Cacheable.of(() -> {
             var item = registry.getValue(name);
             if (item != null)
@@ -265,7 +266,7 @@ public class ChangedCompatibility {
     }
 
     private static final Cacheable<Enchantment> enchantment_enigmaticlegacy_eternalbinding
-            = findRegistryObject(ForgeRegistries.ENCHANTMENTS, ResourceLocation.fromNamespaceAndPath("enigmaticlegacy", "eternal_binding_curse"));
+            = findRegistryObject(ForgeRegistries.ENCHANTMENTS, new ResourceLocation("enigmaticlegacy", "eternal_binding_curse"));
 
     public static void shouldAccessoryDropOnDeath(AccessorySlots.DropItemEvent event) {
         if (EnchantmentHelper.getItemEnchantmentLevel(enchantment_enigmaticlegacy_eternalbinding.get(), event.getStack()) > 0)

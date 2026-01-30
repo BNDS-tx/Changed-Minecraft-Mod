@@ -20,7 +20,7 @@ public abstract class ServerPlayerGameModeMixin {
         ProcessTransfur.ifPlayerTransfurred(this.player, variant -> {
             if (variant.getParent().canGlide) {
                 this.player.getAbilities().mayfly = true;
-                if (!this.player.onGround() && newType.isSurvival()) {
+                if (!this.player.isOnGround() && newType.isSurvival()) {
                     this.player.getAbilities().flying = true;
                 }
             }

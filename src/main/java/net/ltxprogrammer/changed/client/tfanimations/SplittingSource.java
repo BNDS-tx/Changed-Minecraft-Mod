@@ -1,12 +1,13 @@
 package net.ltxprogrammer.changed.client.tfanimations;
 
 import com.mojang.datafixers.util.Pair;
+import net.ltxprogrammer.changed.aaBackport.JomlConverter;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Vector3f;
-import org.joml.Vector3fc;
+import repack.joml.Vector3f;
+import repack.joml.Vector3fc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -480,8 +481,8 @@ public class SplittingSource {
 
         float lowest = Float.MAX_VALUE;
         for (var normal : Direction.values()) {
-            Vector3f wantedSurfaceCenter = new Vector3f(wantedCenter).add(normal.step().mul(wantedSize).mul(0.5f));
-            Vector3f thisSurfaceCenter = new Vector3f(thisCenter).add(normal.step().mul(thisSize).mul(0.5f));
+            Vector3f wantedSurfaceCenter = new Vector3f(wantedCenter).add(new JomlConverter().toJoml(normal.step()).mul(wantedSize).mul(0.5f));
+            Vector3f thisSurfaceCenter = new Vector3f(thisCenter).add(new JomlConverter().toJoml(normal.step()).mul(thisSize).mul(0.5f));
 
             float distance = thisSurfaceCenter.distance(wantedSurfaceCenter);
             if (distance < lowest)

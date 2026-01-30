@@ -5,6 +5,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -21,7 +22,7 @@ public class CommandUUID {
     }
 
     private static int fetchUuid(CommandSourceStack source, ServerPlayer player) {
-        source.sendSuccess(() -> Component.literal(player.getUUID().toString()), true);
+        source.sendSuccess(new TextComponent(player.getUUID().toString()), true);
         return Command.SINGLE_SUCCESS;
     }
 }

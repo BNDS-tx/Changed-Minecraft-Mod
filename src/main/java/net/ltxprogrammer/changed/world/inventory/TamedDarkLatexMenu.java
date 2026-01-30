@@ -32,7 +32,7 @@ public class TamedDarkLatexMenu extends AbstractContainerMenu implements Updatea
         if (extraData == null)
             return;
 
-        this.tamedDarkLatex = (AbstractDarkLatexEntity) inv.player.level().getEntity(extraData.readInt());
+        this.tamedDarkLatex = (AbstractDarkLatexEntity) inv.player.level.getEntity(extraData.readInt());
     }
 
     @Override
@@ -66,7 +66,7 @@ public class TamedDarkLatexMenu extends AbstractContainerMenu implements Updatea
         if (receiver == LogicalSide.SERVER && origin == this.tamedDarkLatex.getOwner()) {
             switch (payload.getString("command")) {
                 case "view_inventory" -> {
-                    NetworkHooks.openScreen((ServerPlayer) this.player, new SimpleMenuProvider(
+                    NetworkHooks.openGui((ServerPlayer) this.player, new SimpleMenuProvider(
                             (id, inv, viewer) -> new TamedDarkLatexInventoryMenu(id, this.player, this.tamedDarkLatex),
                             this.tamedDarkLatex.getDisplayName()
                     ), extraData -> {

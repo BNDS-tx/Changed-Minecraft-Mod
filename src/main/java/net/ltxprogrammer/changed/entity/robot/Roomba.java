@@ -57,7 +57,7 @@ public class Roomba extends AbstractRobot {
 
     @Override
     public void push(Entity entity) {
-        if (!this.onGround() || entity instanceof Roomba) {
+        if (!this.onGround || entity instanceof Roomba) {
             super.push(entity);
         } else {
             entity.setDeltaMovement(entity.getDeltaMovement().add(this.getDeltaMovement()));
@@ -66,7 +66,7 @@ public class Roomba extends AbstractRobot {
 
     @Override
     public boolean canBeCollidedWith() {
-        return !this.onGround() ? super.canBeCollidedWith() : this.isAlive();
+        return !this.onGround ? super.canBeCollidedWith() : this.isAlive();
     }
 
     @Override
@@ -133,7 +133,7 @@ public class Roomba extends AbstractRobot {
     }
 
     public boolean canVisitBlock(BlockPos pos) {
-        return level().getBlockState(pos).getCollisionShape(level(), pos, CollisionContext.of(this))
+        return level.getBlockState(pos).getCollisionShape(level, pos, CollisionContext.of(this))
                 .isEmpty();
     }
 

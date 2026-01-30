@@ -45,29 +45,7 @@ public abstract class ServerEntityMixin {
     }
 
     @Inject(method = "sendPairingData", at = @At("RETURN"))
-    private void andSendChangedData(ServerPlayer packetListener, Consumer<Packet<?>> connectionSend, CallbackInfo ci) {
-        if (entity instanceof Player player) {
-            BasicPlayerInfoPacket.Builder builderBPI = new BasicPlayerInfoPacket.Builder();
-            if (packetListener != player) builderBPI.addPlayer(player);
-            if (builderBPI.worthSending())
-                connectionSend.accept(
-                        Changed.PACKET_HANDLER.toVanillaPacket(builderBPI.build(), NetworkDirection.PLAY_TO_CLIENT)
-                );
-
-            SyncTransfurPacket.Builder builderTf = new SyncTransfurPacket.Builder();
-            builderTf.addPlayer(player, true);
-            if (builderTf.worthSending())
-                connectionSend.accept(
-                        Changed.PACKET_HANDLER.toVanillaPacket(builderTf.build(), NetworkDirection.PLAY_TO_CLIENT)
-                );
-
-            SyncMoversPacket.Builder builderMover = new SyncMoversPacket.Builder();
-            builderMover.addPlayer(player, true);
-            if (builderMover.worthSending())
-                connectionSend.accept(
-                    Changed.PACKET_HANDLER.toVanillaPacket(builderMover.build(), NetworkDirection.PLAY_TO_CLIENT)
-                );
-        }
+    private void andSendAccessoryData(Consumer<Packet<?>> connectionSend, CallbackInfo ci) {
         if (entity instanceof LivingEntityDataExtension ext) {
             ext.getAccessorySlots().ifPresent(slots -> {
                 if (!slots.isEmpty())

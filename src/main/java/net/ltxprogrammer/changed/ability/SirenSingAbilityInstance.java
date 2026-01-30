@@ -9,9 +9,10 @@ import net.ltxprogrammer.changed.init.ChangedTags;
 import net.ltxprogrammer.changed.util.CameraUtil;
 import net.ltxprogrammer.changed.util.EntityUtil;
 import net.ltxprogrammer.changed.util.LevelUtil;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
+
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -34,7 +35,7 @@ public class SirenSingAbilityInstance extends AbstractAbilityInstance {
 
     @Override
     public boolean canUse() {
-        return this.entity.getEntity().isEyeInFluidType(ForgeMod.EMPTY_TYPE.get());
+        return this.entity.getEntity().level.getFluidState(new BlockPos(this.entity.getEntity().getEyePosition())).isEmpty();
     }
 
     @Override
@@ -58,7 +59,7 @@ public class SirenSingAbilityInstance extends AbstractAbilityInstance {
             return;
 
         int seed = target.getId() * 131313 + ((target.getId() + target.tickCount) / 30);
-        RandomSource random = RandomSource.create(seed);
+        Random random = new Random(seed);
         random.nextInt();
         random.nextInt();
         float value = random.nextFloat();

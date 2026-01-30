@@ -9,7 +9,6 @@ import net.ltxprogrammer.changed.network.packet.SyncSwitchPacket;
 import net.ltxprogrammer.changed.world.inventory.InfuserMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.narration.NarratedElementType;
@@ -18,6 +17,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
 import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
@@ -57,23 +57,31 @@ public class InfuserScreen extends AbstractContainerScreen<InfuserMenu> implemen
             this.showLabel = true;
         }
 
-        public void renderWidget(GuiGraphics graphics, int p_93844_, int p_93845_, float p_93846_) {
-            super.renderWidget(graphics, p_93844_, p_93845_, p_93846_);
+        public void renderButton(PoseStack pose, int p_93844_, int p_93845_, float p_93846_) {
             Minecraft minecraft = Minecraft.getInstance();
             Font font = minecraft.font;
-            graphics.setColor(1.0F, 1.0F, 1.0F, 1.0f);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             RenderSystem.enableDepthTest();
             RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
             int switchX = this.isHoveredOrFocused() ? this.width : 0;
             int switchY = this.disabled ? this.height * 2 : (this.toggle ? this.height : 0);
-            graphics.blit(sheet, this.getX(), this.getY(), switchX, switchY, this.width, this.height, this.width * 2, this.height * 3);
+            blit(pose, this.x, this.y, switchX, switchY, this.width, this.height, this.width * 2, this.height * 3);
+            this.renderBg(pose, minecraft, p_93844_, p_93845_);
+            if (this.showLabel) {
+                drawString(pose, font, this.getMessage(), this.x + 24, this.y + (this.height - 8) / 2, 14737632 | Mth.ceil(this.alpha * 255.0F) << 24);
+            }
         }
 
         @Override
-        protected void updateWidgetNarration(@NotNull NarrationElementOutput p_259858_) {
+        public void updateNarration(@NotNull NarrationElementOutput p_259858_) {
             this.defaultButtonNarrationText(p_259858_);
+        }
+
+        public void setPosition(int x, int y) {
+            this.x = x;
+            this.y = y;
         }
 
         public ResourceLocation getName() {
@@ -81,7 +89,7 @@ public class InfuserScreen extends AbstractContainerScreen<InfuserMenu> implemen
         }
     }
 
-    private static final ResourceLocation RECIPE_BUTTON_LOCATION = ResourceLocation.parse("textures/gui/recipe_button.png");
+    private static final ResourceLocation RECIPE_BUTTON_LOCATION = new ResourceLocation("textures/gui/recipe_button.png");
     private static final ResourceLocation GENDER_SWITCH_LOCATION = Changed.modResource("textures/gui/gender_switch.png");
     private final RecipeBookComponent recipeBookComponent = new RecipeBookComponent();
     private boolean widthTooNarrow;
@@ -101,7 +109,7 @@ public class InfuserScreen extends AbstractContainerScreen<InfuserMenu> implemen
         this.addRenderableWidget(new ImageButton(this.leftPos + 16, this.height / 2 - 30, 20, 18, 0, 0, 19, RECIPE_BUTTON_LOCATION, (p_98484_) -> {
             this.recipeBookComponent.toggleVisibility();
             this.leftPos = this.recipeBookComponent.updateScreenPosition(this.width, this.imageWidth);
-            p_98484_.setPosition(this.leftPos + 16, this.height / 2 - 30);
+            ((ImageButton)p_98484_).setPosition(this.leftPos + 16, this.height / 2 - 25);
             maleFemaleSwitch.setPosition(this.leftPos + 135, this.topPos + 61);
         }));
         this.addWidget(this.recipeBookComponent);
@@ -109,7 +117,7 @@ public class InfuserScreen extends AbstractContainerScreen<InfuserMenu> implemen
         this.titleLabelX = 5;
         this.titleLabelY = 5;
 
-        maleFemaleSwitch = new Switch(this, Changed.modResource("male_female_switch"), this.leftPos + 135, this.topPos + 61, 20, 10, Component.empty(), false,
+        maleFemaleSwitch = new Switch(this, Changed.modResource("male_female_switch"), this.leftPos + 135, this.topPos + 61, 20, 10, TextComponent.EMPTY, false,
                 GENDER_SWITCH_LOCATION);
         this.addRenderableWidget(maleFemaleSwitch);
     }
@@ -117,31 +125,32 @@ public class InfuserScreen extends AbstractContainerScreen<InfuserMenu> implemen
     private static final ResourceLocation texture = Changed.modResource("textures/gui/infuser.png");
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int p_98480_, int p_98481_, float p_98482_) {
+    public void render(PoseStack p_98479_, int p_98480_, int p_98481_, float p_98482_) {
         var variant = Syringe.getVariant(menu.getResultSlot().getItem());
         maleFemaleSwitch.disabled = variant != null && !variant.isGendered();
 
-        this.renderBackground(graphics);
+        this.renderBackground(p_98479_);
         if (this.recipeBookComponent.isVisible() && this.widthTooNarrow) {
-            this.renderBg(graphics, p_98482_, p_98480_, p_98481_);
-            this.recipeBookComponent.render(graphics, p_98480_, p_98481_, p_98482_);
+            this.renderBg(p_98479_, p_98482_, p_98480_, p_98481_);
+            this.recipeBookComponent.render(p_98479_, p_98480_, p_98481_, p_98482_);
         } else {
-            this.recipeBookComponent.render(graphics, p_98480_, p_98481_, p_98482_);
-            super.render(graphics, p_98480_, p_98481_, p_98482_);
-            this.recipeBookComponent.renderGhostRecipe(graphics, this.leftPos, this.topPos, true, p_98482_);
+            this.recipeBookComponent.render(p_98479_, p_98480_, p_98481_, p_98482_);
+            super.render(p_98479_, p_98480_, p_98481_, p_98482_);
+            this.recipeBookComponent.renderGhostRecipe(p_98479_, this.leftPos, this.topPos, true, p_98482_);
         }
 
-        this.renderTooltip(graphics, p_98480_, p_98481_);
-        this.recipeBookComponent.renderTooltip(graphics, this.leftPos, this.topPos, p_98480_, p_98481_);
+        this.renderTooltip(p_98479_, p_98480_, p_98481_);
+        this.recipeBookComponent.renderTooltip(p_98479_, this.leftPos, this.topPos, p_98480_, p_98481_);
     }
 
     @Override
-    protected void renderBg(GuiGraphics graphics, float partialTicks, int gx, int gy) {
-        graphics.setColor(1, 1, 1, 1);
+    protected void renderBg(PoseStack ms, float partialTicks, int gx, int gy) {
+        RenderSystem.setShaderColor(1, 1, 1, 1);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
 
-        graphics.blit(texture, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, this.imageWidth, this.imageHeight);
+        RenderSystem.setShaderTexture(0, texture);
+        this.blit(ms, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, this.imageWidth, this.imageHeight);
 
         RenderSystem.disableBlend();
     }

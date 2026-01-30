@@ -19,40 +19,21 @@ import java.util.function.Supplier;
 public class SetTransfurVariantDataPacket implements ChangedPacket {
     private final int id;
     @Nullable
-    private final List<SynchedEntityData.DataValue<?>> packedItems;
+    private final List<SynchedEntityData.DataItem<?>> packedItems;
 
-    private static void pack(List<SynchedEntityData.DataValue<?>> p_253940_, FriendlyByteBuf p_253901_) {
-        for(SynchedEntityData.DataValue<?> datavalue : p_253940_) {
-            datavalue.write(p_253901_);
-        }
-
-        p_253901_.writeByte(255);
-    }
-
-    private static List<SynchedEntityData.DataValue<?>> unpack(FriendlyByteBuf p_253726_) {
-        List<SynchedEntityData.DataValue<?>> list = new ArrayList<>();
-
-        int i;
-        while((i = p_253726_.readUnsignedByte()) != 255) {
-            list.add(SynchedEntityData.DataValue.read(p_253726_, i));
-        }
-
-        return list;
-    }
-
-    public SetTransfurVariantDataPacket(int id, List<SynchedEntityData.DataValue<?>> data) {
+    public SetTransfurVariantDataPacket(int id, List<SynchedEntityData.DataItem<?>> data) {
         this.id = id;
         this.packedItems = data;
     }
 
     public SetTransfurVariantDataPacket(FriendlyByteBuf buffer) {
         this.id = buffer.readVarInt();
-        this.packedItems = unpack(buffer);
+        this.packedItems = SynchedEntityData.unpack(buffer);
     }
 
     public void write(FriendlyByteBuf buffer) {
         buffer.writeVarInt(this.id);
-        pack(this.packedItems, buffer);
+        SynchedEntityData.pack(this.packedItems, buffer);
     }
 
     @Override

@@ -2,6 +2,7 @@ package net.ltxprogrammer.changed.entity.ai;
 
 import com.mojang.serialization.DataResult;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.StringRepresentable;
 
 import java.util.Arrays;
@@ -25,7 +26,7 @@ public enum DarkLatexAttackCondition implements StringRepresentable {
     public static DataResult<DarkLatexAttackCondition> fromSerial(String serializedName) {
         return Arrays.stream(values()).filter(value -> value.serializedName.equals(serializedName))
                 .findAny().map(DataResult::success).orElse(DataResult.error(
-                        () -> "Invalid attack condition " + serializedName
+                        "Invalid attack condition " + serializedName
                 ));
     }
 
@@ -37,6 +38,6 @@ public enum DarkLatexAttackCondition implements StringRepresentable {
     }
 
     public Component getDisplayText() {
-        return Component.translatable("changed.tamed_dark_latex.attack_condition." + serializedName);
+        return new TranslatableComponent("changed.tamed_dark_latex.attack_condition." + serializedName);
     }
 }

@@ -2,14 +2,15 @@ package net.ltxprogrammer.changed.mixin.render;
 
 import com.mojang.datafixers.util.Pair;
 import net.ltxprogrammer.changed.Changed;
+import net.ltxprogrammer.changed.aaBackport.JomlConverter;
 import net.ltxprogrammer.changed.client.CubeExtender;
 import net.ltxprogrammer.changed.util.Cacheable;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.builders.UVPair;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
-import org.joml.Vector3f;
+
+import repack.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -17,6 +18,7 @@ import org.spongepowered.asm.mixin.Unique;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 @Mixin(ModelPart.Cube.class)
@@ -34,13 +36,13 @@ public abstract class CubeMixin implements CubeExtender {
         for (var polygon : this.polygons) {
             for (var vertex : polygon.vertices) {
                 if (min == null) {
-                    min = new Vector3f(vertex.pos);
+                    min = new Vector3f(new JomlConverter().toJoml(vertex.pos));
                     continue;
                 }
 
-                min.x = Math.min(min.x, vertex.pos.x);
-                min.y = Math.min(min.y, vertex.pos.y);
-                min.z = Math.min(min.z, vertex.pos.z);
+                min.x = Math.min(min.x, vertex.pos.x());
+                min.y = Math.min(min.y, vertex.pos.y());
+                min.z = Math.min(min.z, vertex.pos.z());
             }
         }
         return min;
@@ -50,13 +52,13 @@ public abstract class CubeMixin implements CubeExtender {
         for (var polygon : this.polygons) {
             for (var vertex : polygon.vertices) {
                 if (max == null) {
-                    max = new Vector3f(vertex.pos);
+                    max = new Vector3f(new JomlConverter().toJoml(vertex.pos));
                     continue;
                 }
 
-                max.x = Math.max(max.x, vertex.pos.x);
-                max.y = Math.max(max.y, vertex.pos.y);
-                max.z = Math.max(max.z, vertex.pos.z);
+                max.x = Math.max(max.x, vertex.pos.x());
+                max.y = Math.max(max.y, vertex.pos.y());
+                max.z = Math.max(max.z, vertex.pos.z());
             }
         }
         return max;
@@ -72,19 +74,69 @@ public abstract class CubeMixin implements CubeExtender {
         return visualMax.get();
     }
 
+    @Override
+    public UVPair getUV(Vector3f cubeSurfaceNormal) {
+        ModelPart.Polygon surface = null;
+        float bestMatch = -1.0f;
+
+        float xLerp = 0.0f;
+        float yLerp = 0.0f;
+
+        for (ModelPart.Polygon polygon : this.polygons) {
+            var polyNormal = polygon.normal;
+
+            float thisMatch = polyNormal.dot(new JomlConverter().toMojang(cubeSurfaceNormal));
+            if (thisMatch > bestMatch) {
+                surface = polygon;
+                bestMatch = thisMatch;
+
+                if (Mth.abs(polyNormal.x()) > Mth.abs(polyNormal.y()) && Mth.abs(polyNormal.x()) > Mth.abs(polyNormal.z())) {
+                    xLerp = cubeSurfaceNormal.z() * 0.5f + 0.5f;
+                    yLerp = cubeSurfaceNormal.y() * 0.5f + 0.5f;
+                } else if (Mth.abs(polyNormal.y()) > Mth.abs(polyNormal.x()) && Mth.abs(polyNormal.y()) > Mth.abs(polyNormal.z())) {
+                    xLerp = cubeSurfaceNormal.x() * 0.5f + 0.5f;
+                    yLerp = cubeSurfaceNormal.z() * 0.5f + 0.5f;
+                } else {
+                    xLerp = cubeSurfaceNormal.x() * 0.5f + 0.5f;
+                    yLerp = cubeSurfaceNormal.y() * 0.5f + 0.5f;
+                }
+            }
+        }
+
+        if (surface == null) {
+            Changed.LOGGER.warn("Null surface encountered for given normal {}, with {} polygons", cubeSurfaceNormal, this.polygons.length);
+            return new UVPair(0, 0);
+        }
+
+        float uX = Mth.lerp(xLerp, surface.vertices[0].u, surface.vertices[1].u);
+        float uY = Mth.lerp(xLerp, surface.vertices[3].u, surface.vertices[2].u);
+        float vX = Mth.lerp(xLerp, surface.vertices[0].v, surface.vertices[1].v);
+        float vY = Mth.lerp(xLerp, surface.vertices[3].v, surface.vertices[2].v);
+
+        return new UVPair(Mth.lerp(yLerp, uX, uY), Mth.lerp(yLerp, vX, vY));
+        }
+
     @Unique
     private static final ModelPart.Vertex NULL_VERTEX = new ModelPart.Vertex(0, 0, 0, 0, 0);
 
     @Unique
     private ModelPart.Polygon getFaceFromDirection(Direction dir) {
-        Vector3f step = dir.getAxis() == Direction.Axis.Y ? dir.getOpposite().step() : dir.step();
+        Vector3f step = new JomlConverter().toJoml(dir.getAxis() == Direction.Axis.Y ? dir.getOpposite().step() : dir.step());
         for (ModelPart.Polygon polygon : polygons) {
-            if (polygon.normal.dot(step) >= 0.95f)
+            if (polygon.normal.dot(new JomlConverter().toMojang(step)) >= 0.95f)
                 return polygon;
         }
         return null;
     }
 
+    @Override
+    public void removeSides(Set<Direction> directions) {
+        for (var dir : directions) {
+            var polygon = getFaceFromDirection(dir);
+            if (polygon != null)
+                Arrays.fill(polygon.vertices, NULL_VERTEX);
+        }
+    }
 
     @Override
     public void copyUVStarts(Set<Pair<Direction, Direction>> directions) {
@@ -149,7 +201,7 @@ public abstract class CubeMixin implements CubeExtender {
     }
 
     @Override
-    public ModelPart.Polygon getRandomPolygonWeighted(RandomSource random) {
+    public ModelPart.Polygon getRandomPolygonWeighted(Random random) {
         float[] weights = new float[polygons.length];
         float totalWeight = 0.0f;
 
@@ -159,16 +211,16 @@ public abstract class CubeMixin implements CubeExtender {
 
             for (var vertex : polygon.vertices) {
                 if (min == null)
-                    min = new Vector3f(vertex.pos);
+                    min = new Vector3f(new JomlConverter().toJoml(vertex.pos));
                 if (max == null)
-                    max = new Vector3f(vertex.pos);
+                    max = new Vector3f(new JomlConverter().toJoml(vertex.pos));
 
-                min.x = Math.min(min.x, vertex.pos.x);
-                min.y = Math.min(min.y, vertex.pos.y);
-                min.z = Math.min(min.z, vertex.pos.z);
-                max.x = Math.max(max.x, vertex.pos.x);
-                max.y = Math.max(max.y, vertex.pos.y);
-                max.z = Math.max(max.z, vertex.pos.z);
+                min.x = Math.min(min.x, vertex.pos.x());
+                min.y = Math.min(min.y, vertex.pos.y());
+                min.z = Math.min(min.z, vertex.pos.z());
+                max.x = Math.max(max.x, vertex.pos.x());
+                max.y = Math.max(max.y, vertex.pos.y());
+                max.z = Math.max(max.z, vertex.pos.z());
             }
 
             if (min == null) {

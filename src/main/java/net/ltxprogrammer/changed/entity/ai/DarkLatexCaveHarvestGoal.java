@@ -18,6 +18,7 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.MoveToBlockGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.PickaxeItem;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -26,7 +27,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
@@ -51,7 +52,7 @@ public class DarkLatexCaveHarvestGoal extends MoveToBlockGoal {
     public DarkLatexCaveHarvestGoal(AbstractDarkLatexEntity entity, double speedModifier, int searchRange, int verticalSearchRange) {
         super(entity, speedModifier, searchRange, verticalSearchRange);
         this.entity = entity;
-        this.level = entity.level();
+        this.level = entity.level;
     }
 
     @Override
@@ -83,7 +84,7 @@ public class DarkLatexCaveHarvestGoal extends MoveToBlockGoal {
         this.inventory = inventory;
         if (entity.getCurrentFavor() != DarkLatexFavor.CAVING)
             return false;
-        if (!entity.getMainHandItem().is(ItemTags.PICKAXES))
+        if (!(entity.getMainHandItem().getItem() instanceof PickaxeItem))
             return false;
 
         return super.canUse();
@@ -95,7 +96,7 @@ public class DarkLatexCaveHarvestGoal extends MoveToBlockGoal {
             return false;
         if (entity.getCurrentFavor() != DarkLatexFavor.CAVING)
             return false;
-        if (!entity.getMainHandItem().is(ItemTags.PICKAXES))
+        if (!(entity.getMainHandItem().getItem() instanceof PickaxeItem))
             return false;
         if (!wantToMine(targetOrePosition))
             return false;
@@ -116,7 +117,7 @@ public class DarkLatexCaveHarvestGoal extends MoveToBlockGoal {
                 for(int x = 0; x <= r; x = x > 0 ? -x : 1 - x) {
                     for(int z = x < r && x > -r ? r : 0; z <= r; z = z > 0 ? -z : 1 - z) {
                         blockpos$mutableblockpos.setWithOffset(blockpos, x, y - 1, z);
-                        if (this.mob.isWithinRestriction(blockpos$mutableblockpos) && this.isValidOre(this.mob.level(), blockpos$mutableblockpos)) {
+                        if (this.mob.isWithinRestriction(blockpos$mutableblockpos) && this.isValidOre(this.mob.level, blockpos$mutableblockpos)) {
                             this.targetOrePosition = blockpos$mutableblockpos;
                             return true;
                         }
@@ -232,7 +233,7 @@ public class DarkLatexCaveHarvestGoal extends MoveToBlockGoal {
             f /= 5.0F;
         }
 
-        if (!entity.onGround()) {
+        if (!entity.isOnGround()) {
             f /= 5.0F;
         }
 
@@ -278,7 +279,7 @@ public class DarkLatexCaveHarvestGoal extends MoveToBlockGoal {
             inventory.add(itemStack);
             Block.popResource(level, targetOrePosition, itemStack);
         });
-        blockState.spawnAfterBreak((ServerLevel) level, targetOrePosition, pickaxe, false);
+        blockState.spawnAfterBreak((ServerLevel) level, targetOrePosition, pickaxe);
         level.setBlockAndUpdate(targetOrePosition, blockState.getFluidState().createLegacyBlock());
         level.levelEvent(2001, targetOrePosition, Block.getId(blockState));
         level.destroyBlockProgress(entity.getId(), targetOrePosition, -1);

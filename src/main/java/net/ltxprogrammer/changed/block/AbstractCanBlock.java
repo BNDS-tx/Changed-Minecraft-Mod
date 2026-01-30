@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -27,7 +28,7 @@ public class AbstractCanBlock extends AbstractCustomShapeBlock implements Simple
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     public AbstractCanBlock() {
-        super(BlockBehaviour.Properties.of().offsetType(OffsetType.XZ).sound(SoundType.COPPER).strength(0.5F).noOcclusion());
+        super(BlockBehaviour.Properties.of(Material.METAL).sound(SoundType.COPPER).strength(0.5F).noOcclusion());
         this.registerDefaultState(this.stateDefinition.any().setValue(WATERLOGGED, false));
     }
 

@@ -1,7 +1,7 @@
 package net.ltxprogrammer.changed.client.renderer.layers;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import com.mojang.math.Vector3f;
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel;
 import net.ltxprogrammer.changed.client.renderer.model.DoubleArmedModel;
 import net.ltxprogrammer.changed.entity.ChangedEntity;
@@ -15,14 +15,13 @@ import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
 public class DoubleItemInHandLayer<T extends ChangedEntity, M extends AdvancedHumanoidModel<T> & DoubleArmedModel<T> & HeadedModel> extends ItemInHandLayer<T, M> {
     private final ItemInHandRenderer itemInHandRenderer;
 
     public DoubleItemInHandLayer(RenderLayerParent<T, M> parent, ItemInHandRenderer itemInHandRenderer) {
-        super(parent, itemInHandRenderer);
+        super(parent);
         this.itemInHandRenderer = itemInHandRenderer;
     }
 
@@ -41,18 +40,18 @@ public class DoubleItemInHandLayer<T extends ChangedEntity, M extends AdvancedHu
                 poseStack.scale(0.5F, 0.5F, 0.5F);
             }
 
-            this.renderArmWithItem(entity, rightHandStack, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, HumanoidArm.RIGHT, poseStack, bufferSource, packedLight);
-            this.renderArmWithItem(entity, leftHandStack, ItemDisplayContext.THIRD_PERSON_LEFT_HAND, HumanoidArm.LEFT, poseStack, bufferSource, packedLight);
+            this.renderArmWithItem(entity, rightHandStack, ItemTransforms.TransformType.THIRD_PERSON_RIGHT_HAND, HumanoidArm.RIGHT, poseStack, bufferSource, packedLight);
+            this.renderArmWithItem(entity, leftHandStack, ItemTransforms.TransformType.THIRD_PERSON_LEFT_HAND, HumanoidArm.LEFT, poseStack, bufferSource, packedLight);
             poseStack.popPose();
         }
     }
 
-    protected void renderArmWithItem(T entity, ItemStack item, ItemDisplayContext transformType, HumanoidArm arm, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+    protected void renderArmWithItem(T entity, ItemStack item, ItemTransforms.TransformType transformType, HumanoidArm arm, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         if (!item.isEmpty()) {
             poseStack.pushPose();
             this.getParentModel().translateToLowerHand(entity, arm, poseStack);
-            poseStack.mulPose(Axis.XP.rotationDegrees(-90.0F));
-            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+            poseStack.mulPose(Vector3f.XP.rotationDegrees(-90.0F));
+            poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
             boolean flag = arm == HumanoidArm.LEFT;
             poseStack.translate((double)((float)(flag ? -1 : 1) / 16.0F), 0.125D, -0.625D);
             itemInHandRenderer.renderItem(entity, item, transformType, flag, poseStack, bufferSource, packedLight);

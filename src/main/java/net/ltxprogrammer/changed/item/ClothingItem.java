@@ -8,6 +8,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.InteractionHand;
@@ -16,7 +18,6 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -60,11 +61,11 @@ public class ClothingItem extends Item implements Clothing, ExtendedItemProperti
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> builder, TooltipFlag tooltipFlag) {
         super.appendHoverText(stack, level, builder, tooltipFlag);
         if (tooltipFlag.isAdvanced())
-            builder.add((Component.literal(this.getClothingState(stack).toString())).withStyle(ChatFormatting.DARK_GRAY));
+            builder.add((new TextComponent(this.getClothingState(stack).toString())).withStyle(ChatFormatting.DARK_GRAY));
     }
 
     protected void addInteractInstructions(Consumer<Component> builder) {
-        builder.accept(Component.translatable(INTERACT_INSTRUCTIONS, Minecraft.getInstance().options.keyUse.getTranslatedKeyMessage())
+        builder.accept(new TranslatableComponent(INTERACT_INSTRUCTIONS, Minecraft.getInstance().options.keyUse.getTranslatedKeyMessage())
                 .withStyle(ChatFormatting.GRAY));
     }
 

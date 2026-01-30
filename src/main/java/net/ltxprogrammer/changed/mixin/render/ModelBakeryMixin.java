@@ -46,8 +46,21 @@ public abstract class ModelBakeryMixin implements BakeryExtender {
 
     @WrapMethod(method = "loadModel")
     public void orLoadAbilityModel(ResourceLocation modelName, Operation<Void> original) throws Exception {
+//        if (modelName instanceof ModelResourceLocation modelLocation && Objects.equals(modelLocation.getVariant(), "ability")) {
+//            ResourceLocation resourcelocation = modelName.withPrefix("ability/");
+//            BlockModel blockmodel = this.loadBlockModel(resourcelocation);
+//            this.cacheAndQueueDependencies(modelLocation, blockmodel);
+//            this.unbakedCache.put(resourcelocation, blockmodel);
+//        } else {
+//            original.call(modelName);
+//        }
         if (modelName instanceof ModelResourceLocation modelLocation && Objects.equals(modelLocation.getVariant(), "ability")) {
-            ResourceLocation resourcelocation = modelName.withPrefix("ability/");
+            // 1.18.2 手动拼接前缀：获取旧的命名空间，拼接新的路径
+            ResourceLocation resourcelocation = new ResourceLocation(
+                    modelName.getNamespace(),
+                    "ability/" + modelName.getPath()
+            );
+
             BlockModel blockmodel = this.loadBlockModel(resourcelocation);
             this.cacheAndQueueDependencies(modelLocation, blockmodel);
             this.unbakedCache.put(resourcelocation, blockmodel);

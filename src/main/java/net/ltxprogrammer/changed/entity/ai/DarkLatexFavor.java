@@ -25,7 +25,7 @@ public enum DarkLatexFavor implements StringRepresentable {
     public static DataResult<DarkLatexFavor> fromSerial(String serializedName) {
         return Arrays.stream(values()).filter(value -> value.serializedName.equals(serializedName))
                 .findAny().map(DataResult::success).orElse(DataResult.error(
-                        () -> "Invalid favor " + serializedName
+                        "Invalid favor " + serializedName
                 ));
     }
 }

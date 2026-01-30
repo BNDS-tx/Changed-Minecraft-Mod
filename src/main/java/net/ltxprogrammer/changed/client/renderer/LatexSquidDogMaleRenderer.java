@@ -7,6 +7,7 @@ import net.ltxprogrammer.changed.client.renderer.model.LatexSquidDogMaleModel;
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorLatexMaleSquidDogModel;
 import net.ltxprogrammer.changed.entity.beast.LatexSquidDogMale;
 import net.ltxprogrammer.changed.util.Color3;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.resources.ResourceLocation;
 
@@ -15,7 +16,7 @@ public class LatexSquidDogMaleRenderer extends AdvancedHumanoidRenderer<LatexSqu
 
     public LatexSquidDogMaleRenderer(EntityRendererProvider.Context context) {
         super(context, new LatexSquidDogMaleModel(context.bakeLayer(LatexSquidDogMaleModel.LAYER_LOCATION)), ArmorLatexMaleSquidDogModel.MODEL_SET, 0.65f);
-        this.addLayer(new DoubleItemInHandLayer<>(this, context.getItemInHandRenderer()));
+        this.addLayer(new DoubleItemInHandLayer<>(this, Minecraft.getInstance().getItemInHandRenderer()));
         this.addLayer(new LatexParticlesLayer<>(this, getModel()));
         this.addLayer(TransfurCapeLayer.normalCape(this, context.getModelSet()));
         this.addLayer(CustomEyesLayer.builder(this, context.getModelSet())

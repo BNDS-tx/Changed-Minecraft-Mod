@@ -27,6 +27,6 @@ public class Hypercoagulation extends MobEffect {
     public void applyEffectTick(@NotNull LivingEntity entity, int amplifier) {
         if (EntityUtil.maybeGetOverlaying(entity).getType().is(ChangedTags.EntityTypes.LATEX))
             return;
-        entity.hurt(ChangedDamageSources.BLOODLOSS.source(entity.level().registryAccess()), 1.0f);
+        entity.hurt(ChangedDamageSources.BLOODLOSS.source(entity), 1.0f);
     }
 }

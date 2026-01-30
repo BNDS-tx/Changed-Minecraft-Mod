@@ -1,6 +1,7 @@
 package net.ltxprogrammer.changed.client;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Vector3f;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.client.animations.AnimationAssociations;
 import net.ltxprogrammer.changed.client.animations.AnimationDefinitions;
@@ -36,21 +37,21 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.ChunkRenderTypeSet;
-import net.minecraftforge.client.event.RegisterColorHandlersEvent;
+import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.registries.ForgeRegistries;
-import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 @OnlyIn(Dist.CLIENT)
 public class ChangedClient {
+    private static final Minecraft minecraft = Minecraft.getInstance();
     public static long clientTicks = 0;
     public static final Cacheable<LatexParticleEngine> particleSystem = Cacheable.of(() -> new LatexParticleEngine(Minecraft.getInstance()));
     public static final Cacheable<ChangedBlockEntityWithoutLevelRenderer> itemRenderer =
@@ -65,13 +66,17 @@ public class ChangedClient {
 
     private static final ThreadLocal<Function<RenderType, RenderType>> CHUNK_RENDER_TYPE_SET_OVERRIDE = ThreadLocal.withInitial(() -> null);
 
-    public static ChunkRenderTypeSet createRenderTypeSetWithOverride(
-            ChunkRenderTypeSet toWrap,
+    public static RenderType createRenderTypeSetWithOverride(
+            RenderType toWrap,
             Function<RenderType, RenderType> function) {
 
+        // 假设你有一个对应的 ThreadLocal 变量
+        // 你需要把它的类型也从 Function<..., ChunkRenderTypeSet> 改成 RenderType 相关
         CHUNK_RENDER_TYPE_SET_OVERRIDE.set(function);
 
-        return ChunkRenderTypeSet.of(toWrap.asList());
+        // 直接应用函数，或者直接返回 toWrap
+        // 在 1.18.2 中，通常你是想拿到修改后的 RenderType
+        return function.apply(toWrap);
     }
 
     public static Function<RenderType, RenderType> acceptNextRenderTypeSetOverride() {
@@ -106,7 +111,7 @@ public class ChangedClient {
     }
 
     public static double getAcceptableParticleDistanceSqr() {
-        return switch (Minecraft.getInstance().options.particles().get()) {
+        return switch (minecraft.options.particles) {
             case ALL -> 9999999999999999.0;
             case DECREASED -> 4096.0;
             case MINIMAL -> 256.0;
@@ -198,7 +203,7 @@ public class ChangedClient {
 
     private static boolean renderingWaveVision = false;
     private static float waveEffect = 0.0f;
-    private static Vector3f waveResonance = new Vector3f(0f);
+    private static Vector3f waveResonance = Vector3f.ZERO;
     public static float setupWaveVisionEffect(float partialTicks) {
         float effect = ProcessTransfur.getPlayerTransfurVariantSafe(EntityUtil.playerOrNull(Minecraft.getInstance().cameraEntity))
                 .filter(variant -> variant.visionType == VisionType.WAVE_VISION)
@@ -226,42 +231,84 @@ public class ChangedClient {
     }
 
     public static void resetWaveResonance() {
-        ChangedClient.waveResonance = new Vector3f(0f);
+        ChangedClient.waveResonance = Vector3f.ZERO;
     }
 
     public static Vector3f getWaveResonance() {
         return waveResonance;
     }
 
-    public static void onBlockColorsInit(RegisterColorHandlersEvent.Block event) {
-        event.register((state, level, pos, layer) ->
-                        switch (layer) {
-                            case 0 -> level != null && pos != null ? BiomeColors.getAverageFoliageColor(level, pos) : FoliageColor.getDefaultColor();
-                            case 1 -> 0xFFFFFF;
-                            default -> -1;
+    public static void onBlockColorsInit(ColorHandlerEvent.Block event) {
+//        event.register((state, level, pos, layer) ->
+//                        switch (layer) {
+//                            case 0 -> level != null && pos != null ? BiomeColors.getAverageFoliageColor(level, pos) : FoliageColor.getDefaultColor();
+//                            case 1 -> 0xFFFFFF;
+//                            default -> -1;
+//                        },
+//                ChangedBlocks.ORANGE_TREE_LEAVES.get());
+        event.getBlockColors().register((state, level, pos, tintIndex) ->
+                        switch (tintIndex) {
+                            // level != null && pos != null 的检查非常重要，因为物品栏里渲染时这些是 null
+                            case 0 -> (level != null && pos != null)
+                                    ? BiomeColors.getAverageFoliageColor(level, pos)
+                                    : FoliageColor.getDefaultColor();
+                            case 1 -> 0xFFFFFF; // 白色（通常用于不染色的部分）
+                            default -> -1;      // -1 代表不进行染色
                         },
-                ChangedBlocks.ORANGE_TREE_LEAVES.get());
+                ChangedBlocks.ORANGE_TREE_LEAVES.get()
+        );
     }
 
-    public static void onItemColorsInit(RegisterColorHandlersEvent.Item event) {
-        event.register((stack, layer) ->
+    public static void onItemColorsInit(ColorHandlerEvent.Item event) {
+//        event.register((stack, layer) ->
+//                        switch (layer) {
+//                            case 0 -> Syringe.getVariant(stack) != null ?
+//                                    ChangedEntities.getEntityColorBack(ForgeRegistries.ENTITY_TYPES.getKey(Syringe.getVariant(stack).getEntityType()))
+//                                    : 0xF0F0F0;
+//                            case 1 -> Syringe.getVariant(stack) != null ?
+//                                    ChangedEntities.getEntityColorFront(ForgeRegistries.ENTITY_TYPES.getKey(Syringe.getVariant(stack).getEntityType()))
+//                                    : 0xF0F0F0;
+//                            default -> -1;
+//                        },
+//                ChangedItems.LATEX_SYRINGE.get(), ChangedItems.LATEX_TIPPED_ARROW.get(), ChangedItems.LATEX_FLASK.get());
+//
+//        event.register((stack, layer) -> layer > 0 ? -1 : ((DyeableLeatherItem)stack.getItem()).getColor(stack),
+//                ChangedItems.LEATHER_LOWER_ABDOMEN_ARMOR.get(), ChangedItems.LEATHER_UPPER_ABDOMEN_ARMOR.get());
+//        event.register((stack, layer) -> layer > 0 ? -1 : ((DyeableLeatherItem)stack.getItem()).getColor(stack),
+//                ChangedItems.LEATHER_QUADRUPEDAL_BOOTS.get(), ChangedItems.LEATHER_QUADRUPEDAL_LEGGINGS.get());
+//
+//        event.register((stack, layer) ->
+//                        switch (layer) {
+//                            case 0 -> FoliageColor.getDefaultColor();
+//                            case 1 -> 0xFFFFFF;
+//                            default -> -1;
+//                        },
+//                ChangedBlocks.ORANGE_TREE_LEAVES.get());
+        // 1. 注射器、药水瓶等变体颜色
+        // 变动点：使用 event.getItemColors().register
+        event.getItemColors().register((stack, layer) ->
                         switch (layer) {
                             case 0 -> Syringe.getVariant(stack) != null ?
-                                    ChangedEntities.getEntityColorBack(ForgeRegistries.ENTITY_TYPES.getKey(Syringe.getVariant(stack).getEntityType()))
+                                    ChangedEntities.getEntityColorBack(ForgeRegistries.ENTITIES.getKey(Syringe.getVariant(stack).getEntityType()))
                                     : 0xF0F0F0;
                             case 1 -> Syringe.getVariant(stack) != null ?
-                                    ChangedEntities.getEntityColorFront(ForgeRegistries.ENTITY_TYPES.getKey(Syringe.getVariant(stack).getEntityType()))
+                                    ChangedEntities.getEntityColorFront(ForgeRegistries.ENTITIES.getKey(Syringe.getVariant(stack).getEntityType()))
                                     : 0xF0F0F0;
                             default -> -1;
                         },
                 ChangedItems.LATEX_SYRINGE.get(), ChangedItems.LATEX_TIPPED_ARROW.get(), ChangedItems.LATEX_FLASK.get());
 
-        event.register((stack, layer) -> layer > 0 ? -1 : ((DyeableLeatherItem)stack.getItem()).getColor(stack),
+        // 2. 皮革装备染色
+        // 逻辑完全通用，直接复制
+        event.getItemColors().register((stack, layer) -> layer > 0 ? -1 : ((DyeableLeatherItem)stack.getItem()).getColor(stack),
                 ChangedItems.LEATHER_LOWER_ABDOMEN_ARMOR.get(), ChangedItems.LEATHER_UPPER_ABDOMEN_ARMOR.get());
-        event.register((stack, layer) -> layer > 0 ? -1 : ((DyeableLeatherItem)stack.getItem()).getColor(stack),
+
+        event.getItemColors().register((stack, layer) -> layer > 0 ? -1 : ((DyeableLeatherItem)stack.getItem()).getColor(stack),
                 ChangedItems.LEATHER_QUADRUPEDAL_BOOTS.get(), ChangedItems.LEATHER_QUADRUPEDAL_LEGGINGS.get());
 
-        event.register((stack, layer) ->
+        // 3. 树叶物品颜色 (ItemBlock)
+        // 这里注册的是树叶在“物品栏”里的颜色，通常设为默认绿色，否则拿到手里可能是灰色的
+        event.getItemColors().register((stack, layer) ->
                         switch (layer) {
                             case 0 -> FoliageColor.getDefaultColor();
                             case 1 -> 0xFFFFFF;

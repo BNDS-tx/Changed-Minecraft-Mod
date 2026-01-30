@@ -32,7 +32,7 @@ public class GasCanister extends FluidCanister implements SpecializedAnimations 
     private final @Nullable Supplier<? extends TransfurGas> gas;
 
     public GasCanister(Block block, @Nullable Supplier<? extends TransfurGas> gas) {
-        super(block, new Item.Properties().durability(CAPACITY), gas);
+        super(block, new Item.Properties().tab(ChangedTabs.TAB_CHANGED_BLOCKS).durability(CAPACITY), gas);
         this.gas = gas;
     }
 

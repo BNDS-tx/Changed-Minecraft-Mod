@@ -25,7 +25,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.HumanoidArm;
 import org.jetbrains.annotations.NotNull;
 
-public class AzurebyssEntityRenderer extends AdvancedHumanoidRenderer<AzurebyssEntity, AzurebyssWolfModel, ArmorLatexMaleWolfModel<AzurebyssEntity>> implements AzurebyssCreate {
+public class AzurebyssEntityRenderer extends AdvancedHumanoidRenderer<AzurebyssEntity, AzurebyssWolfModel> implements AzurebyssCreate {
     private static final ResourceLocation TEXTURE = Changed.modResource("textures/azurebyss_entity/customized_entity.png");
 
     public AzurebyssEntityRenderer(EntityRendererProvider.Context context) {

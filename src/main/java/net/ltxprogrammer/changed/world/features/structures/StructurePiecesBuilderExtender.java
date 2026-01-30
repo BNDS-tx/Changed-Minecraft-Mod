@@ -9,4 +9,6 @@ public interface StructurePiecesBuilderExtender {
     int pieceCount();
 
     List<StructurePiece> getPieces();
+
+    void clear();
 }

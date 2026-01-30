@@ -6,7 +6,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.entity.latex.LatexType;
-import net.ltxprogrammer.changed.entity.latex.SpreadingLatexType;
 import net.ltxprogrammer.changed.init.ChangedLatexTypes;
 import net.ltxprogrammer.changed.init.ChangedRegistry;
 import net.ltxprogrammer.changed.util.Cacheable;
@@ -14,12 +13,9 @@ import net.ltxprogrammer.changed.util.UniversalDist;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.FullChunkStatus;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.tags.TagKey;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -29,14 +25,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateHolder;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.chunk.*;
-import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.lighting.LightEngine;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParam;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -118,7 +111,7 @@ public class LatexCoverState extends StateHolder<LatexType, LatexCoverState> {
                         levelExtension.setCoversDirty(level, blockPos, oldState, recordedState);
                     }
 
-                    if ((flags & 2) != 0 && (!level.isClientSide || (flags & 4) == 0) && (level.isClientSide || levelchunk.getFullStatus() != null && levelchunk.getFullStatus().isOrAfter(FullChunkStatus.BLOCK_TICKING))) {
+                    if ((flags & 2) != 0 && (!level.isClientSide || (flags & 4) == 0) && (level.isClientSide || levelchunk.getFullStatus() != null && levelchunk.getLevel().hasChunkAt(levelchunk.getPos().getWorldPosition()))) {
                         levelExtension.sendCoverUpdated(level, blockPos, oldState, newState, flags);
                     }
 
@@ -369,7 +362,7 @@ public class LatexCoverState extends StateHolder<LatexType, LatexCoverState> {
                 .setLatexCoverState(x & 15, y & 15, z & 15, state);
     }
 
-    public void randomTick(ServerLevel level, BlockPos position, RandomSource random) {
+    public void randomTick(ServerLevel level, BlockPos position, Random random) {
         this.getType().randomTick(this.asState(), level, position, random);
     }
 
@@ -381,11 +374,11 @@ public class LatexCoverState extends StateHolder<LatexType, LatexCoverState> {
         this.getType().spawnAfterBreak(this.asState(), level, blockPos, itemStack, dropXp);
     }
 
-    public List<ItemStack> getDrops(LootParams.Builder builder) {
-        return this.getType().getDrops(this.asState(), builder);
+    public List<ItemStack> getDrops(BlockPos pos, LootContext.Builder builder) {
+        return this.getType().getDrops(this.asState(), pos, builder);
     }
 
-    public void animateTick(Level level, BlockPos pos, RandomSource random) {
+    public void animateTick(Level level, BlockPos pos, Random random) {
         this.getType().animateTick(this.asState(), level, pos, random);
     }
 
@@ -544,7 +537,7 @@ public class LatexCoverState extends StateHolder<LatexType, LatexCoverState> {
     }
 
     public static InteractionResult handleInteractionEvent(PlayerInteractEvent.RightClickBlock event) {
-        final var player = event.getEntity();
+        final var player = event.getPlayer();
         final var hand = event.getHand();
         final var hitVec = event.getHitVec();
         final var itemStack = event.getItemStack();
@@ -560,12 +553,12 @@ public class LatexCoverState extends StateHolder<LatexType, LatexCoverState> {
                     return result;
                 }
             }
-            boolean flag = !player.getMainHandItem().doesSneakBypassUse(player.level(), blockPos, player) || !player.getOffhandItem().doesSneakBypassUse(player.level(), blockPos, player);
+            boolean flag = !player.getMainHandItem().doesSneakBypassUse(player.level, blockPos, player) || !player.getOffhandItem().doesSneakBypassUse(player.level, blockPos, player);
             boolean flag1 = player.isSecondaryUseActive() && flag;
-            LatexCoverState state = LatexCoverState.getAt(player.level(), blockPos);
+            LatexCoverState state = LatexCoverState.getAt(player.level, blockPos);
 
             if (event.getUseBlock() == net.minecraftforge.eventbus.api.Event.Result.ALLOW || (event.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY && !flag1)) {
-                InteractionResult interactionresult = state.use(player.level(), player, hand, hitVec);
+                InteractionResult interactionresult = state.use(player.level, player, hand, hitVec);
                 if (interactionresult.consumesAction()) {
                     return interactionresult;
                 }

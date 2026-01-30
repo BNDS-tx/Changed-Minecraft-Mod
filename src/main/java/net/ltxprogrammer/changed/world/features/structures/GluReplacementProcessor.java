@@ -9,7 +9,6 @@ import net.ltxprogrammer.changed.init.ChangedBlocks;
 import net.ltxprogrammer.changed.init.ChangedFeatures;
 import net.minecraft.commands.arguments.blocks.BlockStateParser;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Blocks;
@@ -30,24 +29,54 @@ public class GluReplacementProcessor extends StructureProcessor {
     private GluReplacementProcessor() {
     }
 
-    @Nullable
-    public StructureTemplate.StructureBlockInfo processBlock(LevelReader p_74127_, BlockPos p_74128_, BlockPos p_74129_, StructureTemplate.StructureBlockInfo p_74130_, StructureTemplate.StructureBlockInfo blockInfo, StructurePlaceSettings p_74132_) {
-        BlockState blockstate = blockInfo.state();
-        if (blockstate.is(ChangedBlocks.GLU_BLOCK.get())) {
-            if (Changed.dataFixer != null) // Fixes rare scenario where a facility was created pre-datafixer, then later placed in the world post-datafixer
-                Changed.dataFixer.updateBlockEntity(blockInfo.nbt());
+//    @Nullable
+//    public StructureTemplate.StructureBlockInfo processBlock(LevelReader p_74127_, BlockPos p_74128_, BlockPos p_74129_, StructureTemplate.StructureBlockInfo p_74130_, StructureTemplate.StructureBlockInfo blockInfo, StructurePlaceSettings p_74132_) {
+//        BlockState blockstate = blockInfo.state;
+//        if (blockstate.is(ChangedBlocks.GLU_BLOCK.get())) {
+//            if (Changed.dataFixer != null) // Fixes rare scenario where a facility was created pre-datafixer, then later placed in the world post-datafixer
+//                Changed.dataFixer.updateBlockEntity(blockInfo.nbt);
+//
+//            String s = blockInfo.nbt.getString(GluBlockEntity.FINAL_STATE);
+//
+//            BlockState blockstate1;
+//            try {
+//                BlockStateParser.BlockResult blockstateparser$blockresult = BlockStateParser.parseForBlock(p_74127_.holderLookup(Registries.BLOCK), s, true);
+//                blockstate1 = blockstateparser$blockresult.blockState();
+//            } catch (CommandSyntaxException commandsyntaxexception) {
+//                throw new RuntimeException(commandsyntaxexception);
+//            }
+//
+//            return blockstate1.is(Blocks.STRUCTURE_VOID) ? null : new StructureTemplate.StructureBlockInfo(blockInfo.pos, blockstate1, (CompoundTag)null);
+//        } else {
+//            return blockInfo;
+//        }
+//    }
 
-            String s = blockInfo.nbt().getString(GluBlockEntity.FINAL_STATE);
+    @Nullable
+    @Override
+    public StructureTemplate.StructureBlockInfo processBlock(LevelReader level, BlockPos templatePos, BlockPos pivot, StructureTemplate.StructureBlockInfo originalInfo, StructureTemplate.StructureBlockInfo blockInfo, StructurePlaceSettings settings) {
+        BlockState blockstate = blockInfo.state;
+        if (blockstate.is(ChangedBlocks.GLU_BLOCK.get())) {
+            if (Changed.dataFixer != null)
+                Changed.dataFixer.updateBlockEntity(blockInfo.nbt);
+
+            String s = blockInfo.nbt.getString(GluBlockEntity.FINAL_STATE);
 
             BlockState blockstate1;
             try {
-                BlockStateParser.BlockResult blockstateparser$blockresult = BlockStateParser.parseForBlock(p_74127_.holderLookup(Registries.BLOCK), s, true);
-                blockstate1 = blockstateparser$blockresult.blockState();
+                // 1.18.2 适配核心：手动构建 Parser
+                // 参数1: StringReader包装字符串
+                // 参数2: allowTags (通常设为 false，除非你期望解析 #tag)
+                BlockStateParser parser = new BlockStateParser(new StringReader(s), false);
+
+                // parse(true) 表示尝试解析 NBT (如果字符串里有的话)，最后 .getState() 获取 BlockState
+                blockstate1 = parser.parse(true).getState();
             } catch (CommandSyntaxException commandsyntaxexception) {
                 throw new RuntimeException(commandsyntaxexception);
             }
 
-            return blockstate1.is(Blocks.STRUCTURE_VOID) ? null : new StructureTemplate.StructureBlockInfo(blockInfo.pos(), blockstate1, (CompoundTag)null);
+            // 1.18.2 的 StructureBlockInfo 构造函数也是 (pos, state, nbt)
+            return blockstate1.is(Blocks.STRUCTURE_VOID) ? null : new StructureTemplate.StructureBlockInfo(blockInfo.pos, blockstate1, (CompoundTag)null);
         } else {
             return blockInfo;
         }

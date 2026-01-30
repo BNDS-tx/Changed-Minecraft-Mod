@@ -1,5 +1,4 @@
 {
-	"loader": "forge:composite",
 	"children": {
 		"base": {
 			"format_version": "1.21.6",

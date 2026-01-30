@@ -17,7 +17,7 @@ public abstract class GasSFX {
         public boolean stopped = false;
 
         public GasSoundInstance(SoundEvent event, SoundSource source, float volume, float pitch, double x, double y, double z) {
-            super(event.getLocation(), source, volume, pitch, SoundInstance.createUnseededRandom(), true, 0, Attenuation.NONE, x, y, z, false);
+            super(event.getLocation(), source, volume, pitch, true, 0, SoundInstance.Attenuation.LINEAR, x, y, z, false);
         }
 
         @Override

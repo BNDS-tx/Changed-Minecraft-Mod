@@ -3,26 +3,24 @@ package net.ltxprogrammer.changed.mixin.gui;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.EntityUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
+import net.minecraftforge.client.gui.ForgeIngameGui;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-@Mixin(value = ForgeGui.class, remap = false)
+@Mixin(value = ForgeIngameGui.class, remap = false)
 public abstract class ForgeIngameGuiMixin extends Gui {
-    public ForgeIngameGuiMixin(Minecraft p_232355_, ItemRenderer p_232356_) {
-        super(p_232355_, p_232356_);
+    public ForgeIngameGuiMixin(Minecraft p_93005_) {
+        super(p_93005_);
     }
 
     @WrapMethod(method = "renderAir")
-    protected void renderAir(int width, int height, GuiGraphics guiGraphics, Operation<Void> original) {
+    protected void renderAir(int width, int height, PoseStack guiGraphics, Operation<Void> original) {
         var variant = ProcessTransfur.getPlayerTransfurVariant(EntityUtil.playerOrNull(Minecraft.getInstance().getCameraEntity()));
         if (variant == null) {
             original.call(width, height, guiGraphics);

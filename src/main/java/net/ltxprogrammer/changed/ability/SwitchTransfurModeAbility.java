@@ -4,6 +4,7 @@ import net.ltxprogrammer.changed.entity.TransfurMode;
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.*;
@@ -31,7 +32,7 @@ public class SwitchTransfurModeAbility extends SimpleAbility {
             entity.setTransfurMode(TransfurMode.ABSORPTION);
 
         setDirty(entity);
-        entity.displayClientMessage(Component.translatable("ability.changed.switch_transfur_mode.select", Component.translatable("ability.changed.switch_transfur_mode." + entity.getTransfurMode().toString().toLowerCase())), true);
+        entity.displayClientMessage(new TranslatableComponent("ability.changed.switch_transfur_mode.select", new TranslatableComponent("ability.changed.switch_transfur_mode." + entity.getTransfurMode().toString().toLowerCase())), true);
     }
 
     @Override
@@ -58,11 +59,11 @@ public class SwitchTransfurModeAbility extends SimpleAbility {
     }
 
     private static final Map<TransfurMode, Collection<Component>> DESCRIPTION = Util.make(new EnumMap<>(TransfurMode.class), map -> {
-        Component baseDesc = Component.translatable("ability.changed.switch_transfur_mode.desc");
+        Component baseDesc = new TranslatableComponent("ability.changed.switch_transfur_mode.desc");
 
-        map.put(TransfurMode.NONE, List.of(baseDesc, Component.translatable("ability.changed.switch_transfur_mode.none.desc")));
-        map.put(TransfurMode.ABSORPTION, List.of(baseDesc, Component.translatable("ability.changed.switch_transfur_mode.absorption.desc")));
-        map.put(TransfurMode.REPLICATION, List.of(baseDesc, Component.translatable("ability.changed.switch_transfur_mode.replication.desc")));
+        map.put(TransfurMode.NONE, List.of(baseDesc, new TranslatableComponent("ability.changed.switch_transfur_mode.none.desc")));
+        map.put(TransfurMode.ABSORPTION, List.of(baseDesc, new TranslatableComponent("ability.changed.switch_transfur_mode.absorption.desc")));
+        map.put(TransfurMode.REPLICATION, List.of(baseDesc, new TranslatableComponent("ability.changed.switch_transfur_mode.replication.desc")));
     });
 
     @Override

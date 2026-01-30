@@ -1,27 +1,27 @@
 package net.ltxprogrammer.changed.aaBackport;
 
 import com.mojang.serialization.Codec;
-import net.ltxprogrammer.changed.ability.tree.AbilityTree;
+import net.ltxprogrammer.changed.ability.tree.condition.AbstractCondition;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.registries.IForgeRegistryEntry;
 
-public class CodecWrapperATNE<T extends AbilityTree.NodeEffect> implements IForgeRegistryEntry<CodecWrapperATNE<? extends AbilityTree.NodeEffect>> {
+public class CodecWrapperAC<T extends AbstractCondition> implements IForgeRegistryEntry<CodecWrapperAC<? extends AbstractCondition>> {
     // 关键点1：这里用 ? extends T，允许存储子类的 Codec
-    private final Codec<? extends AbilityTree.NodeEffect> codec;
+    private final Codec<? extends AbstractCondition> codec;
     private ResourceLocation registryName;
 
     // 关键点2：构造函数接收 ? extends T
-    public CodecWrapperATNE(Codec<? extends AbilityTree.NodeEffect> codec) {
+    public CodecWrapperAC(Codec<? extends AbstractCondition> codec) {
         this.codec = codec;
     }
 
     // 关键点3：Getter 返回 ? extends T
-    public Codec<? extends AbilityTree.NodeEffect> getCodec() {
+    public Codec<? extends AbstractCondition> getCodec() {
         return codec;
     }
 
     @Override
-    public CodecWrapperATNE<? extends AbilityTree.NodeEffect> setRegistryName(ResourceLocation name) {
+    public CodecWrapperAC<? extends AbstractCondition> setRegistryName(ResourceLocation name) {
         this.registryName = name;
         return this;
     }
@@ -32,7 +32,7 @@ public class CodecWrapperATNE<T extends AbilityTree.NodeEffect> implements IForg
     }
 
     @Override
-    public Class<CodecWrapperATNE<? extends AbilityTree.NodeEffect>> getRegistryType() {
-        return (Class<CodecWrapperATNE<? extends AbilityTree.NodeEffect>>) (Class<?>) CodecWrapperATNE.class;
+    public Class<CodecWrapperAC<? extends AbstractCondition>> getRegistryType() {
+        return (Class<CodecWrapperAC<? extends AbstractCondition>>) (Class<?>) CodecWrapperAC.class;
     }
 }

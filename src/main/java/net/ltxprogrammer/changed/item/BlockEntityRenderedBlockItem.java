@@ -4,7 +4,7 @@ import net.ltxprogrammer.changed.client.ChangedClient;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
+import net.minecraftforge.client.IItemRenderProperties;
 
 import java.util.function.Consumer;
 
@@ -14,11 +14,11 @@ public class BlockEntityRenderedBlockItem extends BlockItem {
     }
 
     @Override
-    public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+    public void initializeClient(Consumer<IItemRenderProperties> consumer) {
         super.initializeClient(consumer);
-        consumer.accept(new IClientItemExtensions() {
+        consumer.accept(new IItemRenderProperties() {
             @Override
-            public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+            public BlockEntityWithoutLevelRenderer getItemStackRenderer() {
                 return ChangedClient.itemRenderer.get();
             }
         });

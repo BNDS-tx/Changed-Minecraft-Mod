@@ -20,6 +20,7 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.commands.synchronization.SuggestionProviders;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -38,9 +39,9 @@ public class CommandAbilityTree {
                 .findFirst().map(AbilityTree::getNodes).stream().flatMap(stream -> stream.map(Pair::getFirst)), p_121668_);
     });
 
-    private static final SimpleCommandExceptionType NOT_TRANSFURRED = new SimpleCommandExceptionType(Component.translatable("command.changed.error.not_transfurred"));
-    private static final SimpleCommandExceptionType NOT_TREE = new SimpleCommandExceptionType(Component.translatable("command.changed.error.not_tree"));
-    private static final SimpleCommandExceptionType NOT_NODE = new SimpleCommandExceptionType(Component.translatable("command.changed.error.not_node"));
+    private static final SimpleCommandExceptionType NOT_TRANSFURRED = new SimpleCommandExceptionType(new TranslatableComponent("command.changed.error.not_transfurred"));
+    private static final SimpleCommandExceptionType NOT_TREE = new SimpleCommandExceptionType(new TranslatableComponent("command.changed.error.not_tree"));
+    private static final SimpleCommandExceptionType NOT_NODE = new SimpleCommandExceptionType(new TranslatableComponent("command.changed.error.not_node"));
 
     @SubscribeEvent
     public static void registerCommands(RegisterCommandsEvent event) {
@@ -86,7 +87,7 @@ public class CommandAbilityTree {
         int granted = tree.get().makePurchase(nodeId, variant.getParent(), 0) ? 1 : 0;
 
         if (granted > 0)
-            source.sendSuccess(() -> Component.translatable("command.changed.success.abilitytree.grant", node.titleId, player.getScoreboardName()), false);
+            source.sendSuccess(new TranslatableComponent("command.changed.success.abilitytree.grant", node.titleId, player.getScoreboardName()), false);
 
         return granted;
     }
@@ -107,7 +108,7 @@ public class CommandAbilityTree {
         }).reduce(Integer::sum).orElse(0);
 
         if (granted > 0)
-            source.sendSuccess(() -> Component.translatable("command.changed.success.abilitytree.grant.many", granted, player.getScoreboardName()), false);
+            source.sendSuccess(new TranslatableComponent("command.changed.success.abilitytree.grant.many", granted, player.getScoreboardName()), false);
         return granted;
     }
 
@@ -125,7 +126,7 @@ public class CommandAbilityTree {
         int refunded = tree.get().refundNodePurchases(nodeId);
 
         if (refunded > 0)
-            source.sendSuccess(() -> Component.translatable("command.changed.success.abilitytree.refund.many", refunded, player.getScoreboardName()), false);
+            source.sendSuccess(new TranslatableComponent("command.changed.success.abilitytree.refund.many", refunded, player.getScoreboardName()), false);
 
         return refunded;
     }
@@ -142,7 +143,7 @@ public class CommandAbilityTree {
         }).reduce(Integer::sum).orElse(0);
 
         if (refunded > 0)
-            source.sendSuccess(() -> Component.translatable("command.changed.success.abilitytree.refund.many", refunded, player.getScoreboardName()), false);
+            source.sendSuccess(new TranslatableComponent("command.changed.success.abilitytree.refund.many", refunded, player.getScoreboardName()), false);
         return refunded;
     }
 }

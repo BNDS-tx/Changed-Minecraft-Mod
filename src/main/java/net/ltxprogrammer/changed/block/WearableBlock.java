@@ -15,10 +15,10 @@ public interface WearableBlock {
     @Mod.EventBusSubscriber
     class Event {
         @SubscribeEvent
-        public static void onEntityTick(LivingEvent.LivingTickEvent event) {
-            event.getEntity().getArmorSlots().forEach(itemStack -> {
+        public static void onEntityTick(LivingEvent.LivingUpdateEvent event) {
+            event.getEntityLiving().getArmorSlots().forEach(itemStack -> {
                 if (itemStack.getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof WearableBlock wearableBlock) {
-                    wearableBlock.wearTick(event.getEntity(), itemStack);
+                    wearableBlock.wearTick(event.getEntityLiving(), itemStack);
                 }
             });
         }

@@ -6,6 +6,7 @@ import net.ltxprogrammer.changed.entity.beast.AbstractDarkLatexEntity;
 import net.ltxprogrammer.changed.entity.latex.LatexType;
 import net.ltxprogrammer.changed.init.ChangedTags;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -41,7 +42,7 @@ public enum DarkLatexTargetType implements BiPredicate<AbstractDarkLatexEntity, 
             return false;
         if (target instanceof Mob mob)
             return mob.getTarget() == self.getOwner();
-        return self.getOwner().getLastAttacker() == target;
+        return self.getOwner().getLastHurtByMob() == target;
     });
 
     private final String serializedName;
@@ -69,12 +70,12 @@ public enum DarkLatexTargetType implements BiPredicate<AbstractDarkLatexEntity, 
     public static DataResult<DarkLatexTargetType> fromSerial(String serializedName) {
         return Arrays.stream(values()).filter(value -> value.serializedName.equals(serializedName))
                 .findAny().map(DataResult::success).orElse(DataResult.error(
-                        () -> "Invalid target type " + serializedName
+                        "Invalid target type " + serializedName
                 ));
     }
 
     public Component getDisplayText() {
-        return Component.translatable("changed.tamed_dark_latex.targeting." + serializedName);
+        return new TranslatableComponent("changed.tamed_dark_latex.targeting." + serializedName);
     }
 
     public DarkLatexTargetType cycle() {

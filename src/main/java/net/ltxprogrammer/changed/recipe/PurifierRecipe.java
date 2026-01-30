@@ -88,13 +88,7 @@ public class PurifierRecipe implements Recipe<SimpleContainer> {
         return i == 1 && (isSimple ? stackedcontents.canCraft(this, (IntList)null) : net.minecraftforge.common.util.RecipeMatcher.findMatches(inputs,  this.ingredients) != null);
     }
 
-    @Override
-    public ItemStack assemble(SimpleContainer container, RegistryAccess registryAccess) {
-        return this.getResultItem();
-    }
-
-    @Override
-    public ItemStack getResultItem(RegistryAccess registryAccess) {
+    public ItemStack assemble(SimpleContainer p_44260_) {
         return this.getResultItem();
     }
 
@@ -102,18 +96,18 @@ public class PurifierRecipe implements Recipe<SimpleContainer> {
         return p_44252_ * p_44253_ >= this.ingredients.size();
     }
 
-    public static class Serializer implements RecipeSerializer<PurifierRecipe> {
+    public static class Serializer extends net.minecraftforge.registries.ForgeRegistryEntry<RecipeSerializer<?>> implements RecipeSerializer<PurifierRecipe> {
         public PurifierRecipe fromJson(ResourceLocation id, JsonObject json) {
             String group = GsonHelper.getAsString(json, "group", "");
             Ingredient in = Ingredient.fromJson(json.get("ingredient"));
-            Item out = ForgeRegistries.ITEMS.getValue(ResourceLocation.parse(json.get("result").getAsString()));
+            Item out = ForgeRegistries.ITEMS.getValue(new ResourceLocation(json.get("result").getAsString()));
             return new PurifierRecipe(id, group, in, out);
         }
 
         public PurifierRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buffer) {
             String group = buffer.readUtf();
             Ingredient in = Ingredient.fromNetwork(buffer);
-            Item out = ForgeRegistries.ITEMS.getValue(ResourceLocation.parse(buffer.readUtf()));
+            Item out = ForgeRegistries.ITEMS.getValue(new ResourceLocation(buffer.readUtf()));
             return new PurifierRecipe(id, group, in, out);
         }
 

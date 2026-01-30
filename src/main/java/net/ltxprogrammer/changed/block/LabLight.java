@@ -21,7 +21,7 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.material.PushReaction;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -46,7 +46,7 @@ public class LabLight extends AbstractCustomShapeBlock {
     }
 
     @Override
-    public List<ItemStack> getDrops(BlockState p_60537_, LootParams.Builder p_60538_) {
+    public List<ItemStack> getDrops(BlockState p_60537_, LootContext.Builder p_60538_) {
         if (p_60537_.getValue(SECTION) == 0)
             return super.getDrops(p_60537_, p_60538_);
         else

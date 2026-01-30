@@ -34,13 +34,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import tschipp.carryon.client.render.CarryRenderHelper;
+import tschipp.carryon.client.event.RenderEvents;
+import tschipp.carryon.client.helper.CarryRenderHelper;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/*@Mixin(value = RenderEvents.class, remap = false)
+@Mixin(value = RenderEvents.class, remap = false)
 @RequiredMods("carryon")
 public abstract class RenderEventsMixin {
     @Unique private static Player currentPlayer = null;
@@ -162,4 +163,4 @@ public abstract class RenderEventsMixin {
             CarryRenderHelper.renderItem(state, tag, stack, tileStack, matrix, buffer, light, model);
         });
     }
-}*/
+}

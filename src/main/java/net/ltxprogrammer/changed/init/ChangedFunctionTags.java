@@ -21,7 +21,7 @@ public class ChangedFunctionTags {
             if (server == null) return;
             var functions = server.getFunctions();
 
-            functions.getTag(tagId).forEach(fn -> {
+            functions.getTag(tagId).getValues().forEach(fn -> {
                 functions.execute(fn, functions.getGameLoopSender());
             });
         }
@@ -38,7 +38,7 @@ public class ChangedFunctionTags {
             if (server == null) return;
             var functions = server.getFunctions();
 
-            functions.getTag(tagId).forEach(fn -> {
+            functions.getTag(tagId).getValues().forEach(fn -> {
                 functions.execute(fn, functions.getGameLoopSender().withEntity(source));
             });
         }

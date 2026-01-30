@@ -2,6 +2,7 @@ package net.ltxprogrammer.changed.client.renderer.layers;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.ltxprogrammer.changed.aaBackport.JomlConverter;
 import net.ltxprogrammer.changed.client.*;
 import net.ltxprogrammer.changed.client.latexparticles.LatexDripParticle;
 import net.ltxprogrammer.changed.client.latexparticles.SetupContext;
@@ -18,14 +19,16 @@ import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
-import org.joml.Vector3f;
+
+import repack.joml.Vector3f;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -117,14 +120,21 @@ public class LatexParticlesLayer<T extends ChangedEntity, M extends AdvancedHuma
     }
 
     public Optional<NativeImage> tryFromDisk(ResourceLocation name) {
-        return minecraft.getResourceManager().getResource(name)
-                .flatMap(resource -> {
-                    try (var inputStream = resource.open()) {
-                        return Optional.of(NativeImage.read(inputStream));
-                    } catch (IOException ignored) {}
+        Resource resource = null;
 
-                    return Optional.empty();
-                });
+        try {
+            resource = minecraft.getResourceManager().getResource(name);
+            return Optional.of(NativeImage.read(resource.getInputStream()));
+        } catch (IOException ignored) {}
+        finally {
+            if (resource != null) {
+                try {
+                    resource.close();
+                } catch (IOException ignored) {}
+            }
+        }
+
+        return Optional.empty();
     }
 
     public Optional<NativeImage> trySkinDirectory(ResourceLocation name) {
@@ -141,7 +151,7 @@ public class LatexParticlesLayer<T extends ChangedEntity, M extends AdvancedHuma
         );
     }
 
-    public static SurfacePoint findRandomSurface(ModelPart part, RandomSource random) {
+    public static SurfacePoint findRandomSurface(ModelPart part, Random random) {
         var cube = ((ModelPartExtender)(Object)part).getRandomCubeWeighted(random);
         var polygon = ((CubeExtender)cube).getRandomPolygonWeighted(random);
 
@@ -154,10 +164,10 @@ public class LatexParticlesLayer<T extends ChangedEntity, M extends AdvancedHuma
         );
 
         Vector3f scaledPos = new Vector3f();
-        return new SurfacePoint(polygon.normal, vertex.pos.mul(1.0f / 16.0f, scaledPos), new UVPair(vertex.u, vertex.v));
+        return new SurfacePoint(polygon.normal, new JomlConverter().toMojang(new JomlConverter().toJoml(vertex.pos).mul(1.0f / 16.0f, scaledPos)), new UVPair(vertex.u, vertex.v));
     }
 
-    private Optional<AdvancedHumanoidModel<T>> getRandomModel(RandomSource random) {
+    private Optional<AdvancedHumanoidModel<T>> getRandomModel(Random random) {
         if (this.models.isEmpty())
             return Optional.empty();
         int indexToGet = random.nextInt(this.models.size());
@@ -177,8 +187,8 @@ public class LatexParticlesLayer<T extends ChangedEntity, M extends AdvancedHuma
         if (partsWithCubes.isEmpty())
             return;
 
-        var partToAttach = partsWithCubes.get(entity.level().random.nextInt(partsWithCubes.size()));
-        var surface = findRandomSurface(partToAttach.getLeaf(), entity.level().random);
+        var partToAttach = partsWithCubes.get(entity.level.random.nextInt(partsWithCubes.size()));
+        var surface = findRandomSurface(partToAttach.getLeaf(), entity.level.random);
 
         Color3 color;
         float alpha;

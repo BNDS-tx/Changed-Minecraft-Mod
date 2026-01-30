@@ -1,7 +1,7 @@
 package net.ltxprogrammer.changed.client.renderer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import com.mojang.math.Vector3f;
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel;
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModelPicker;
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModelSet;
@@ -28,7 +28,7 @@ public abstract class AdvancedFeralRenderer<T extends ChangedEntity, M extends A
             super.setupRotations(entity, poseStack, bob, bodyYRot, partialTicks);
             float f3 = entity.isInWater() ? -entity.getXRot() : 0.0F;
             float f4 = Mth.lerp(swimAmount, 0.0F, f3 * 0.75f);
-            poseStack.mulPose(Axis.XP.rotationDegrees(f4));
+            poseStack.mulPose(Vector3f.XP.rotationDegrees(f4));
         } else {
             super.setupRotations(entity, poseStack, bob, bodyYRot, partialTicks);
         }

@@ -3,14 +3,17 @@ package net.ltxprogrammer.changed.init;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.minecraft.core.Registry;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.material.Fluid;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class ChangedTags {
     public static class EntityTypes {
@@ -30,7 +33,7 @@ public class ChangedTags {
         public static final TagKey<EntityType<?>> DARK_LATEXES = create("dark_latexes");
 
         private static TagKey<EntityType<?>> create(String name) {
-            return TagKey.create(Registries.ENTITY_TYPE, Changed.modResource(name));
+            return TagKey.create(Registry.ENTITY_TYPE_REGISTRY, Changed.modResource(name));
         }
     }
 
@@ -48,7 +51,7 @@ public class ChangedTags {
         public static final TagKey<Block> DENY_LATEX_COVER_CLIMB = create("deny_latex_cover_climb");
 
         private static TagKey<Block> create(String name) {
-            return TagKey.create(Registries.BLOCK, Changed.modResource(name));
+            return TagKey.create(Registry.BLOCK_REGISTRY, Changed.modResource(name));
         }
     }
 
@@ -61,7 +64,7 @@ public class ChangedTags {
         public static final TagKey<Item> QUADRUPEDAL_BOOTS = create("quadrupedal_boots");
 
         private static TagKey<Item> create(String name) {
-            return TagKey.create(Registries.ITEM, Changed.modResource(name));
+            return TagKey.create(Registry.ITEM_REGISTRY, Changed.modResource(name));
         }
     }
 
@@ -70,7 +73,7 @@ public class ChangedTags {
         public static final TagKey<Fluid> LASER_TRANSLUCENT = create("laser_translucent");
 
         private static TagKey<Fluid> create(String name) {
-            return TagKey.create(Registries.FLUID, Changed.modResource(name));
+            return TagKey.create(Registry.FLUID_REGISTRY, Changed.modResource(name));
         }
     }
 
@@ -82,17 +85,52 @@ public class ChangedTags {
         public static final TagKey<Biome> HAS_FACILITY = create("has_structure/facility");
 
         private static TagKey<Biome> create(String name) {
-            return TagKey.create(Registries.BIOME, Changed.modResource(name));
+            return TagKey.create(Registry.BIOME_REGISTRY, Changed.modResource(name));
         }
     }
 
-    public static class DamageTypes {
-        public static final TagKey<DamageType> IS_TRANSFUR = create("is_transfur");
-        public static final TagKey<DamageType> LATEX_IMMUNE_TO = create("latex_immune_to");
-        public static final TagKey<DamageType> LATEX_WEAK_TO = create("latex_weak_to");
+//    public static class DamageTypes {
+//        public static final TagKey<DamageSource> IS_TRANSFUR = create("is_transfur");
+//        public static final TagKey<DamageSource> LATEX_IMMUNE_TO = create("latex_immune_to");
+//        public static final TagKey<DamageSource> LATEX_WEAK_TO = create("latex_weak_to");
+//
+//        private static TagKey<DamageSource> create(String name) {
+//            return TagKey.create(Registry., Changed.modResource(name));
+//        }
+//
+//
+//    }
 
-        private static TagKey<DamageType> create(String name) {
-            return TagKey.create(Registries.DAMAGE_TYPE, Changed.modResource(name));
+    public static final class DamageTypes {
+
+        private static final Set<DamageSource> IS_TRANSFUR = new HashSet<>();
+        private static final Set<DamageSource> LATEX_IMMUNE_TO = new HashSet<>();
+        private static final Set<DamageSource> LATEX_WEAK_TO = new HashSet<>();
+
+        public static boolean isTransfur(DamageSource source) {
+            return IS_TRANSFUR.contains(source);
+        }
+
+        public static boolean isLatexImmuneTo(DamageSource source) {
+            return LATEX_IMMUNE_TO.contains(source) || source.getEntity() instanceof Bee;
+        }
+
+        public static boolean isLatexWeakTo(DamageSource source) {
+            return LATEX_WEAK_TO.contains(source);
+        }
+
+        // 注册方法
+        public static void register() {
+            IS_TRANSFUR.add(ChangedDamageSources.TRANSFUR.source());
+            IS_TRANSFUR.add(ChangedDamageSources.ABSORB.source());
+
+            LATEX_IMMUNE_TO.add(DamageSource.CACTUS);
+            LATEX_IMMUNE_TO.add(DamageSource.SWEET_BERRY_BUSH);
+
+            LATEX_WEAK_TO.add(DamageSource.IN_FIRE);
+            LATEX_WEAK_TO.add(DamageSource.ON_FIRE);
+            LATEX_WEAK_TO.add(DamageSource.LIGHTNING_BOLT);
+            LATEX_WEAK_TO.add(ChangedDamageSources.ELECTROCUTION.source());
         }
     }
 

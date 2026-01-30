@@ -1,6 +1,7 @@
 package net.ltxprogrammer.changed.client.gui;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.ability.AbstractAbility;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
@@ -12,8 +13,8 @@ import net.ltxprogrammer.changed.network.VariantAbilityActivate;
 import net.ltxprogrammer.changed.util.SingleRunnable;
 import net.ltxprogrammer.changed.world.inventory.AbilityRadialMenu;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.entity.player.Inventory;
 
 import javax.annotation.Nullable;
@@ -52,18 +53,18 @@ public class AbilityRadialScreen extends VariantRadialScreen<AbilityRadialMenu> 
         var builder = ImmutableList.<Component>builder().add(abilityInstance.getAbilityName());
 
         if (!desc.isEmpty()) {
-            builder.add(Component.empty());
+            builder.add(TextComponent.EMPTY);
             builder.addAll(desc);
         }
 
         if (this.minecraft.options.advancedItemTooltips)
-            builder.add((Component.literal(ChangedRegistry.ABILITY.getKey(abilityInstance.ability).toString())).withStyle(ChatFormatting.DARK_GRAY));
+            builder.add((new TextComponent(ChangedRegistry.ABILITY.getKey(abilityInstance.ability).toString())).withStyle(ChatFormatting.DARK_GRAY));
 
         return builder.build();
     }
 
     @Override
-    public void renderSectionForeground(GuiGraphics graphics, int section, double x, double y, float partialTicks, int mouseX, int mouseY, float red, float green, float blue, float alpha) {
+    public void renderSectionForeground(PoseStack pose, int section, double x, double y, float partialTicks, int mouseX, int mouseY, float red, float green, float blue, float alpha) {
         boolean enabled = false;
         boolean selected = false;
         if (menu.variant.abilityInstances.containsKey(abilities.get(section))) {
@@ -78,7 +79,7 @@ public class AbilityRadialScreen extends VariantRadialScreen<AbilityRadialMenu> 
             x = x * 0.9;
             y = (y * 0.9) - 16;
 
-            HairStyleRadialScreen.renderEntityHeadWithHair(graphics, (int)x + this.leftPos, (int)y + 32 + this.topPos, 40,
+            HairStyleRadialScreen.renderEntityHeadWithHair((int)x + this.leftPos, (int)y + 32 + this.topPos, 40,
                     (float)(this.leftPos) - mouseX + (int)x,
                     (float)(this.topPos) - mouseY + (int)y,
                     variant.getChangedEntity(), alpha);
@@ -86,7 +87,6 @@ public class AbilityRadialScreen extends VariantRadialScreen<AbilityRadialMenu> 
 
         else {
             ChangedClient.abilityRenderer.getOrThrow().renderAndDecorateAbility(
-                    graphics,
                     menu.player,
                     menu.variant.getAbilityInstance(abilities.get(section)),
                     (int) (x - 24 + this.leftPos),

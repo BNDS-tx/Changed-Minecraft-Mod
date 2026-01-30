@@ -21,7 +21,7 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.material.PushReaction;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -41,12 +41,12 @@ public class BookStack extends Block implements SimpleWaterloggedBlock {
     public static final VoxelShape EIGHT_AABB = Block.box(3.5D, 0.0D, 3.5D, 12.5D, 16.0D, 12.5D);
 
     public BookStack(Properties properties) {
-        super(properties.offsetType(OffsetType.XZ).dynamicShape());
+        super(properties.dynamicShape());
         this.registerDefaultState(this.stateDefinition.any().setValue(BOOKS, 1).setValue(WATERLOGGED, false));
     }
 
     @Override
-    public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
+    public List<ItemStack> getDrops(BlockState state, LootContext.Builder builder) {
         return List.of(new ItemStack(ChangedItems.LAB_BOOK.get(), state.getValue(BOOKS)));
     }
 

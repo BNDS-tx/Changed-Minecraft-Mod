@@ -56,7 +56,7 @@ public abstract class AbstractArmorStand extends ArmorStand implements EntitySha
             itemstack.setHoverName(this.getCustomName());
         }
 
-        Block.popResource(this.level(), this.blockPosition(), itemstack);
+        Block.popResource(this.level, this.blockPosition(), itemstack);
         this.brokenByAnything(damageSource);
     }
 }

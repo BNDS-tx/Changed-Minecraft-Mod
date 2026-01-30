@@ -13,11 +13,9 @@ import net.ltxprogrammer.changed.world.features.structures.StructureTemplateExte
 import net.ltxprogrammer.changed.world.features.structures.HangingBlockFixerProcessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderGetter;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.util.RandomSource;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.Painting;
@@ -37,10 +35,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Mixin(StructureTemplate.class)
 public abstract class StructureTemplateMixin implements StructureTemplateExtender {
@@ -50,32 +45,31 @@ public abstract class StructureTemplateMixin implements StructureTemplateExtende
     private final List<LatexCoverPalette> changed$latexCoverPalettes = Lists.newArrayList();
 
     @WrapMethod(method = "load")
-    public void updateWithCDFU(HolderGetter<Block> registry, CompoundTag tag, Operation<Void> original) {
+    public void updateWithCDFU(CompoundTag tag, Operation<Void> original) {
         if (Changed.dataFixer != null)
             Changed.dataFixer.updateCompoundTag(DataFixTypes.STRUCTURE, tag);
         
-        original.call(registry, tag);
+        original.call(tag);
         this.changed$latexCoverPalettes.clear();
         
         ListTag listtag1 = tag.getList("latexCovers", 10);
-        HolderGetter<LatexType> typeRegistry = ChangedRegistry.LATEX_TYPE.asLookup();
         if (tag.contains("latexCoverPalettes", 9)) {
             ListTag listtag2 = tag.getList("latexCoverPalettes", 9);
 
             for(int i = 0; i < listtag2.size(); ++i) {
-                this.loadCoverPalette(typeRegistry, listtag2.getList(i), listtag1);
+                this.loadCoverPalette(listtag2.getList(i), listtag1);
             }
         } else {
-            this.loadCoverPalette(typeRegistry, tag.getList("latexCoverPalette", 10), listtag1);
+            this.loadCoverPalette(tag.getList("latexCoverPalette", 10), listtag1);
         }
     }
     
     @Unique
-    public void loadCoverPalette(HolderGetter<LatexType> registry, ListTag latexCoverPalette, ListTag latexCovers) {
+    public void loadCoverPalette(ListTag latexCoverPalette, ListTag latexCovers) {
         SimpleCoverPalette palette = new SimpleCoverPalette();
 
         for(int i = 0; i < latexCoverPalette.size(); ++i) {
-            palette.addMapping(LatexType.readLatexCoverState(registry, latexCoverPalette.getCompound(i)), i);
+            palette.addMapping(LatexType.readLatexCoverState(latexCoverPalette.getCompound(i)), i);
         }
 
         List<StructureLatexCoverInfo> list2 = Lists.newArrayList();
@@ -167,10 +161,9 @@ public abstract class StructureTemplateMixin implements StructureTemplateExtende
 
         var pos = new BlockPos.MutableBlockPos();
         pos.set(painting.getPos());
-        var variant = painting.getVariant().value();
 
-        var width = variant.getWidth() / 16;
-        var height = variant.getHeight() / 16;
+        var width = painting.getWidth() / 16;
+        var height = painting.getHeight() / 16;
         var direction = painting.getDirection();
 
         // paintings with an even height seem to always be moved upwards...
@@ -185,7 +178,7 @@ public abstract class StructureTemplateMixin implements StructureTemplateExtende
             pos.move(moveTo);
         }
 
-        painting.setPos(pos.getCenter());
+        painting.setPos(Vec3.atCenterOf(pos));
     }
 
     @WrapMethod(method = "fillFromWorld")
@@ -236,7 +229,7 @@ public abstract class StructureTemplateMixin implements StructureTemplateExtende
                                       BlockPos templatePos,
                                       BlockPos bottomCenterPos,
                                       StructurePlaceSettings settings,
-                                      RandomSource random,
+                                      Random random,
                                       int setBlockFlags,
                                       Operation<Boolean> original) {
         var coverStates = this.getRandomCoverPalette(settings, this.changed$latexCoverPalettes, templatePos).latexCovers();

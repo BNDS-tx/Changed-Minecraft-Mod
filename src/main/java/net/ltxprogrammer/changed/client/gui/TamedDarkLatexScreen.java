@@ -1,16 +1,18 @@
 package net.ltxprogrammer.changed.client.gui;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.entity.ai.DarkLatexFavor;
 import net.ltxprogrammer.changed.util.Color3;
 import net.ltxprogrammer.changed.util.SingleRunnable;
 import net.ltxprogrammer.changed.world.inventory.TamedDarkLatexMenu;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
@@ -25,8 +27,8 @@ public class TamedDarkLatexScreen extends AbstractRadialScreen<TamedDarkLatexMen
     private static final String PATH_GOO = "textures/gui/radial/goo/";
     private static final String PATH_GOO_SELECTED = "textures/gui/radial/goo_selected/";
 
-    private static final Component ACTIVE = Component.translatable("changed.tamed_dark_latex.active");
-    private static final Component INACTIVE = Component.translatable("changed.tamed_dark_latex.inactive");
+    private static final Component ACTIVE = new TranslatableComponent("changed.tamed_dark_latex.active");
+    private static final Component INACTIVE = new TranslatableComponent("changed.tamed_dark_latex.inactive");
 
     public record Interaction(String command, ResourceLocation texture, Supplier<List<Component>> tooltips, Supplier<Boolean> shouldHighlight) {
         public Interaction(String command, Supplier<List<Component>> tooltips, Supplier<Boolean> shouldHighlight) {
@@ -40,44 +42,44 @@ public class TamedDarkLatexScreen extends AbstractRadialScreen<TamedDarkLatexMen
         super(menu, inventory, text, Color3.DARK, Color3.WHITE, menu.tamedDarkLatex);
         var interactionsBuilder = ImmutableList.<Interaction>builder();
         interactionsBuilder.add(new Interaction("view_inventory",
-                () -> List.of(Component.translatable("changed.tamed_dark_latex.title.view_inventory")),
+                () -> List.of(new TranslatableComponent("changed.tamed_dark_latex.title.view_inventory")),
                 () -> false
         ));
         interactionsBuilder.add(new Interaction("cycle_follow",
-                () -> List.of(Component.translatable("changed.tamed_dark_latex.title.cycle_follow"),
-                        Component.translatable(menu.tamedDarkLatex.isFollowingOwner() ? "changed.tamed_dark_latex.follow" : "changed.tamed_dark_latex.wander")),
+                () -> List.of(new TranslatableComponent("changed.tamed_dark_latex.title.cycle_follow"),
+                        new TranslatableComponent(menu.tamedDarkLatex.isFollowingOwner() ? "changed.tamed_dark_latex.follow" : "changed.tamed_dark_latex.wander")),
                 () -> false
         ));
         interactionsBuilder.add(new Interaction("cycle_target_type",
-                () -> List.of(Component.translatable("changed.tamed_dark_latex.title.cycle_target_type"),
+                () -> List.of(new TranslatableComponent("changed.tamed_dark_latex.title.cycle_target_type"),
                         menu.tamedDarkLatex.getTargetType().getDisplayText()),
                 () -> false
         ));
         interactionsBuilder.add(new Interaction("cycle_attack_type",
-                () -> List.of(Component.translatable("changed.tamed_dark_latex.title.cycle_attack_type"),
+                () -> List.of(new TranslatableComponent("changed.tamed_dark_latex.title.cycle_attack_type"),
                         menu.tamedDarkLatex.getAttackType().getDisplayText()),
                 () -> false
         ));
         interactionsBuilder.add(new Interaction("cycle_attack_condition",
-                () -> List.of(Component.translatable("changed.tamed_dark_latex.title.cycle_attack_condition"),
+                () -> List.of(new TranslatableComponent("changed.tamed_dark_latex.title.cycle_attack_condition"),
                         menu.tamedDarkLatex.getAttackCondition().getDisplayText()),
                 () -> false
         ));
         if (menu.tamedDarkLatex.canDoFavor(DarkLatexFavor.FISHING))
             interactionsBuilder.add(new Interaction("favor_fishing",
-                    () -> List.of(Component.translatable("changed.tamed_dark_latex.title.favor_fishing"),
+                    () -> List.of(new TranslatableComponent("changed.tamed_dark_latex.title.favor_fishing"),
                             menu.tamedDarkLatex.getCurrentFavor() == DarkLatexFavor.FISHING ? ACTIVE : INACTIVE),
                     () -> menu.tamedDarkLatex.getCurrentFavor() == DarkLatexFavor.FISHING
             ));
         if (menu.tamedDarkLatex.canDoFavor(DarkLatexFavor.CAVING))
             interactionsBuilder.add(new Interaction("favor_caving",
-                    () -> List.of(Component.translatable("changed.tamed_dark_latex.title.favor_caving"),
+                    () -> List.of(new TranslatableComponent("changed.tamed_dark_latex.title.favor_caving"),
                             menu.tamedDarkLatex.getCurrentFavor() == DarkLatexFavor.CAVING ? ACTIVE : INACTIVE),
                     () -> menu.tamedDarkLatex.getCurrentFavor() == DarkLatexFavor.CAVING
             ));
         if (menu.tamedDarkLatex.canDoFavor(DarkLatexFavor.SUIT_OWNER))
             interactionsBuilder.add(new Interaction("favor_suit_owner",
-                    () -> List.of(Component.translatable("changed.tamed_dark_latex.title.favor_suit_owner"),
+                    () -> List.of(new TranslatableComponent("changed.tamed_dark_latex.title.favor_suit_owner"),
                             menu.tamedDarkLatex.getCurrentFavor() == DarkLatexFavor.SUIT_OWNER ? ACTIVE : INACTIVE),
                     () -> menu.tamedDarkLatex.getCurrentFavor() == DarkLatexFavor.SUIT_OWNER
             ));
@@ -105,23 +107,24 @@ public class TamedDarkLatexScreen extends AbstractRadialScreen<TamedDarkLatexMen
     }
 
     @Override
-    public void renderSectionBackground(GuiGraphics graphics, int section, double x, double y, float partialTicks, int mouseX, int mouseY, float red, float green, float blue) {
+    public void renderSectionBackground(PoseStack pose, int section, double x, double y, float partialTicks, int mouseX, int mouseY, float red, float green, float blue) {
         var hovered = getSectionAt(mouseX, mouseY);
         boolean anyHovered = hovered.isPresent();
         boolean thisHovered = anyHovered && hovered.get() == section;
-        graphics.setColor(red, green, blue, 1);
-        graphics.blit(getTextureForSection(section, thisHovered, anyHovered, getInteractionSafe(section).map(Interaction::shouldHighlight).map(Supplier::get).orElse(false)),
-                (int)x - 32 + this.leftPos, (int)y - 32 + this.topPos, 0, 0, 64, 64, 64, 64);
+        RenderSystem.setShaderColor(red, green, blue, 1);
+        RenderSystem.setShaderTexture(0,
+                getTextureForSection(section, thisHovered, anyHovered, getInteractionSafe(section).map(Interaction::shouldHighlight).map(Supplier::get).orElse(false)));
+        blit(pose, (int)x - 32 + this.leftPos, (int)y - 32 + this.topPos, 0, 0, 64, 64, 64, 64);
     }
 
     @Override
-    public void renderSectionForeground(GuiGraphics graphics, int section, double x, double y, float partialTicks, int mouseX, int mouseY, float red, float green, float blue, float alpha) {
-        graphics.setColor(0, 0, 0, 0.5f);
-        graphics.blit(availableInteractions.get(section).texture,
-                (int)x - 24 + this.leftPos + 3, (int)y - 24 + this.topPos + 3, 0, 0, 48, 48, 48, 48);
-        graphics.setColor(red, green, blue, 1);
-        graphics.blit(availableInteractions.get(section).texture,
-                (int)x - 24 + this.leftPos, (int)y - 24 + this.topPos, 0, 0, 48, 48, 48, 48);
+    public void renderSectionForeground(PoseStack pose, int section, double x, double y, float partialTicks, int mouseX, int mouseY, float red, float green, float blue, float alpha) {
+        RenderSystem.setShaderColor(0, 0, 0, 0.5f);
+        RenderSystem.setShaderTexture(0, availableInteractions.get(section).texture);
+        blit(pose, (int)x - 24 + this.leftPos + 3, (int)y - 24 + this.topPos + 3, 0, 0, 48, 48, 48, 48);
+        RenderSystem.setShaderColor(red, green, blue, 1);
+        RenderSystem.setShaderTexture(0, availableInteractions.get(section).texture);
+        blit(pose, (int)x - 24 + this.leftPos, (int)y - 24 + this.topPos, 0, 0, 48, 48, 48, 48);
     }
 
     @Override

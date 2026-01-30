@@ -1,6 +1,7 @@
 package net.ltxprogrammer.changed.mixin.compatibility.Pehkui;
 
 import net.ltxprogrammer.changed.entity.ChangedEntity;
+import net.ltxprogrammer.changed.entity.beast.*;
 import net.ltxprogrammer.changed.extension.RequiredMods;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;

@@ -10,8 +10,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.AbortableIterationConsumer;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -103,31 +101,29 @@ public class WhiteLatexBlock extends AbstractLatexBlock implements WhiteLatexTra
         AtomicBoolean isTargetNearby = new AtomicBoolean(false);
         level.getEntities().get(EntityTypeTest.forClass(LivingEntity.class), new AABB(blockPos).inflate(6), livingEntity -> {
             if (isTargetNearby.get())
-                return AbortableIterationConsumer.Continuation.ABORT;
+                return; // Early out
 
             var latexType = LatexType.getEntityLatexType(livingEntity);
             if (latexType != null && latexType.isHostileTo(ChangedLatexTypes.WHITE_LATEX.get())) {
                 isTargetNearby.set(true);
-                return AbortableIterationConsumer.Continuation.ABORT;
+                return;
             }
 
             if (ChangedFusions.INSTANCE.getFusionsFor(ChangedTransfurVariants.PURE_WHITE_LATEX_WOLF.get(), livingEntity.getClass()).findAny().isPresent()) {
                 isTargetNearby.set(true);
-                return AbortableIterationConsumer.Continuation.ABORT;
+                return;
             }
 
             var latexVariant = TransfurVariant.getEntityVariant(livingEntity);
             if (latexVariant != null && ChangedFusions.INSTANCE.getFusionsFor(ChangedTransfurVariants.PURE_WHITE_LATEX_WOLF.get(), latexVariant).findAny().isPresent()) {
                 isTargetNearby.set(true);
-                return AbortableIterationConsumer.Continuation.ABORT;
+                return;
             }
 
             if (livingEntity instanceof Player player && !player.isSpectator() && !ProcessTransfur.isPlayerTransfurred(player)) {
                 isTargetNearby.set(true);
-                return AbortableIterationConsumer.Continuation.ABORT;
+                return;
             }
-
-            return AbortableIterationConsumer.Continuation.CONTINUE;
         });
         return isTargetNearby.getAcquire();
     }

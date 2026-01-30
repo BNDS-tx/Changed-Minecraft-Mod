@@ -14,10 +14,11 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
+
 import net.minecraft.util.random.Weight;
 import net.minecraft.util.random.WeightedEntry;
 import net.minecraft.util.random.WeightedRandomList;
@@ -75,7 +76,7 @@ public class ActiveFacilityInstance {
         }
 
         public Component getDisplayName() {
-            return Component.translatable("facility.site", this.name);
+            return new TranslatableComponent("facility.site", this.name);
         }
 
         public boolean readInfoFromName(String fileName) {
@@ -134,7 +135,7 @@ public class ActiveFacilityInstance {
             list.add("Omega");
         }
 
-        public static String generateRandomName(RandomSource random) {
+        public static String generateRandomName(Random random) {
             int nameLength = random.nextInt(2, 4);
             List<String> fragments = new ArrayList<>(NAME_FRAGMENTS);
             StringBuilder stringBuilder = new StringBuilder();
@@ -150,7 +151,7 @@ public class ActiveFacilityInstance {
             return stringBuilder.toString();
         }
 
-        public void initialize(BoundingBox facilitySpan, RandomSource random) {
+        public void initialize(BoundingBox facilitySpan, Random random) {
             this.minimum = new ChunkPos(
                     SectionPos.blockToSectionCoord(facilitySpan.minX()),
                     SectionPos.blockToSectionCoord(facilitySpan.minZ())
@@ -343,7 +344,7 @@ public class ActiveFacilityInstance {
             });
         }
 
-        public Optional<Pair<SpawnInfo, SpawnInfo.EntityInfo>> getNextSpawn(RandomSource random) {
+        public Optional<Pair<SpawnInfo, SpawnInfo.EntityInfo>> getNextSpawn(Random random) {
             return WeightedRandomList.create(spawnLists.stream().filter(SpawnInfo::isNotExhausted).toList()).getRandom(random)
                     .map(info -> Pair.of(info, WeightedRandomList.create(info.getSpawns())))
                     .map(pair -> pair.mapSecond(list -> list.getRandom(random)))
@@ -380,7 +381,16 @@ public class ActiveFacilityInstance {
                 if (possibleSpawns.isEmpty())
                     return null;
 
-                var entity = entityType.spawn(level, Util.getRandom(possibleSpawns, level.getRandom()), MobSpawnType.STRUCTURE);
+//                var entity = entityType.spawn(level, Util.getRandom(possibleSpawns, level.getRandom()), MobSpawnType.STRUCTURE);
+                var entity = entityType.spawn(
+                        level,
+                        null, // ItemStack (刷怪蛋物品)
+                        null, // Player (触发的玩家)
+                        Util.getRandom(possibleSpawns, level.getRandom()),
+                        MobSpawnType.STRUCTURE,
+                        false, // alignPosition (通常为 true 时会调整实体中心到方块中心，false 则直接在方块角)
+                        false  // invertY (是否反转 Y 轴检测)
+                );
 
                 if (entity == null)
                     return null;

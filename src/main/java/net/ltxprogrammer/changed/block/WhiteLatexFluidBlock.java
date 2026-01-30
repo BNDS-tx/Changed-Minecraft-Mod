@@ -17,12 +17,13 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 
 public class WhiteLatexFluidBlock extends AbstractLatexFluidBlock implements WhiteLatexTransportInterface {
     public WhiteLatexFluidBlock() {
-        super(ChangedFluids.WHITE_LATEX, BlockBehaviour.Properties.of().replaceable().strength(100f));
+        super(ChangedFluids.WHITE_LATEX, BlockBehaviour.Properties.of(Material.WATER).strength(100f));
     }
 
     @Override
@@ -49,6 +50,6 @@ public class WhiteLatexFluidBlock extends AbstractLatexFluidBlock implements Whi
         super.entityInside(state, level, pos, entity);
 
         if (ChangedLatexTypes.WHITE_LATEX.get().isHostileTo(LatexType.getEntityLatexType(entity)))
-            entity.hurt(ChangedDamageSources.WHITE_LATEX.source(entity.level().registryAccess()), 3.0f);
+            entity.hurt(ChangedDamageSources.WHITE_LATEX.source(entity), 3.0f);
     }
 }
