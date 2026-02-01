@@ -53,16 +53,16 @@ import java.util.function.Function;
 public class ChangedClient {
     private static final Minecraft minecraft = Minecraft.getInstance();
     public static long clientTicks = 0;
-    public static final Cacheable<LatexParticleEngine> particleSystem = Cacheable.of(() -> new LatexParticleEngine(Minecraft.getInstance()));
+    public static final Cacheable<LatexParticleEngine> particleSystem = Cacheable.of(() -> new LatexParticleEngine(minecraft));
     public static final Cacheable<ChangedBlockEntityWithoutLevelRenderer> itemRenderer =
-            Cacheable.of(() -> new ChangedBlockEntityWithoutLevelRenderer(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels()));
+            Cacheable.of(() -> new ChangedBlockEntityWithoutLevelRenderer(minecraft.getBlockEntityRenderDispatcher(), minecraft.getEntityModels()));
     public static final Cacheable<ChangedEntityWithOutLevelRenderer> itemEntityRenderer =
-            Cacheable.of(() -> new ChangedEntityWithOutLevelRenderer(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().getEntityRenderDispatcher()));
+            Cacheable.of(() -> new ChangedEntityWithOutLevelRenderer(minecraft.getBlockEntityRenderDispatcher(), minecraft.getEntityModels(), minecraft.getEntityRenderDispatcher()));
     public static final Cacheable<AbilityColors> abilityColors = Cacheable.of(AbilityColors::createDefault);
-    public static final Cacheable<AbilityRenderer> abilityRenderer = Cacheable.of(() -> new AbilityRenderer(Minecraft.getInstance().textureManager, Minecraft.getInstance().getModelManager(), abilityColors.getOrThrow()));
-    public static final Cacheable<LatexCoveredBlocksRenderer> latexCoveredBlocksRenderer = Cacheable.of(() -> new LatexCoveredBlocksRenderer(Minecraft.getInstance()));
-    public static final Cacheable<WallSignTextureManager> wallSigns = Cacheable.of(() -> new WallSignTextureManager(Minecraft.getInstance().getTextureManager()));
-    public static final Cacheable<ChangedDebugRenderer> debugRenderer = Cacheable.of(() -> new ChangedDebugRenderer(Minecraft.getInstance()));
+    public static final Cacheable<AbilityRenderer> abilityRenderer = Cacheable.of(() -> new AbilityRenderer(minecraft.textureManager, minecraft.getModelManager(), abilityColors.getOrThrow()));
+    public static final Cacheable<LatexCoveredBlocksRenderer> latexCoveredBlocksRenderer = Cacheable.of(() -> new LatexCoveredBlocksRenderer(minecraft));
+    public static final Cacheable<WallSignTextureManager> wallSigns = Cacheable.of(() -> new WallSignTextureManager(minecraft.getTextureManager()));
+    public static final Cacheable<ChangedDebugRenderer> debugRenderer = Cacheable.of(() -> new ChangedDebugRenderer(minecraft));
 
     private static final ThreadLocal<Function<RenderType, RenderType>> CHUNK_RENDER_TYPE_SET_OVERRIDE = ThreadLocal.withInitial(() -> null);
 
@@ -105,7 +105,7 @@ public class ChangedClient {
 
     public static void afterRenderStage(RenderLevelStageEvent event) {
         if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_PARTICLES) {
-            particleSystem.get().render(event.getPoseStack(), Minecraft.getInstance().gameRenderer.lightTexture(), event.getCamera(), event.getPartialTick(), event.getFrustum(), SetupContext.THIRD_PERSON);
+            particleSystem.get().render(event.getPoseStack(), minecraft.gameRenderer.lightTexture(), event.getCamera(), event.getPartialTick(), event.getFrustum(), SetupContext.THIRD_PERSON);
             FirstPersonLayer.renderFirstPersonLayersOnFace(event.getPoseStack(), event.getCamera(), event.getPartialTick());
         }
     }
@@ -124,9 +124,9 @@ public class ChangedClient {
             return;
         if (entity.getRandom().nextFloat() > entity.getDripRate(1.0f - entity.computeHealthRatio()))
             return;
-        if (Minecraft.getInstance().cameraEntity != null && entity.distanceToSqr(Minecraft.getInstance().cameraEntity) > getAcceptableParticleDistanceSqr())
+        if (minecraft.cameraEntity != null && entity.distanceToSqr(minecraft.cameraEntity) > getAcceptableParticleDistanceSqr())
             return;
-        var renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity);
+        var renderer = minecraft.getEntityRenderDispatcher().getRenderer(entity);
         if (!(renderer instanceof LivingEntityRenderer<?,?> livingEntityRenderer))
             return;
         for (var layer : livingEntityRenderer.layers) {
@@ -144,7 +144,6 @@ public class ChangedClient {
     }
 
     public static void onClientTick(TickEvent.ClientTickEvent event) {
-        final Minecraft minecraft = Minecraft.getInstance();
         if (event.phase != TickEvent.Phase.END)
             return;
 
@@ -193,9 +192,6 @@ public class ChangedClient {
     }
 
     public static boolean shouldBeRenderingWaveVision() {
-        final var minecraft = Minecraft.getInstance();
-        if (minecraft == null)
-            return false;
         return ProcessTransfur.getPlayerTransfurVariantSafe(EntityUtil.playerOrNull(minecraft.cameraEntity))
                 .map(variant -> variant.visionType == VisionType.WAVE_VISION)
                 .orElse(false);
@@ -205,7 +201,7 @@ public class ChangedClient {
     private static float waveEffect = 0.0f;
     private static Vector3f waveResonance = Vector3f.ZERO;
     public static float setupWaveVisionEffect(float partialTicks) {
-        float effect = ProcessTransfur.getPlayerTransfurVariantSafe(EntityUtil.playerOrNull(Minecraft.getInstance().cameraEntity))
+        float effect = ProcessTransfur.getPlayerTransfurVariantSafe(EntityUtil.playerOrNull(minecraft.cameraEntity))
                 .filter(variant -> variant.visionType == VisionType.WAVE_VISION)
                 .map(TransfurVariantInstance::getTicksInWaveVision)
                 .map(ticks -> ticks + partialTicks).orElse(0.0f);

@@ -34,8 +34,9 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.client.event.ModelBakeEvent;
+import net.minecraftforge.client.model.ForgeModelBakery;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -86,16 +87,24 @@ public class AbilityRenderer implements ResourceManagerReloadListener {
 //    }
 
     @SubscribeEvent
-    public static void onRegisterModels(ModelBakeEvent event) {
-        for (ResourceLocation id : ChangedRegistry.ABILITY.get().getKeys()) {
-            if (AbilityRenderer.IGNORED.contains(id))
-                continue;
+    public static void onRegisterModels(FMLClientSetupEvent event) {
+//        for (ResourceLocation id : ChangedRegistry.ABILITY.get().getKeys()) {
+//            if (AbilityRenderer.IGNORED.contains(id))
+//                continue;
+//
+//            ModelResourceLocation model = new ModelResourceLocation(id, "ability");
+//
+//            // 强制请求模型（否则不会加载）
+//            event.getModelManager().getModel(model);
+//        }
+        event.enqueueWork(() -> {
+            for (var id : ChangedRegistry.ABILITY.getKeys()) {
+                if (AbilityRenderer.IGNORED.contains(id))
+                    continue;
 
-            ModelResourceLocation model = new ModelResourceLocation(id, "ability");
-
-            // 强制请求模型（否则不会加载）
-            event.getModelManager().getModel(model);
-        }
+                ForgeModelBakery.addSpecialModel(new net.minecraft.client.resources.model.ModelResourceLocation(id, "ability"));
+            }
+        });
     }
 
     public void renderModelLists(BakedModel model, AbstractAbilityInstance abilityInstance, int packedLight, int packedOverlay, PoseStack poseStack, VertexConsumer buffer, float redMul, float greenMul, float blueMul, float alpha) {

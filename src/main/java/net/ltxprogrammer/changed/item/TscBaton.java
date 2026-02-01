@@ -25,14 +25,14 @@ public class TscBaton extends TscWeapon implements SpecializedItemRendering {
         super(new Properties().durability(500));
     }
 
-    private static final Cacheable<ResourceLocation> BATON_IN_HAND = Cacheable.of(() -> {
+    private static final Cacheable<ModelResourceLocation> BATON_IN_HAND = Cacheable.of(() -> {
         return DistExecutor.unsafeCallWhenOn(Dist.CLIENT,
                 () -> () ->  new ModelResourceLocation(Changed.modResource("tsc_baton_in_hand"), "inventory"));
     });
 
     @Override
     public ModelResourceLocation getModelLocation(ItemStack itemStack, ItemTransforms.TransformType type) {
-        return SpecializedItemRendering.isGUI(type) ? null : new ModelResourceLocation(BATON_IN_HAND.get(), "inventory");
+        return SpecializedItemRendering.isGUI(type) ? null : BATON_IN_HAND.get();
     }
 
     @Override

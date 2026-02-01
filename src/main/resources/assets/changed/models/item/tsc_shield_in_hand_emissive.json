@@ -8,8 +8,8 @@
 	"elements": [
 		{
 			"name": "shield",
-			"from": [7, 3, 5],
-			"to": [9, 9, 11],
+			"from": [6.975, 2.975, 4.975],
+			"to": [9.025, 9.025, 11.025],
 			"faces": {
 				"north": {"uv": [8, 1.5, 8.5, 3], "texture": "#0"},
 				"east": {"uv": [6.5, 1.5, 8, 3], "texture": "#0"},
@@ -21,8 +21,8 @@
 		},
 		{
 			"name": "shield",
-			"from": [2, -5, 4],
-			"to": [14, 17, 5],
+			"from": [1.975, -5.025, 3.975],
+			"to": [14.025, 17.025, 5.025],
 			"faces": {
 				"north": {"uv": [0.25, 0.25, 3.25, 5.75], "texture": "#0"},
 				"east": {"uv": [0, 0.25, 0.25, 5.75], "texture": "#0"},
@@ -34,8 +34,8 @@
 		},
 		{
 			"name": "shield",
-			"from": [1, -5, 5],
-			"to": [2, 17, 6],
+			"from": [0.975, -5.025, 4.975],
+			"to": [2.025, 17.025, 6.025],
 			"faces": {
 				"north": {"uv": [10.75, 0.25, 11, 5.75], "texture": "#0"},
 				"east": {"uv": [10.5, 0.25, 10.75, 5.75], "texture": "#0"},
@@ -47,8 +47,8 @@
 		},
 		{
 			"name": "shield",
-			"from": [14, -5, 5],
-			"to": [15, 17, 6],
+			"from": [13.975, -5.025, 4.975],
+			"to": [15.025, 17.025, 6.025],
 			"faces": {
 				"north": {"uv": [11.75, 0.25, 12, 5.75], "texture": "#0"},
 				"east": {"uv": [11.5, 0.25, 11.75, 5.75], "texture": "#0"},
@@ -108,7 +108,7 @@
 			"predicate": {
 				"blocking": 1
 			},
-			"model": "changed:item/tsc_shield_in_hand_blocking"
+			"model": "changed:item/tsc_shield_in_hand_emissive_blocking"
 		}
 	]
 }

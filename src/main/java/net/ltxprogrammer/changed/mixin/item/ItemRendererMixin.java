@@ -53,6 +53,15 @@ public abstract class ItemRendererMixin implements ResourceManagerReloadListener
             return;
         if (!(itemStack.getItem() instanceof SpecializedItemRendering special))
             return; // Don't override
+
+        // 关键：GUI / 地面 / 展示框 这些场景必须走 vanilla item model（models/item/*.json）
+        if (SpecializedItemRendering.isGUI(type))
+            return;
+
+        ResourceLocation modelLocation = special.getModelLocation(itemStack, type);
+        if (modelLocation == null)
+            return;
+
         ItemRenderer self = (ItemRenderer)(Object)this;
         model = self.getItemModelShaper().getModelManager().getModel(special.getModelLocation(itemStack, type));
 
@@ -83,8 +92,12 @@ public abstract class ItemRendererMixin implements ResourceManagerReloadListener
             return;
         if (!(itemStack.getItem() instanceof SpecializedItemRendering special))
             return;
-        ResourceLocation modelLocation = special.getModelLocation(itemStack, type);
-        ModelResourceLocation location = (modelLocation == null) ? null : new ModelResourceLocation(modelLocation, "inventory");
+
+        // GUI 场景不要叠任何层（避免图标出现奇怪叠加）
+        if (SpecializedItemRendering.isGUI(type))
+            return;
+
+        ModelResourceLocation location = special.getModelLocation(itemStack, type);
         if (location == null)
             return;
         ItemRenderer self = (ItemRenderer)(Object)this;

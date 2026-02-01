@@ -210,9 +210,10 @@ public class LatexCoverState extends StateHolder<LatexType, LatexCoverState> {
         int i = blockPos.getY();
         LevelChunkSection section = chunk.getSection(chunk.getSectionIndex(i));
         boolean hasOnlyAir = section.hasOnlyAir();
-        if (hasOnlyAir && state.isPresent()) {
-            return null;
-        } else {
+//        if (hasOnlyAir && state.isPresent()) {
+//            return null;
+//        } else {
+        {
             int j = blockPos.getX() & 15;
             int k = i & 15;
             int l = blockPos.getZ() & 15;

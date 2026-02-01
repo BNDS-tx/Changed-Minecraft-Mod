@@ -1,6 +1,7 @@
 package net.ltxprogrammer.changed.item;
 
 import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -17,7 +18,7 @@ public interface SpecializedItemRendering {
         return type == ItemTransforms.TransformType.GUI || type == ItemTransforms.TransformType.GROUND || type == ItemTransforms.TransformType.FIXED;
     }
 
-    @Nullable ResourceLocation getModelLocation(ItemStack itemStack, ItemTransforms.TransformType type);
+    @Nullable ModelResourceLocation getModelLocation(ItemStack itemStack, ItemTransforms.TransformType type);
     void loadSpecialModels(Consumer<ResourceLocation> loader);
 
     @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)

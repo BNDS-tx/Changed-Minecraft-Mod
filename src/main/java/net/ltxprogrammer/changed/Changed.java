@@ -154,13 +154,14 @@ public class Changed {
         eventBus.addListener(ChangedClient::onBlockColorsInit);
         eventBus.addListener(ChangedClient::onItemColorsInit);
         eventBus.addListener(ChangedClient::onClientFinishSetup);
-        eventBus.addListener(AbilityRenderer::onRegisterModels);
+//        eventBus.addListener(AbilityRenderer::onRegisterModels);
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {
         event.enqueueWork(RecipeCategories::registerCategories);
         ChangedOverlays.registerOverlays(event);
         ChangedClient.registerEventListeners();
+        AbilityRenderer.onRegisterModels(event);
     }
 
     private void dataListeners(final AddReloadListenerEvent event) {

@@ -35,14 +35,14 @@ public class TscShield extends TscWeapon implements SpecializedItemRendering {
         DispenserBlock.registerBehavior(this, ArmorItem.DISPENSE_ITEM_BEHAVIOR);
     }
 
-    private static final Cacheable<ResourceLocation> SHIELD_IN_HAND = Cacheable.of(() -> {
+    private static final Cacheable<ModelResourceLocation> SHIELD_IN_HAND = Cacheable.of(() -> {
         return DistExecutor.unsafeCallWhenOn(Dist.CLIENT,
                 () -> () ->  new ModelResourceLocation(Changed.modResource("tsc_shield_in_hand"), "inventory"));
     });
 
     @Override
     public ModelResourceLocation getModelLocation(ItemStack itemStack, ItemTransforms.TransformType type) {
-        return SpecializedItemRendering.isGUI(type) ? null : new ModelResourceLocation(SHIELD_IN_HAND.get(), "inventory");
+        return SpecializedItemRendering.isGUI(type) ? null : SHIELD_IN_HAND.get();
     }
 
     @Override

@@ -3,6 +3,7 @@ package net.ltxprogrammer.changed.item;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.util.Cacheable;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.resources.model.ModelResourceLocation;
@@ -30,14 +31,14 @@ public class TscStaff extends TscWeapon implements SpecializedItemRendering, Spe
         super(new Properties().durability(500));
     }
 
-    private static final Cacheable<ResourceLocation> STAFF_IN_HAND = Cacheable.of(() -> {
+    private static final Cacheable<ModelResourceLocation> STAFF_IN_HAND = Cacheable.of(() -> {
         return DistExecutor.unsafeCallWhenOn(Dist.CLIENT,
                 () -> () ->  new ModelResourceLocation(Changed.modResource("tsc_staff_in_hand"), "inventory"));
     });
 
     @Override
     public ModelResourceLocation getModelLocation(ItemStack itemStack, ItemTransforms.TransformType type) {
-        return SpecializedItemRendering.isGUI(type) ? null : new ModelResourceLocation(STAFF_IN_HAND.get(), "inventory");
+        return SpecializedItemRendering.isGUI(type) ? null : STAFF_IN_HAND.get();
     }
 
     @Override
@@ -130,6 +131,7 @@ public class TscStaff extends TscWeapon implements SpecializedItemRendering, Spe
             offArm.zRot = ((float)Math.PI / 4.5F);
         }
 
+        @Override
         public void setupAttackAnimation(ItemStack itemStack, EntityStateContext entity, UpperModelContext model) {
             setupIdleAnimation(itemStack, entity, model);
             if (entity.livingEntity.isVisuallySwimming()) {
