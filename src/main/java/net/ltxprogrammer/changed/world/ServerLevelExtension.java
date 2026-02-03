@@ -2,6 +2,7 @@ package net.ltxprogrammer.changed.world;
 
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.network.packet.CustomLevelEventPacket;
+import net.ltxprogrammer.changed.network.packet.LatexCoverUpdatePacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundLevelEventPacket;
 import net.minecraft.server.level.ServerLevel;
@@ -9,6 +10,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
 public class ServerLevelExtension extends LevelExtension {
@@ -17,6 +19,8 @@ public class ServerLevelExtension extends LevelExtension {
     @Override
     public void sendCoverUpdated(LevelAccessor level, BlockPos blockPos, LatexCoverState oldState, LatexCoverState newState, int flags) {
         ((ServerLevel)level).getChunkSource().blockChanged(blockPos);
+        Changed.LOGGER.info("Sending LatexCover update at " + blockPos + ": " + newState.getType());
+        Changed.PACKET_HANDLER.send(PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(blockPos.getX(), blockPos.getY(), blockPos.getZ(), 64.0, ((ServerLevel)level).dimension())), new LatexCoverUpdatePacket(blockPos, newState));
     }
 
     @Override

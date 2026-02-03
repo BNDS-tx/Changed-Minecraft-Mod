@@ -238,6 +238,10 @@ public class LatexCoverState extends StateHolder<LatexType, LatexCoverState> {
                     }
 
                     chunk.setUnsaved(true);
+                    if (chunk.getLevel().isClientSide) {
+                        // 核心：这一步会强迫游戏重新调用渲染逻辑，从而走下面的 Mixin
+                        net.minecraft.client.Minecraft.getInstance().levelRenderer.setBlockDirty(blockPos, null, null);
+                    }
                     return oldState;
                 }
             }
