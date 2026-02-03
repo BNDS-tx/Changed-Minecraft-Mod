@@ -6,7 +6,8 @@
   "refmap": "changed.refmap.json",
   "plugin": "net.ltxprogrammer.changed.mixin.compatibility.ChangedMixinPlugin",
   "mixins": [
-    "Oculus.WorldRenderingPhaseMixin"
+    "Oculus.WorldRenderingPhaseMixin",
+    "Curios.CuriosApiMixin"
   ],
   "client": [
     "BeyondEarth.OxygenSystemMixin",

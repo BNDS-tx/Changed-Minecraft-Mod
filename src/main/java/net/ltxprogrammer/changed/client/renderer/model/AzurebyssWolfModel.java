@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class AzurebyssWolfModel extends AdvancedHumanoidModel<AzurebyssEntity> implements AdvancedHumanoidModelInterface<AzurebyssEntity, AzurebyssWolfModel>, AzurebyssCreate {
+public class AzurebyssWolfModel extends AdvancedHumanoidModel<AzurebyssEntity> implements AzurebyssCreate {
 	// This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Changed.modResource("textures/azurebyss_entity/customized_entity.png"), "main");
 	private final ModelPart Head;
@@ -312,22 +312,6 @@ public class AzurebyssWolfModel extends AdvancedHumanoidModel<AzurebyssEntity> i
 				.texOffs(19, 91).mirror().addBox(-0.225F, 9.475F, -1.625F, 1.0F, 1.0F, 1.0F, new CubeDeformation(0.075F)).mirror(false), PartPose.offset(1.0F, -8.5F, -0.05F));
 
 		return LayerDefinition.create(meshdefinition, 96, 96);
-	}
-
-	@Override
-	public void prepareMobModel(@NotNull AzurebyssEntity entity, float limbSwing, float limbSwingAmount, float partialTicks) {
-		// Let the animator handle prepareMobModel()
-		this.prepareMobModel(animator, entity, limbSwing, limbSwingAmount, partialTicks);
-	}
-
-	public void setupHand(AzurebyssEntity entity) {
-		animator.setupHand();
-	}
-
-	@Override
-	public void setupAnim(@NotNull AzurebyssEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-		animator.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-		super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 	}
 
 	public ModelPart getArm(HumanoidArm side) {

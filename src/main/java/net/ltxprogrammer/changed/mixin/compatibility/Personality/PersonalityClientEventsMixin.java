@@ -17,11 +17,12 @@ import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(value = CommonEvents.class, remap = false)
 @RequiredMods("personality")
-public class PersonalityClientEventsMixin<T extends ChangedEntity> {
+public abstract class PersonalityClientEventsMixin {
     @WrapOperation(method = "onEntitySize", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/player/Player;STANDING_DIMENSIONS:Lnet/minecraft/world/entity/EntityDimensions;", remap = true))
     private static EntityDimensions applyPersonalitySizeEvent(Operation<EntityDimensions> original, @Local(argsOnly = true) EntityEvent.Size event) {
+        final var standingDimensions = original.call();
         return ProcessTransfur.getPlayerTransfurVariantSafe(EntityUtil.playerOrNull(event.getEntity()))
-                .map(variant -> variant.getTransfurDimensions(Pose.STANDING))
-                .orElseGet(original::call);
+                .map(variant -> variant.getTransfurDimensions(Pose.STANDING, standingDimensions))
+                .orElse(standingDimensions);
     }
 }

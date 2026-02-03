@@ -2,8 +2,6 @@ package net.ltxprogrammer.changed.mixin.compatibility.EMF;
 
 import net.ltxprogrammer.changed.client.renderer.animate.HumanoidAnimator;
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel;
-import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModelInterface;
-import net.ltxprogrammer.changed.client.renderer.model.TorsoedModel;
 import net.ltxprogrammer.changed.entity.ChangedEntity;
 import net.ltxprogrammer.changed.extension.RequiredMods;
 import net.minecraft.client.Minecraft;

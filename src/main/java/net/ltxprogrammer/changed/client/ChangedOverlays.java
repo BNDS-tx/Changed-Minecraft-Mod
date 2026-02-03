@@ -112,6 +112,7 @@ public class ChangedOverlays {
                     // 这部分 Tesselator 渲染代码是纯 OpenGL 操作，与版本无关，直接保留即可
                     RenderSystem.disableDepthTest();
                     RenderSystem.depthMask(false);
+                    RenderSystem.enableBlend();
                     RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
                     RenderSystem.setShaderColor(color.red(), color.green(), color.blue(), 1.0F);
 
@@ -129,6 +130,7 @@ public class ChangedOverlays {
                     RenderSystem.depthMask(true);
                     RenderSystem.enableDepthTest();
                     RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                    RenderSystem.disableBlend();
                     RenderSystem.defaultBlendFunc();
                 });
             }

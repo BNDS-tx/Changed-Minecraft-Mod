@@ -250,11 +250,11 @@ public class EventHandlerClient {
             if (event.livingEntity.level.isClientSide)
                 return;
 
-            if (event.oldVariant == event.newVariant || event.cause == null)
+            if (event.oldVariant == event.newVariant || event.context == null)
                 return;
 
             final int duration = event.livingEntity.level.getGameRules().getBoolean(ChangedGameRules.RULE_DO_TRANSFUR_ANIMATION) ?
-                    (int)(event.cause.getDuration() * 20) : 40;
+                    (int)(event.context.cause.getDuration() * 20) : 40;
             event.livingEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, duration, 4, false, false));
 
             if (event.oldVariant != null || event.livingEntity.tickCount < 20)
@@ -270,26 +270,26 @@ public class EventHandlerClient {
             event.livingEntity.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, duration, 1, false, false));
         }
 
-//        @SubscribeEvent
-//        public static void onRenderBlockHighlight(RenderHighlightEvent.Block event) {
-//            if (event.getTarget() instanceof LatexCoverHitResult)
-//                event.setCanceled(true);
-//
-//            final var level = Minecraft.getInstance().level;
-//            final var getter = LatexCoverGetter.wrap(level);
-//            final var blockPos = event.getTarget().getBlockPos();
-//
-//            LatexCoverState state = LatexCoverState.getAt(level, blockPos);
-//            if (!state.isAir() && level.getWorldBorder().isWithinBounds(blockPos)) {
-//                VertexConsumer bufferBuilder = event.getMultiBufferSource().getBuffer(RenderType.lines());
-//                Vec3 vec3 = event.getCamera().getPosition();
-//                double d0 = vec3.x();
-//                double d1 = vec3.y();
-//                double d2 = vec3.z();
-//
-//                LevelRenderer.renderVoxelShape(event.getPoseStack(), bufferBuilder, state.getShape(getter, blockPos, CollisionContext.of(event.getCamera().getEntity())),
-//                        (double)blockPos.getX() - d0, (double)blockPos.getY() - d1, (double)blockPos.getZ() - d2, 0.0F, 0.0F, 0.0F, 0.4F, false);
-//            }
-//        }
+        @SubscribeEvent
+        public static void onRenderBlockHighlight(DrawSelectionEvent.HighlightBlock event) {
+            if (event.getTarget() instanceof LatexCoverHitResult)
+                event.setCanceled(true);
+
+            final var level = Minecraft.getInstance().level;
+            final var getter = LatexCoverGetter.wrap(level);
+            final var blockPos = event.getTarget().getBlockPos();
+
+            LatexCoverState state = LatexCoverState.getAt(level, blockPos);
+            if (!state.isAir() && level.getWorldBorder().isWithinBounds(blockPos)) {
+                VertexConsumer bufferBuilder = event.getMultiBufferSource().getBuffer(RenderType.lines());
+                Vec3 vec3 = event.getCamera().getPosition();
+                double d0 = vec3.x();
+                double d1 = vec3.y();
+                double d2 = vec3.z();
+
+                LevelRenderer.renderVoxelShape(event.getPoseStack(), bufferBuilder, state.getShape(getter, blockPos, CollisionContext.of(event.getCamera().getEntity())),
+                        (double)blockPos.getX() - d0, (double)blockPos.getY() - d1, (double)blockPos.getZ() - d2, 0.0F, 0.0F, 0.0F, 0.4F);
+            }
+        }
     }
 }

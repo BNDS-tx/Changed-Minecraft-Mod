@@ -89,14 +89,14 @@ public class AzurebyssEntityRenderer extends AdvancedHumanoidRenderer<AzurebyssE
         }
 
         @Override
-        public void renderFirstPersonOnArms(PoseStack stack, MultiBufferSource bufferSource, int packedLight, T entity, HumanoidArm arm, PartPose armPose, PoseStack stackCorrector, float partialTick) {
-            FirstPersonLayer.super.renderFirstPersonOnArms(stack, bufferSource, packedLight, entity, arm, armPose, stackCorrector, partialTick);
+        public void renderFirstPersonOnArms(PoseStack stack, MultiBufferSource bufferSource, int packedLight, T entity, HumanoidArm arm, PartPose armPose, float partialTick) {
+            FirstPersonLayer.super.renderFirstPersonOnArms(stack, bufferSource, packedLight, entity, arm, armPose, partialTick);
             if (entity.getUnderlyingPlayer() != null) {
                 stack.pushPose();
                 stack.scale(1.0002F, 1.0002F, 1.0002F);
                 EntityModel<T> var8 = this.getParentModel();
                 if (var8 instanceof AdvancedHumanoidModel<?> armedModel) {
-                    FormRenderHandler.renderModelPartWithTexture(armedModel.getArm(arm), stackCorrector, stack, bufferSource.getBuffer(this.renderType()), 15728880, 1.0F);
+                    FormRenderHandler.renderModelPartWithTexture(armedModel.getArm(arm), stack, bufferSource.getBuffer(this.renderType()), 15728880, 1.0F);
                 }
                 stack.popPose();
             }
@@ -106,7 +106,7 @@ public class AzurebyssEntityRenderer extends AdvancedHumanoidRenderer<AzurebyssE
                 stack.scale(1.0002F, 1.0002F, 1.0002F);
                 EntityModel<T> var8 = this.getParentModel();
                 if (var8 instanceof AdvancedHumanoidModel<?> armedModel) {
-                    FormRenderHandler.renderModelPartWithTexture(armedModel.getArm(arm), stackCorrector, stack, bufferSource.getBuffer(this.renderType()), 15728880, 1.0F);
+                    FormRenderHandler.renderModelPartWithTexture(armedModel.getArm(arm), stack, bufferSource.getBuffer(this.renderType()), 15728880, 1.0F);
                 }
                 stack.popPose();
             }
@@ -116,7 +116,7 @@ public class AzurebyssEntityRenderer extends AdvancedHumanoidRenderer<AzurebyssE
                 stack.scale(1.0002F, 1.0002F, 1.0002F);
                 EntityModel<T> var8 = this.getParentModel();
                 if (var8 instanceof AdvancedHumanoidModel<?> armedModel) {
-                    FormRenderHandler.renderModelPartWithTexture(armedModel.getArm(arm), stackCorrector, stack, bufferSource.getBuffer(this.renderType()), 15728880, 1.0F);
+                    FormRenderHandler.renderModelPartWithTexture(armedModel.getArm(arm), stack, bufferSource.getBuffer(this.renderType()), 15728880, 1.0F);
                 }
                 stack.popPose();
             }

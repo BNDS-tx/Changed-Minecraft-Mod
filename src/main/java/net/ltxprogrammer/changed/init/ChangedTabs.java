@@ -457,9 +457,9 @@ public class ChangedTabs {
 
             accept(items, ChangedBlocks.BEEHIVE_BED.get());
             accept(items, ChangedBlocks.BEEHIVE_WALL.get());
-            accept(items, ChangedBlocks.BEEHIVE_CORNER.get());
-            accept(items, ChangedBlocks.BEEHIVE_FLOOR.get());
-            accept(items, ChangedBlocks.BEEHIVE_ROOF.get());
+//            accept(items, ChangedBlocks.BEEHIVE_CORNER.get());
+//            accept(items, ChangedBlocks.BEEHIVE_FLOOR.get());
+//            accept(items, ChangedBlocks.BEEHIVE_ROOF.get());
 
             accept(items, ChangedBlocks.LARGE_LAB_DOOR.get());
             accept(items, ChangedBlocks.LARGE_LIBRARY_DOOR.get());
@@ -634,15 +634,20 @@ public class ChangedTabs {
         public void fillItemList(NonNullList<ItemStack> items) {
             accept(items, ChangedItems.BENIGN_SHORTS.get());
             accept(items, ChangedItems.PINK_SHORTS.get());
+            accept(items, ChangedItems.BLACK_PANTS.get());
+            accept(items, ChangedItems.NAVY_PANTS.get());
             accept(items, ChangedItems.BLACK_TSHIRT.get());
             accept(items, ChangedItems.WHITE_TSHIRT.get());
+            accept(items, ChangedItems.TSC_VEST.get());
             accept(items, ChangedItems.SPORTS_BRA.get());
             accept(items, ChangedItems.LAB_COAT.get());
             accept(items, ChangedItems.WETSUIT.get());
             accept(items, ChangedItems.NITRILE_GLOVES.get());
+            accept(items, ChangedItems.FACE_MASK.get());
             accept(items, ChangedItems.ORANGE_NECK_TIE.get());
             accept(items, ChangedItems.RED_NECK_TIE.get());
             accept(items, ChangedItems.BLUE_NECK_TIE.get());
+            accept(items, ChangedItems.DOG_COLLAR.get());
         }
     };
 

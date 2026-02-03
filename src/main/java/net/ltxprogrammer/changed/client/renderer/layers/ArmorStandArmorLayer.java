@@ -3,16 +3,9 @@ package net.ltxprogrammer.changed.client.renderer.layers;
 import com.google.common.collect.Maps;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.ltxprogrammer.changed.client.renderer.AdvancedHumanoidRenderer;
-import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel;
-import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModelInterface;
 import net.ltxprogrammer.changed.client.renderer.model.ArmorStandArmorModel;
-import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel;
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModelPicker;
-import net.ltxprogrammer.changed.client.renderer.model.armor.LatexHumanoidArmorModel;
-import net.ltxprogrammer.changed.entity.ChangedEntity;
 import net.ltxprogrammer.changed.entity.decoration.AbstractArmorStand;
-import net.ltxprogrammer.changed.entity.decoration.BipedArmorStand;
 import net.ltxprogrammer.changed.extension.ChangedCompatibility;
 import net.ltxprogrammer.changed.world.enchantments.FormFittingEnchantment;
 import net.minecraft.client.model.EntityModel;
@@ -121,7 +114,6 @@ public class ArmorStandArmorLayer<T extends AbstractArmorStand, M extends Entity
         model.renderForSlot(entity, (RenderLayerParent) this.parent, stack, slot, pose,
                 buffers.getBuffer(RenderType.armorCutoutNoCull(armorResource)),
                 packedLight, OverlayTexture.NO_OVERLAY, red, green, blue, 1.0F);
-        model.prepareVisibility(slot, stack);
     }
 
     private void renderModel(PoseStack pose, MultiBufferSource buffers, int packedLight, net.minecraft.client.model.Model model, float red, float green, float blue, ResourceLocation armorResource) {
@@ -135,8 +127,6 @@ public class ArmorStandArmorLayer<T extends AbstractArmorStand, M extends Entity
 
         model.renderForSlot(entity, (RenderLayerParent) this.parent, stack, slot, pose,
                 buffers.getBuffer(RenderType.armorEntityGlint()), packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
-
-        model.prepareVisibility(slot, stack);
     }
 
     private void renderGlint(PoseStack pose, MultiBufferSource buffers, int packedLight, net.minecraft.client.model.Model model) {

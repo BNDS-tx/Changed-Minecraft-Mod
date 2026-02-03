@@ -1,5 +1,6 @@
 package net.ltxprogrammer.changed.mixin.entity;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ltxprogrammer.changed.Changed;
@@ -15,11 +16,8 @@ import net.ltxprogrammer.changed.network.packet.SyncMoversPacket;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.CameraUtil;
 import net.ltxprogrammer.changed.util.EntityUtil;
-import net.ltxprogrammer.changed.world.inventory.AccessoryAccessMenu;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.stats.Stats;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
@@ -40,7 +38,6 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -315,19 +312,33 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
         return abilityTree;
     }
 
-//    @WrapOperation(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;isEmpty()Z"))
-//    public boolean canSwimInAir(FluidState instance, Operation<Boolean> original) {
-//        return !(this.getTransfurVariant() != null && this.getTransfurVariant().getChangedEntity().canSwimInFluidType(instance.getFluidType())) &&
-//                original.call(instance);
-//    }
-//
-//    @Override
-//    public boolean canStartSwimming() {
-//        return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().canStartSwimming() : super.canStartSwimming();
-//    }
-//
-//    @Override
-//    public boolean canSwimInFluidType(FluidType type) {
-//        return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().canSwimInFluidType(type) : super.canSwimInFluidType(type);
-//    }
+    @WrapOperation(method = "causeFallDamage", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/player/Abilities;mayfly:Z"))
+    public boolean changed$shouldIgnoreFallDamage(Abilities instance, Operation<Boolean> original) {
+        if (this.getTransfurVariant() == null)
+            return original.call(instance);
+        return original.call(instance) && !this.getTransfurVariant().getParent().canGlide;
+    }
+
+    @WrapMethod(method = "getDimensions")
+    public EntityDimensions changed$getTransfurDimensions(Pose pose, Operation<EntityDimensions> original) {
+        if (this.getTransfurVariant() == null)
+            return original.call(pose);
+        return this.getTransfurVariant().getTransfurDimensions(pose, original.call(pose));
+    }
+
+    @WrapOperation(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;isEmpty()Z"))
+    public boolean canSwimInAir(FluidState instance, Operation<Boolean> original) {
+        return !(this.getTransfurVariant() != null && this.getTransfurVariant().getChangedEntity().canSwimInFluidType(instance.getFluidType())) &&
+                original.call(instance);
+    }
+
+    @Override
+    public boolean canStartSwimming() {
+        return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().canStartSwimming() : super.canStartSwimming();
+    }
+
+    @Override
+    public boolean canSwimInFluidType(FluidType type) {
+        return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().canSwimInFluidType(type) : super.canSwimInFluidType(type);
+    }
 }

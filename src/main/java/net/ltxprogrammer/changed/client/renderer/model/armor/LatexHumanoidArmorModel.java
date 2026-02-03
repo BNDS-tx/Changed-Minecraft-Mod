@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.ltxprogrammer.changed.client.CubeListBuilderExtender;
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel;
-import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModelInterface;
 import net.ltxprogrammer.changed.client.tfanimations.HelperModel;
 import net.ltxprogrammer.changed.client.animations.Limb;
 import net.ltxprogrammer.changed.client.tfanimations.TransfurHelper;
@@ -29,7 +28,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 
-public abstract class LatexHumanoidArmorModel<T extends ChangedEntity, M extends AdvancedHumanoidModel<T>> extends AdvancedHumanoidModel<T> implements AdvancedHumanoidModelInterface<T, M> {
+public abstract class LatexHumanoidArmorModel<T extends ChangedEntity, M extends AdvancedHumanoidModel<T>> extends AdvancedHumanoidModel<T> {
     public static final ModelPart EMPTY_PART = new ModelPart(List.of(), Map.of());
     public final ArmorModel armorModel;
 
@@ -59,12 +58,12 @@ public abstract class LatexHumanoidArmorModel<T extends ChangedEntity, M extends
     public void scaleForSlot(RenderLayerParent<? super T, ?> parent, EquipmentSlot slot, PoseStack poseStack) {
         switch (slot) {
             case HEAD -> {
-                if (parent.getModel() instanceof AdvancedHumanoidModelInterface<?,?> modelInterface)
-                    modelInterface.scaleForHead(poseStack);
+                if (parent instanceof AdvancedHumanoidModel<?> model)
+                    model.scaleForHead(poseStack);
             }
             case CHEST, LEGS, FEET -> {
-                if (parent.getModel() instanceof AdvancedHumanoidModelInterface<?,?> modelInterface)
-                    modelInterface.scaleForBody(poseStack);
+                if (parent instanceof AdvancedHumanoidModel<?> model)
+                    model.scaleForBody(poseStack);
             }
         }
     }
@@ -73,38 +72,27 @@ public abstract class LatexHumanoidArmorModel<T extends ChangedEntity, M extends
                                        PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha);
 
     public static void prepareUnifiedLegsForArmor(ItemStack stack, ModelPart LeftLeg, ModelPart RightLeg) {
-        prepareUnifiedLegsForArmor(stack, LeftLeg, RightLeg, null);
-    }
+        setAllPartsVisibility(LeftLeg, true);
+        setAllPartsVisibility(RightLeg, true);
 
-    public static void prepareUnifiedLegsForArmor(ItemStack stack, ModelPart LeftLeg, ModelPart RightLeg, @Nullable ModelPart Tail) {
         if (stack.getItem() instanceof Shorts) {
             setAllPartsVisibility(LeftLeg.getChild("LeftLowerLeg"), false);
             setAllPartsVisibility(RightLeg.getChild("RightLowerLeg"), false);
-            if (Tail != null)
-                Tail.visible = false;
         } else if (stack.getItem() instanceof Clothing) {
             setAllPartsVisibility(LeftLeg.getChild("LeftLowerLeg").getChild("LeftFoot"), false);
             setAllPartsVisibility(RightLeg.getChild("RightLowerLeg").getChild("RightFoot"), false);
-            if (Tail != null)
-                Tail.visible = false;
-        } else {
-            setAllPartsVisibility(LeftLeg, true);
-            setAllPartsVisibility(RightLeg, true);
-            if (Tail != null)
-                Tail.visible = true;
         }
     }
 
-    public static void unprepareUnifiedLegsForArmor(ItemStack stack, ModelPart LeftLeg, ModelPart RightLeg) {
-        unprepareUnifiedLegsForArmor(stack, LeftLeg, RightLeg, null);
-    }
+    public static void prepareUnifiedLegsForArmor(ItemStack stack, ModelPart LeftLeg, ModelPart RightLeg, ModelPart Tail) {
+        prepareUnifiedLegsForArmor(stack, LeftLeg, RightLeg);
 
-    public static void unprepareUnifiedLegsForArmor(ItemStack stack, ModelPart LeftLeg, ModelPart RightLeg, @Nullable ModelPart Tail) {
         if (stack.getItem() instanceof Shorts) {
-            setAllPartsVisibility(LeftLeg, true);
-            setAllPartsVisibility(RightLeg, true);
-            if (Tail != null)
-                Tail.visible = true;
+            Tail.visible = false;
+        } else if (stack.getItem() instanceof Clothing) {
+            Tail.visible = false;
+        } else {
+            Tail.visible = true;
         }
     }
 
@@ -237,28 +225,12 @@ public abstract class LatexHumanoidArmorModel<T extends ChangedEntity, M extends
         return Mth.sqrt(f * f + f1 * f1 + f2 * f2);
     }
 
-    @Override
-    public void prepareMobModel(@NotNull T entity, float p_102862_, float p_102863_, float partialTicks) {
-        this.prepareMobModel(getAnimator(entity), entity, p_102862_, p_102863_, partialTicks);
-    }
-
-    @Override
-    public void setupAnim(@NotNull T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        getAnimator(entity).setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-        super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-    }
-
     public static void setAllPartsVisibility(ModelPart part, boolean visible) {
         part.getAllParts().forEach(modelPart -> modelPart.visible = visible);
     }
 
     @Override
     public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {}
-
-    @Override
-    public final void setupHand(T entity) {
-        getAnimator(entity).setupHand();
-    }
 
     @Nullable
     public HelperModel getTransfurHelperModel(Limb limb) {
@@ -270,5 +242,4 @@ public abstract class LatexHumanoidArmorModel<T extends ChangedEntity, M extends
     }
 
     public void prepareVisibility(EquipmentSlot armorSlot, ItemStack item) {}
-    public void unprepareVisibility(EquipmentSlot armorSlot, ItemStack item) {}
 }

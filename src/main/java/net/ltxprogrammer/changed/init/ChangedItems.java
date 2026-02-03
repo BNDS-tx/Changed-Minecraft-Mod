@@ -7,7 +7,6 @@ import net.ltxprogrammer.changed.entity.TransfurContext;
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton;
 import net.ltxprogrammer.changed.entity.robot.Roomba;
 import net.ltxprogrammer.changed.item.*;
-import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.network.chat.Component;
@@ -25,7 +24,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -49,17 +47,17 @@ public class ChangedItems {
     private static final ResourceLocation EMPTY_SLOT_INGOT = new ResourceLocation("item/empty_slot_ingot");
     private static final ResourceLocation EMPTY_SLOT_DIAMOND = new ResourceLocation("item/empty_slot_diamond");
 
-//    private static List<ResourceLocation> createAbdomenConversionIconList() {
-//        return List.of(EMPTY_SLOT_LEGGINGS, EMPTY_SLOT_BOOTS);
-//    }
-//
-//    private static List<ResourceLocation> createQuadrupedalConversionIconList() {
-//        return List.of(EMPTY_SLOT_LEGGINGS, EMPTY_SLOT_BOOTS);
-//    }
-//
-//    private static List<ResourceLocation> createConversionMaterialList() {
-//        return List.of(EMPTY_SLOT_INGOT, EMPTY_SLOT_DIAMOND);
-//    }
+    private static List<ResourceLocation> createAbdomenConversionIconList() {
+        return List.of(EMPTY_SLOT_LEGGINGS, EMPTY_SLOT_BOOTS);
+    }
+
+    private static List<ResourceLocation> createQuadrupedalConversionIconList() {
+        return List.of(EMPTY_SLOT_LEGGINGS, EMPTY_SLOT_BOOTS);
+    }
+
+    private static List<ResourceLocation> createConversionMaterialList() {
+        return List.of(EMPTY_SLOT_INGOT, EMPTY_SLOT_DIAMOND);
+    }
 
     public static final DeferredRegister<Item> REGISTRY = DeferredRegister.create(ForgeRegistries.ITEMS, Changed.MODID);
     public static final RegistryObject<BenignShorts> BENIGN_SHORTS = register("benign_shorts", BenignShorts::new);
@@ -73,7 +71,12 @@ public class ChangedItems {
     public static final RegistryObject<NeckTieItem> ORANGE_NECK_TIE = register("orange_neck_tie", NeckTieItem::new);
     public static final RegistryObject<NeckTieItem> RED_NECK_TIE = register("red_neck_tie", NeckTieItem::new);
     public static final RegistryObject<NeckTieItem> BLUE_NECK_TIE = register("blue_neck_tie", NeckTieItem::new);
+    public static final RegistryObject<CollarItem> DOG_COLLAR = register("dog_collar", CollarItem::new);
     public static final RegistryObject<GasMaskItem> GAS_MASK = register("gas_mask", GasMaskItem::new);
+    public static final RegistryObject<FaceMaskItem> FACE_MASK = register("face_mask", FaceMaskItem::new);
+    public static final RegistryObject<Pants> BLACK_PANTS = register("black_pants", Pants::new);
+    public static final RegistryObject<Pants> NAVY_PANTS = register("navy_pants", Pants::new);
+    public static final RegistryObject<TscVestItem> TSC_VEST = register("tsc_vest", TscVestItem::new);
     public static final RegistryObject<AbstractChangedItem> DARK_LATEX_CRYSTAL_FRAGMENT = register("dark_latex_crystal_fragment", AbstractChangedItem::new);
     public static final RegistryObject<AbstractLatexItem> DARK_LATEX_GOO = register("dark_latex_goo", () -> new AbstractLatexItem(ChangedBlocks.DARK_LATEX_WALL_SPLOTCH.get(), ChangedLatexTypes.DARK_LATEX));
     public static final RegistryObject<DarkLatexMask> DARK_LATEX_MASK = register("dark_latex_mask", DarkLatexMask::new);

@@ -18,7 +18,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 
 public class ChangedEntityWithOutLevelRenderer extends BlockEntityWithoutLevelRenderer {
-    private final Cacheable<WallSign> wallSign = Cacheable.of(() -> new WallSign(ChangedEntities.WALL_SIGN.get(), Minecraft.getInstance().level));
+    private final Cacheable<WallSign> wallSign = Cacheable.of(() -> new WallSign(ChangedEntities.WALL_SIGN.get(), Minecraft.getInstance().level).markAsItemRep());
     private final EntityRenderDispatcher entityRenderDispatcher;
 
     public ChangedEntityWithOutLevelRenderer(BlockEntityRenderDispatcher dispatcher, EntityModelSet modelSet,

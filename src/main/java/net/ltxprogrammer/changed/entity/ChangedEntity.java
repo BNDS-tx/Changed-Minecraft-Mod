@@ -399,7 +399,7 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
         return getLatexType().isHostileTo(LatexType.getEntityLatexType(player));
     }
 
-    public float getEyeHeightMul() {
+    protected float getEyeHeightMul() {
         if (this.isCrouching())
             return 0.83F;
         else
@@ -783,6 +783,8 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
 
         float damage = (float)maybeGetUnderlying().getAttributeValue(ChangedAttributes.TRANSFUR_DAMAGE.get());
         damage = ProcessTransfur.difficultyAdjustTransfurAmount(entity.level.getDifficulty(), damage, abstractChangedEntity);
+        float attackStrengthScale = this.getUnderlyingPlayer() != null ? this.getUnderlyingPlayer().getAttackStrengthScale(0.5F) : 1.0F;
+        damage *= 0.2F + attackStrengthScale * attackStrengthScale * 0.8F;
         TransfurVariant<?> variant = this.getTransfurVariant();
 
         if (entity instanceof LivingEntity livingEntity) {
@@ -1222,5 +1224,10 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
     public int getMaxAirSupply() {
         // This function is called in the ctor of Entity, so attributes aren't ready yet.
         return this.getAttributes() == null ? 300 : Math.round(20f * (float) this.getAttributes().getValue(ChangedAttributes.AIR_CAPACITY.get()));
+    }
+
+    @Override
+    protected float getStandingEyeHeight(Pose pose, EntityDimensions dimensions) {
+        return dimensions.height * this.getEyeHeightMul();
     }
 }
