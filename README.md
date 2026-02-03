@@ -12,7 +12,7 @@ This repository holds the source code for the **Changed: Minecraft Mod Modefied 
 
 **Unauthorised redistribution, promotion, or commercial use is strictly prohibited! LtxProgrammer holds the copyright for Changed: Minecraft Mod, while Azurebyss (BNDS-tx) only holds the copyright and ownership rights for this modification. This modification possesses no rights for and must not be used for distribution, promotion, or commercial purposes. All matters concerning Changed: Minecraft Mod should be addressed directly with [LtxProgrammer](https://github.com/LtxProgrammer). Azurebyss (BNDS-tx) holds no related rights of Changed: Minecraft Mod and assumes no liability for associated copyright risks or responsibilities related with Changed: Minecraft Mod.**
 
-All descriptions bellow and icons with links above are for the **original Changed: Minecraft Mod by LtxProgrammer**, and this modification is currently based on Changed: Minecraft Mod v0.14.1c for Minecraft 1.18.2 and not sure whether will stay up-to-date with the original mod.
+All descriptions bellow and icons with links above are for the **original Changed: Minecraft Mod by LtxProgrammer**, and this modification is currently based on Changed: Minecraft Mod v0.15 for Minecraft 1.18.2 (Backport) and not sure whether will stay up-to-date with the original mod.
 
 ---
 
@@ -20,7 +20,7 @@ All descriptions bellow and icons with links above are for the **original Change
 
 **未经允许不得擅自对外再分发、宣传、商用！LtxProgrammer 为 Changed: Minecraft Mod 的版权持有者，Azurebyss(蓝夜深空) 仅为本改编版的版权与所有权持有者。本改编版不具备且不得用于分发、宣传与商用用途，任何有关 Changed: Minecraft Mod 的相关事宜请直接与 [LtxProgrammer](https://github.com/LtxProgrammer) 联系，Azurebyss(蓝夜深空) 不持有相关权利，不承担相关版权风险与责任。**
 
-所有**原版 Mod** 的贡献者都在[原版的贡献列表](https://github.com/LtxProgrammer/Changed-Minecraft-Mod/graphs/contributors)以及本改编版的 Mod 菜单中陈列。当前本改编版基于**原版 Changed: Minecraft Mod by LtxProgrammer** 的 v0.14.1c 版本二次开发，仅适用于我的世界（Minecraft）Java 版 1.18.2 版本 Forge 平台，未来是否会继续跟随原版版本更新对齐暂且未定。
+所有**原版 Mod** 的贡献者都在[原版的贡献列表](https://github.com/LtxProgrammer/Changed-Minecraft-Mod/graphs/contributors)以及本改编版的 Mod 菜单中陈列。当前本改编版基于**原版 Changed: Minecraft Mod by LtxProgrammer** 的 v0.15 版本二次开发，仅适用于我的世界（Minecraft）Java 版 1.18.2 版本 Forge 平台（降级移植），未来是否会继续跟随原版版本更新对齐暂且未定。
 
 ---
 
