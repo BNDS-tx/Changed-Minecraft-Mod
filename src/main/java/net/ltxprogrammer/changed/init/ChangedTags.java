@@ -89,22 +89,24 @@ public class ChangedTags {
         }
     }
 
-    public static class DamageTypes {
-        public static final TagKey<DamageType> IS_TRANSFUR = create("is_transfur");
-        public static final TagKey<DamageType> LATEX_IMMUNE_TO = create("latex_immune_to");
-        public static final TagKey<DamageType> LATEX_WEAK_TO = create("latex_weak_to");
-        public static final TagKey<DamageType> IGNORES_FACTION_IMMUNITY = create("ignores_faction_immunity");
-
-        private static TagKey<DamageType> create(String name) {
-            return TagKey.create(Registries.DAMAGE_TYPE, Changed.modResource(name));
-        }
-    }
+//    public static class DamageTypes {
+//        public static final TagKey<DamageSource> IS_TRANSFUR = create("is_transfur");
+//        public static final TagKey<DamageSource> LATEX_IMMUNE_TO = create("latex_immune_to");
+//        public static final TagKey<DamageSource> LATEX_WEAK_TO = create("latex_weak_to");
+//
+//        private static TagKey<DamageSource> create(String name) {
+//            return TagKey.create(Registry., Changed.modResource(name));
+//        }
+//
+//
+//    }
 
     public static final class DamageTypes {
 
         private static final Set<DamageSource> IS_TRANSFUR = new HashSet<>();
         private static final Set<DamageSource> LATEX_IMMUNE_TO = new HashSet<>();
         private static final Set<DamageSource> LATEX_WEAK_TO = new HashSet<>();
+        private static final Set<DamageSource> IGNORES_FACTION_IMMUNITY = new HashSet<>();
 
         public static boolean isTransfur(DamageSource source) {
             return IS_TRANSFUR.contains(source);
@@ -116,6 +118,10 @@ public class ChangedTags {
 
         public static boolean isLatexWeakTo(DamageSource source) {
             return LATEX_WEAK_TO.contains(source);
+        }
+
+        public static boolean isIgnoreFactionImmunity(DamageSource source) {
+            return IGNORES_FACTION_IMMUNITY.contains(source);
         }
 
         // 注册方法
@@ -130,6 +136,8 @@ public class ChangedTags {
             LATEX_WEAK_TO.add(DamageSource.ON_FIRE);
             LATEX_WEAK_TO.add(DamageSource.LIGHTNING_BOLT);
             LATEX_WEAK_TO.add(ChangedDamageSources.ELECTROCUTION.source());
+
+            IGNORES_FACTION_IMMUNITY.add(ChangedDamageSources.GRAB_ESCAPE.source());
         }
     }
 

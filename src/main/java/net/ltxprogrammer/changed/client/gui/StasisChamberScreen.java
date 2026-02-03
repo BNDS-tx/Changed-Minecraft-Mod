@@ -178,7 +178,7 @@ public class StasisChamberScreen extends AbstractContainerScreen<StasisChamberMe
         if (!initialized) return;
 
         boolean open = menu.isChamberOpen();
-        float fillLevel = menu.getChamberFillLevel(Minecraft.getInstance().getPartialTick());
+        float fillLevel = menu.getChamberFillLevel(Minecraft.getInstance().getFrameTime());
         var fillFluid = menu.getChamberFillFluid();
         var chamberedEntity = menu.getChamberedEntity();
 

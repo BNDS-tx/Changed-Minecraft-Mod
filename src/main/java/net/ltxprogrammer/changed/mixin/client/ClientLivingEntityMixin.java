@@ -28,6 +28,7 @@ public class ClientLivingEntityMixin implements ClientLivingEntityExtender {
     @Unique
     private AnimationContainer animationContainer = null;
 
+
     @Inject(method = "tick", at = @At("HEAD"))
     private void tickAnimations(CallbackInfo ci) {
         if (animationContainer != null) {

@@ -17,18 +17,18 @@ import java.util.Map;
 @Mixin(value = CuriosApi.class, remap = false)
 @RequiredMods("curios")
 public abstract class CuriosApiMixin {
-    @WrapMethod(method = "getEntitySlots(Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/Map;")
-    private static Map<String, ISlotType> changed$getEntitySlots(LivingEntity livingEntity, Operation<Map<String, ISlotType>> original) {
-        return original.call(EntityUtil.maybeGetUnderlying(livingEntity));
-    }
-
-    @WrapMethod(method = "getItemStackSlots(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/Map;")
-    private static Map<String, ISlotType> changed$getItemStackSlots(ItemStack stack, LivingEntity livingEntity, Operation<Map<String, ISlotType>> original) {
-        return original.call(stack, EntityUtil.maybeGetUnderlying(livingEntity));
-    }
-
-    @WrapMethod(method = "getCuriosInventory")
-    private static LazyOptional<ICuriosItemHandler> changed$getCuriosInventory(LivingEntity livingEntity, Operation<LazyOptional<ICuriosItemHandler>> original) {
-        return original.call(EntityUtil.maybeGetUnderlying(livingEntity));
-    }
+//    @WrapMethod(method = "getEntitySlots(Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/Map;")
+//    private static Map<String, ISlotType> changed$getEntitySlots(LivingEntity livingEntity, Operation<Map<String, ISlotType>> original) {
+//        return original.call(EntityUtil.maybeGetUnderlying(livingEntity));
+//    }
+//
+//    @WrapMethod(method = "getItemStackSlots(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/Map;")
+//    private static Map<String, ISlotType> changed$getItemStackSlots(ItemStack stack, LivingEntity livingEntity, Operation<Map<String, ISlotType>> original) {
+//        return original.call(stack, EntityUtil.maybeGetUnderlying(livingEntity));
+//    }
+//
+//    @WrapMethod(method = "getCuriosInventory")
+//    private static LazyOptional<ICuriosItemHandler> changed$getCuriosInventory(LivingEntity livingEntity, Operation<LazyOptional<ICuriosItemHandler>> original) {
+//        return original.call(EntityUtil.maybeGetUnderlying(livingEntity));
+//    }
 }

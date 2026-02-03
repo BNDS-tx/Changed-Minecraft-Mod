@@ -132,7 +132,7 @@ public abstract class FormRenderHandler {
 
         return ProcessTransfur.ifPlayerTransfurred(player, variant -> {
             if (player == Minecraft.getInstance().getCameraEntity()) {
-                float partialTick = Minecraft.getInstance().getPartialTick();
+                float partialTick = Minecraft.getInstance().getDeltaFrameTime();
                 HumanoidArm handSide = playerRenderer.getModel().rightArm != arm ? HumanoidArm.LEFT : HumanoidArm.RIGHT;
 
                 ChangedCompatibility.freezeIsFirstPersonRendering();

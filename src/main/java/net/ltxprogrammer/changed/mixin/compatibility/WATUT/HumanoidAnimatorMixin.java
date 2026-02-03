@@ -22,7 +22,7 @@ public abstract class HumanoidAnimatorMixin<T extends ChangedEntity> extends Pla
     }
 
     @Shadow public abstract void syncPropertyModel(T entity);
-    @Shadow public abstract HumanoidAnimator<T, ?> getAnimator(T entity);
+    public abstract HumanoidAnimator<T, ?> getAnimator(T entity);
 
     @Inject(method = "setupAnim", at = @At("TAIL"))
     public void setupAnim(T pEntity, float pLimbSwing, float pLimbSwingAmount, float pAgeInTicks, float pNetHeadYaw, float pHeadPitch, CallbackInfo ci) {

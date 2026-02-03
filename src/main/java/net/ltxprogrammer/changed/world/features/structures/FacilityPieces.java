@@ -24,7 +24,9 @@ import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
@@ -144,13 +146,13 @@ public class FacilityPieces extends SimplePreparableReloadListener<Set<Configure
 
     private static Predicate<ConfiguredFacilityPiece> meetsPiecePositionRequirements(FacilityGenerationContext context, BoundingBox region) {
         final var center = region.getCenter();
-        final var surfaceBiomes = context.structureContext.biomeSource().getBiomesWithin(
+        final var surfaceBiomes = context.structureContext.chunkGenerator().biomeSource.getBiomesWithin(
                 center.getX(), context.structureContext.chunkGenerator().getSeaLevel(), center.getZ(), /* Radius */ 16,
-                context.structureContext.randomState().sampler());
+                context.structureContext.chunkGenerator().climateSampler());
         if (center.getY() > context.structureContext.chunkGenerator().getSeaLevel() - 30) {
-            final var pieceBiomes = context.structureContext.biomeSource().getBiomesWithin(
+            final var pieceBiomes = context.structureContext.chunkGenerator().biomeSource.getBiomesWithin(
                     center.getX(), center.getY(), center.getZ(), /* Radius */ 2,
-                    context.structureContext.randomState().sampler());
+                    context.structureContext.chunkGenerator().climateSampler());
             if (pieceBiomes.stream().anyMatch(pieceBiome -> pieceBiome.is(BiomeTags.IS_RIVER) || pieceBiome.is(BiomeTags.IS_OCEAN)))
                 return piece -> false; // Deny pieces generating too close to surface water
         }
@@ -162,9 +164,9 @@ public class FacilityPieces extends SimplePreparableReloadListener<Set<Configure
 
     private static Predicate<Zone> meetsZonePositionRequirements(FacilityGenerationContext context, BoundingBox region) {
         final var center = region.getCenter();
-        final var surfaceBiomes = context.structureContext.biomeSource().getBiomesWithin(
+        final var surfaceBiomes = context.structureContext.chunkGenerator().biomeSource.getBiomesWithin(
                 center.getX(), context.structureContext.chunkGenerator().getSeaLevel(), center.getZ(), /* Radius */ 16,
-                context.structureContext.randomState().sampler());
+                context.structureContext.chunkGenerator().climateSampler());
         return zone -> {
             return surfaceBiomes.stream().anyMatch(zone.getSurfaceBiomePredicate()::testHolder);
         };

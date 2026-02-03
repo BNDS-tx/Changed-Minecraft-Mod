@@ -326,19 +326,19 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
         return this.getTransfurVariant().getTransfurDimensions(pose, original.call(pose));
     }
 
-    @WrapOperation(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;isEmpty()Z"))
-    public boolean canSwimInAir(FluidState instance, Operation<Boolean> original) {
-        return !(this.getTransfurVariant() != null && this.getTransfurVariant().getChangedEntity().canSwimInFluidType(instance.getFluidType())) &&
-                original.call(instance);
-    }
-
-    @Override
-    public boolean canStartSwimming() {
-        return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().canStartSwimming() : super.canStartSwimming();
-    }
-
-    @Override
-    public boolean canSwimInFluidType(FluidType type) {
-        return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().canSwimInFluidType(type) : super.canSwimInFluidType(type);
-    }
+//    @WrapOperation(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;isEmpty()Z"))
+//    public boolean canSwimInAir(FluidState instance, Operation<Boolean> original) {
+//        return !(this.getTransfurVariant() != null && this.getTransfurVariant().getChangedEntity().canSwimInFluidType(instance.getFluidType())) &&
+//                original.call(instance);
+//    }
+//
+//    @Override
+//    public boolean canStartSwimming() {
+//        return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().canStartSwimming() : super.canStartSwimming();
+//    }
+//
+//    @Override
+//    public boolean canSwimInFluidType(FluidType type) {
+//        return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().canSwimInFluidType(type) : super.canSwimInFluidType(type);
+//    }
 }

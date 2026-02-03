@@ -6,8 +6,8 @@
   "refmap": "changed.refmap.json",
   "plugin": "net.ltxprogrammer.changed.mixin.compatibility.ChangedMixinPlugin",
   "mixins": [
-    "Oculus.WorldRenderingPhaseMixin",
-    "Curios.CuriosApiMixin"
+    "Curios.CuriosApiMixin",
+    "Oculus.WorldRenderingPhaseMixin"
   ],
   "client": [
     "BeyondEarth.OxygenSystemMixin",
@@ -19,6 +19,8 @@
     "CGM.LatexItemInHandLayerMixin",
     "ChiselsAndBits.ChiselRenderTypeMixin",
     "CTM.BlockRenderLayerMixin",
+    "Curios.AdvancedHumanoidRendererMixin",
+    "Curios.PlayerLayerWrapperMixin",
     "DoABarrelRoll.AdvancedHumanoidRendererMixin",
     "EMF.HumanoidAnimatorMixin",
     "EntityCulling.WaveVisionRendererMixin",

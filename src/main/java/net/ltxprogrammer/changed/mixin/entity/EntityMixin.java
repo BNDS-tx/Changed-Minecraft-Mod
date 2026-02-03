@@ -255,7 +255,10 @@ public abstract class EntityMixin extends net.minecraftforge.common.capabilities
     }
 
     @WrapOperation(method = {"playStepSound"},
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;getSoundType(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/world/level/block/SoundType;"))
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/level/block/state/BlockState;getSoundType(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/world/level/block/SoundType;",
+                    remap = false))
     protected SoundType maybeGetLatexCoverSound(BlockState instance, LevelReader reader, BlockPos blockPos, Entity entity, Operation<SoundType> original) {
         final LatexCoverState coverState = LatexCoverState.getAt(reader, blockPos.above());
         if (coverState.isAir())

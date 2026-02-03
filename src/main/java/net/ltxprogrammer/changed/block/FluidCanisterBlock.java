@@ -34,6 +34,7 @@ import net.minecraftforge.fluids.ForgeFlowingFluid;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Random;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 

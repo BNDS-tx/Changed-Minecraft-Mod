@@ -5,7 +5,6 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.datafixers.util.Pair;
 import net.ltxprogrammer.changed.client.renderer.AdvancedHumanoidRenderer;
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel;
-import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModelInterface;
 import net.ltxprogrammer.changed.extension.RequiredMods;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.minecraft.client.Minecraft;
@@ -147,8 +146,8 @@ public abstract class RenderEventsMixin {
                 entityModel.setupAnim(entity, limbSwing, limbSwingAmount, entity.tickCount + partialTicks, netHeadYaw, headPitch);
                 var torso = entityModel.getTorso();
 
-                if (entityModel instanceof AdvancedHumanoidModelInterface modelInterface)
-                    matrix.translate(0.0, 0.0, (perspective == 2 ? -1 : 1) * modelInterface.getAnimator(entity).forwardOffset / 8.0D);
+//                if (entityModel instanceof AdvancedHumanoidModelInterface modelInterface)
+//                    matrix.translate(0.0, 0.0, (perspective == 2 ? -1 : 1) * modelInterface.getAnimator(entity).forwardOffset / 8.0D);
 
                 if (torso != null) {
                     float oldY = torso.y;

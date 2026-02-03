@@ -129,7 +129,7 @@ public class GrabEntityAbilityInstance extends AbstractAbilityInstance {
                 (int) Mth.lerp(scale, 0 /* 0 Seconds */, 20 * 5 /* 5 Seconds */), 1)); // Slowness II (0-5 seconds)
         this.entity.getEntity().addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN,
                 (int) Mth.lerp(scale, 0 /* 0 Seconds */, 20 * 3 /* 3 Seconds */), 7)); // Mining Fatigue VIII (0-3 seconds)
-        this.entity.getEntity().hurt(ChangedDamageSources.GRAB_ESCAPE.source(this.entity.getEntity().level.registryAccess(), grabbed),
+        this.entity.getEntity().hurt(ChangedDamageSources.GRAB_ESCAPE.source(grabbed),
                 Mth.lerp(scale, 0.0F /* 0 Damage */, 6.0F /* 3 Hearts Damage */));
     }
 

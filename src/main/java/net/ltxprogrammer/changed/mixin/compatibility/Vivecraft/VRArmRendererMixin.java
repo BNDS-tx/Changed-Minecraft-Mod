@@ -27,19 +27,19 @@ public abstract class VRArmRendererMixin extends PlayerRenderer {
 
     @Inject(method = {"renderHand", "renderItem"}, at = @At("HEAD"), require = 0, cancellable = true)
     private void renderHandOverride(ControllerType side, PoseStack matrixStackIn, MultiBufferSource bufferIn, int combinedLightIn,
-                                   AbstractClientPlayer playerIn, ModelPart rendererArmIn, ModelPart rendererArmwearIn, CallbackInfo callback) {
+                                    AbstractClientPlayer playerIn, ModelPart rendererArmIn, ModelPart rendererArmwearIn, CallbackInfo callback) {
         if (FormRenderHandler.maybeRenderHand((VRArmRenderer)(Object)this, matrixStackIn, bufferIn, combinedLightIn, playerIn, rendererArmIn, rendererArmwearIn))
             callback.cancel();
     }
 
     @Inject(method = {"renderHand", "renderItem"}, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;disableBlend()V"), require = 0, cancellable = true)
     private void renderItemLayers(ControllerType side, PoseStack matrixStackIn, MultiBufferSource bufferIn, int combinedLightIn,
-                                   AbstractClientPlayer playerIn, ModelPart rendererArmIn, ModelPart rendererArmwearIn, CallbackInfo callback) {
+                                  AbstractClientPlayer playerIn, ModelPart rendererArmIn, ModelPart rendererArmwearIn, CallbackInfo callback) {
         for (var layer : layers) {
             if (layer instanceof FirstPersonLayer firstPersonLayer)
                 firstPersonLayer.renderFirstPersonOnArms(
                         matrixStackIn, bufferIn, combinedLightIn, playerIn, getModel().rightArm != rendererArmIn ? HumanoidArm.LEFT : HumanoidArm.RIGHT,
-                        rendererArmIn.storePose(), Minecraft.getInstance().getPartialTick());
+                        rendererArmIn.storePose(), Minecraft.getInstance().getDeltaFrameTime());
         }
     }
 }
