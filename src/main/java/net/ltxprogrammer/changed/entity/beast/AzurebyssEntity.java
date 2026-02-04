@@ -81,6 +81,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
 
     public static AttributeSupplier.Builder createAttributes() {
         AttributeSupplier.Builder builder = Mob.createMobAttributes();
+        builder = builder.add(ChangedAttributes.AIR_CAPACITY.get(), 60D);
         builder = builder.add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 10D);
         builder = builder.add(ChangedAttributes.JUMP_STRENGTH.get(), 1.5);
         builder = builder.add(ChangedAttributes.FALL_RESISTANCE.get(), 2.5);
@@ -111,6 +112,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
     }
 
     protected void setAttributes(AttributeMap attributes) {
+        Objects.requireNonNull(attributes.getInstance(ChangedAttributes.AIR_CAPACITY.get())).setBaseValue((60));
         Objects.requireNonNull(attributes.getInstance(ChangedAttributes.TRANSFUR_DAMAGE.get())).setBaseValue((10));
         Objects.requireNonNull(attributes.getInstance(ChangedAttributes.JUMP_STRENGTH.get())).setBaseValue(1.5);
         Objects.requireNonNull(attributes.getInstance(ChangedAttributes.FALL_RESISTANCE.get())).setBaseValue(2.5);
