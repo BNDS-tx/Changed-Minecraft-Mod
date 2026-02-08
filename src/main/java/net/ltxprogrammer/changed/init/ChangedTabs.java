@@ -457,9 +457,6 @@ public class ChangedTabs {
 
             accept(items, ChangedBlocks.BEEHIVE_BED.get());
             accept(items, ChangedBlocks.BEEHIVE_WALL.get());
-//            accept(items, ChangedBlocks.BEEHIVE_CORNER.get());
-//            accept(items, ChangedBlocks.BEEHIVE_FLOOR.get());
-//            accept(items, ChangedBlocks.BEEHIVE_ROOF.get());
 
             accept(items, ChangedBlocks.LARGE_LAB_DOOR.get());
             accept(items, ChangedBlocks.LARGE_LIBRARY_DOOR.get());

@@ -420,7 +420,7 @@ public class FacilityPieces extends SimplePreparableReloadListener<Set<Configure
         return replacedRoomStream.findFirst();
     }
 
-    public static FacilityKeystone generateFacility(StructurePiecesBuilder builder, PieceGenerator.Context<NoneFeatureConfiguration> context, int genDepth, int span, BoundingBox allowedRegion) {
+    public static Optional<FacilityKeystone> generateFacility(StructurePiecesBuilder builder, PieceGenerator.Context<NoneFeatureConfiguration> context, int genDepth, int span, BoundingBox allowedRegion) {
         BlockPos blockPos = new BlockPos(
                 context.chunkPos().getBlockX(8), 0,
                 context.chunkPos().getBlockZ(8));
@@ -430,9 +430,12 @@ public class FacilityPieces extends SimplePreparableReloadListener<Set<Configure
         Stack<ConfiguredFacilityPiece> stack = new Stack<>();
         List<GenStep> starts = new ArrayList<>();
         var facilityGenerationContext = new FacilityGenerationContext(builder, context);
-        ConfiguredFacilityPiece entranceNew = INSTANCE.facilityPieceCollections.get(ChangedFacilityPieceTypes.ENTRANCE.get()).shuffledStream(context.random())
-                .filter(meetsPiecePositionRequirements(facilityGenerationContext, new BoundingBox(blockPos).inflatedBy(7)))
-                .findFirst().orElseThrow();
+        Optional<ConfiguredFacilityPiece> entranceNewOpt = INSTANCE.facilityPieceCollections.get(ChangedFacilityPieceTypes.ENTRANCE.get()).shuffledStream(context.random())
+                .filter(meetsPiecePositionRequirements(facilityGenerationContext, new BoundingBox(blockPos).inflatedBy(7))).findFirst();
+        if (entranceNewOpt.isEmpty())
+            return Optional.empty();
+
+        ConfiguredFacilityPiece entranceNew = entranceNewOpt.get();
         FacilityPieceInstance entrancePiece = entranceNew.getFacilityPiece().createStructurePiece(context.structureManager(), genDepth);
 
         var directions = new ArrayList<>(Direction.Plane.HORIZONTAL.stream().toList());
@@ -511,6 +514,10 @@ public class FacilityPieces extends SimplePreparableReloadListener<Set<Configure
                     Pair.of(pair.definition.getName(), pair.instance.getBoundingBox())).toList());
         });
 
-        return new FacilityKeystone(genDepth, zoneBoundingBoxes, entrancePiece.getBoundingBox(), context.random());
+        try {
+            return Optional.of(new FacilityKeystone(genDepth, zoneBoundingBoxes, entrancePiece.getBoundingBox(), context.random()));
+        } catch (Exception ignored) {
+            return Optional.empty();
+        }
     }
 }

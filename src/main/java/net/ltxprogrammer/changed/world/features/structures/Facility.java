@@ -1,5 +1,6 @@
 package net.ltxprogrammer.changed.world.features.structures;
 
+import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.world.features.structures.facility.FacilityKeystone;
@@ -144,6 +145,14 @@ public class Facility extends StructureFeature<NoneFeatureConfiguration> {
         });
     }
 
+    public Optional<Structure.GenerationStub> findGenerationPoint(GenerationContext context) {
+        Rotation rotation = Rotation.getRandom(context.random());
+        BlockPos blockpos = this.getLowestYIn5by5BoxOffset7Blocks(context, rotation);
+        return blockpos.getY() < 60 ? Optional.empty() : Optional.of(new Structure.GenerationStub(blockpos, (builder) -> {
+            this.tryGeneratePieces(builder, context, blockpos, rotation);
+        }));
+    }
+
     // ... generatePieces 方法保持之前修改好的版本 (使用 PieceGenerator.Context) ...
     // 注意：generatePieces 方法体需要包含我们之前修复的 Mixin 调用和 Reroll 逻辑
 
@@ -151,6 +160,9 @@ public class Facility extends StructureFeature<NoneFeatureConfiguration> {
     // 这里的 context 是 PieceGenerator.Context<NoneFeatureConfiguration>，它拥有你报错缺失的所有方法
     private static void generatePieces(StructurePiecesBuilder builder, PieceGenerator.Context<NoneFeatureConfiguration> context, BlockPos blockPos, Rotation rotation) {
         ChunkPos center = context.chunkPos();
+        Changed.LOGGER.info("Started facility generation at ChunkPos {}",
+                center);
+
         ChunkPos min = new ChunkPos(center.x - GENERATION_CHUNK_RADIUS, center.z - GENERATION_CHUNK_RADIUS);
         ChunkPos max = new ChunkPos(center.x + GENERATION_CHUNK_RADIUS, center.z + GENERATION_CHUNK_RADIUS);
         BlockPos minPos = new BlockPos(min.getMinBlockX(), context.heightAccessor().getMinBuildHeight(), min.getMinBlockZ());
@@ -170,7 +182,11 @@ public class Facility extends StructureFeature<NoneFeatureConfiguration> {
             // 关键修正：这里直接传入 context，不再报错
             // 因为 context 类型就是 PieceGenerator.Context<NoneFeatureConfiguration>
             // 而 FacilityPieces.generateFacility 需要的正是这个类型
-            FacilityKeystone keystone = FacilityPieces.generateFacility(builder, context, 5, 20, generationRegion);
+//            FacilityKeystone keystone = FacilityPieces.generateFacility(builder, context, 5, 20, generationRegion);
+            Optional<FacilityKeystone> keystoneOpt = FacilityPieces.generateFacility(builder, context, 5, 20, generationRegion);
+            if (keystoneOpt.isEmpty()) continue;
+            FacilityKeystone keystone = keystoneOpt.get();
+
             builder.addPiece(keystone);
 
             int size = ((StructurePiecesBuilderExtender) builder).pieceCount();
@@ -182,8 +198,13 @@ public class Facility extends StructureFeature<NoneFeatureConfiguration> {
             }
         }
 
-        // 恢复最大的那一组
         ((StructurePiecesBuilderExtender) builder).clear();
+        if (largestKeystone == null) {
+            Changed.LOGGER.info("Failed generating facility at ChunkPos {}",
+                    center);
+            return;
+        }
+
         largestSet.forEach(builder::addPiece);
 
         Changed.LOGGER.info("Generated facility \"{}\" with {} pieces (best of {}), at ChunkPos {}",

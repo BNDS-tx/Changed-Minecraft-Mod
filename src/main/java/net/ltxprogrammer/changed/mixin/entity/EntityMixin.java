@@ -49,6 +49,7 @@ import net.minecraft.world.level.entity.EntityAccess;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.common.util.ITeleporter;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
@@ -160,7 +161,7 @@ public abstract class EntityMixin extends net.minecraftforge.common.capabilities
         EntityShape.getShapeOf(livingEntity)
                 .map(EntityShape::isLegless)
                 .flatMap(legless -> {
-                    if (legless && livingEntity.isEyeInFluid(FluidTags.WATER)) {
+                    if (legless && livingEntity.isEyeInFluidType(ForgeMod.WATER_TYPE.get())) {
                         return Optional.of(pose == Pose.SWIMMING);
                     } else
                         return Optional.empty();
@@ -182,7 +183,7 @@ public abstract class EntityMixin extends net.minecraftforge.common.capabilities
     @Inject(method = "isInvisible", at = @At("RETURN"), cancellable = true)
     public void hideSeatedEntity(CallbackInfoReturnable<Boolean> cir) {
         if (!cir.getReturnValue() && (Entity)(Object)this instanceof LivingEntity livingEntity) {
-            if (livingEntity.vehicle != null && livingEntity.vehicle instanceof SeatEntity seat) {
+            if (livingEntity.getVehicle() != null && livingEntity.getVehicle() instanceof SeatEntity seat) {
                 if (seat.shouldSeatedBeInvisible()) {
                     cir.setReturnValue(true);
                 }
