@@ -23,6 +23,7 @@ import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
@@ -366,6 +367,10 @@ public class LatexCoveredBlocksRenderer implements PreparableReloadListener {
         return specialModelSets.getOrDefault(blockState, defaultModelSets).get(coverState.getType());
     }
 
+    public ModelSet getModelSetForCover(BlockState blockState, LatexCoverState coverState) {
+        return getModelSet(blockState, coverState);
+    }
+
     public RenderType getRenderType(LatexCoverState coverState) {
         // Maybe use a tag
         if (ChangedClient.shouldBeRenderingWaveVision() && ChangedLatexTypes.DARK_LATEX.get().isFriendlyTo(coverState.getType()))
@@ -373,10 +378,34 @@ public class LatexCoveredBlocksRenderer implements PreparableReloadListener {
         return RenderType.solid();
     }
 
+    public RenderType getBuildRenderType(LatexCoverState coverState) {
+        var layer = IClientLatexTypeExtensions.of(coverState).getCoverRenderLayer();
+        if (layer == IClientLatexTypeExtensions.CoverRenderLayer.TRANSLUCENT)
+            return RenderType.translucent();
+        if (layer == IClientLatexTypeExtensions.CoverRenderLayer.CUTOUT)
+            return RenderType.cutout();
+
+        Block block = coverState.getType().getBlock();
+        if (block != null) {
+            BlockState blockState = block.defaultBlockState();
+            if (ItemBlockRenderTypes.canRenderInLayer(blockState, RenderType.translucent()))
+                return RenderType.translucent();
+        }
+        return RenderType.cutout();
+    }
+
     private static final ThreadLocal<LatexCoverGetter> threadLocal = ThreadLocal.withInitial(() -> null);
 
     public static Optional<LatexCoverGetter> getLatexCoverStateGetter() {
         return Optional.ofNullable(threadLocal.get());
+    }
+
+    public void pushCoverGetter(LatexCoverGetter latexCoverGetter) {
+        threadLocal.set(latexCoverGetter);
+    }
+
+    public void popCoverGetter() {
+        threadLocal.remove();
     }
 
     private boolean wrappedTesselate(
@@ -407,7 +436,7 @@ public class LatexCoveredBlocksRenderer implements PreparableReloadListener {
 
         long seed = coverState.getSeed(blockPos);
 
-        final RenderType renderType = this.getRenderType(coverState);
+        final RenderType renderType = this.getBuildRenderType(coverState);
 
         threadLocal.set(latexCoverGetter);
 
@@ -452,14 +481,14 @@ public class LatexCoveredBlocksRenderer implements PreparableReloadListener {
     }
 
     private int getLightColor(BlockAndTintGetter level, BlockPos blockPos) {
-        return LevelRenderer.getLightColor(level, blockPos);
-        /*int lightColor = LevelRenderer.getLightColor(level, blockPos);
+//        return LevelRenderer.getLightColor(level, blockPos);
+        int lightColor = LevelRenderer.getLightColor(level, blockPos);
         int lightColorAbove = LevelRenderer.getLightColor(level, blockPos.above());
         int k = lightColor & 255;
         int l = lightColorAbove & 255;
         int i1 = lightColor >> 16 & 255;
         int j1 = lightColorAbove >> 16 & 255;
-        return (Math.max(k, l)) | (Math.max(i1, j1)) << 16;*/
+        return (Math.max(k, l)) | (Math.max(i1, j1)) << 16;
     }
 
     private static void vertex(VertexConsumer consumer, double x, double y, double z, float red, float green, float blue, float alpha, float texCoordU, float texCoordV, int packedLight) {

@@ -8,6 +8,12 @@ import net.minecraft.resources.ResourceLocation;
 public interface IClientLatexTypeExtensions {
     IClientLatexTypeExtensions DEFAULT = new IClientLatexTypeExtensions() { };
 
+    enum CoverRenderLayer {
+        AUTO,
+        CUTOUT,
+        TRANSLUCENT
+    }
+
     static IClientLatexTypeExtensions of(LatexCoverState state) {
         return of(state.getType());
     }
@@ -18,6 +24,10 @@ public interface IClientLatexTypeExtensions {
 
     default Color3 getColor() {
         return Color3.WHITE;
+    }
+
+    default CoverRenderLayer getCoverRenderLayer() {
+        return CoverRenderLayer.AUTO;
     }
 
     default ResourceLocation getTextureForFace(Direction face) {

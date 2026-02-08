@@ -51,6 +51,7 @@
   ],
   "client": [
     "block.BlockColorsMixin",
+    "client.ChunkRenderDispatcherMixin",
     "client.ClientLevelMixin",
     "client.ClientLivingEntityMixin",
     "client.DebugRendererMixin",

@@ -25,7 +25,7 @@ public class ClientLevelExtension extends LevelExtension {
 
     @Override
     public void setCoversDirty(LevelAccessor level, BlockPos blockPos, LatexCoverState oldState, LatexCoverState recordedState) {
-        Minecraft.getInstance().levelRenderer.setBlocksDirty(blockPos.getX(), blockPos.getY(), blockPos.getZ(), blockPos.getX(), blockPos.getY(), blockPos.getZ());
+        Minecraft.getInstance().levelRenderer.setBlockDirty(blockPos, true);
     }
 
     @Override

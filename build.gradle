@@ -204,6 +204,10 @@ dependencies {
         jarJar.ranged(it, "[0.4.1,)")
     }
 
+    implementation(jarJar("local.repack:repack-joml:1.0.0")) {
+        jarJar.ranged(it, "[1.0.0,)")
+    }
+
     implementation fg.deobf("curse.maven:presence-footsteps-forge-433068:4328018") // Forge 1.18.2 v1.5.1
     implementation fg.deobf("curse.maven:spark-361579:4505375") // Forge 1.18.2 v1.10.38
     implementation fg.deobf("curse.maven:modernfix-790626:5399365") // Forge 1.18.2 v5.18.0

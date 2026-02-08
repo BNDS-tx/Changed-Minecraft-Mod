@@ -2,10 +2,12 @@ package net.ltxprogrammer.changed.mixin.server;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import net.ltxprogrammer.changed.block.LatexCoveringSource;
 import net.ltxprogrammer.changed.init.ChangedLatexTypes;
 import net.ltxprogrammer.changed.world.LatexCoverCounter;
 import net.ltxprogrammer.changed.world.LatexCoverState;
 import net.ltxprogrammer.changed.world.LevelChunkSectionExtension;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -30,7 +32,9 @@ public abstract class LevelChunkSectionMixin implements LevelChunkSectionExtensi
 
     @Override
     public LatexCoverState getLatexCoverState(int x, int y, int z) {
-        // 直接返回 coverStates，不要 new BlockPos 调 source
+        BlockState blockState = this.states.get(x, y, z);
+        if (blockState.getBlock() instanceof LatexCoveringSource source)
+            return source.getLatexCoverState(blockState, new BlockPos(x, y, z));
         return coverStates.get(x, y, z);
     }
 
