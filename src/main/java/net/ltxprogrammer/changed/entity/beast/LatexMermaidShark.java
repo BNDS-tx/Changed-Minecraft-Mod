@@ -1,7 +1,6 @@
 package net.ltxprogrammer.changed.entity.beast;
 
 import net.ltxprogrammer.changed.entity.*;
-import net.ltxprogrammer.changed.entity.latex.LatexType;
 import net.ltxprogrammer.changed.entity.variant.EntityShape;
 import net.ltxprogrammer.changed.util.Color3;
 import net.minecraft.tags.FluidTags;
@@ -37,7 +36,7 @@ public class LatexMermaidShark extends AbstractAquaticGenderedEntity {
 
     @Override
     public boolean isVisuallySwimming() {
-        if (this.getUnderlyingPlayer() != null && this.getUnderlyingPlayer().isEyeInFluidType(ForgeMod.WATER_TYPE.get()))
+        if (this.getUnderlyingPlayer() != null && this.getUnderlyingPlayer().isEyeInFluid(FluidTags.WATER))
             return true;
         return super.isVisuallySwimming();
     }

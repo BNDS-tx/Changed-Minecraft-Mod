@@ -2,36 +2,18 @@ package net.ltxprogrammer.changed.entity.ai;
 
 import net.ltxprogrammer.changed.entity.beast.AbstractDarkLatexEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.MoveToBlockGoal;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.level.storage.loot.BuiltInLootTables;
-import net.minecraft.world.level.storage.loot.LootContext;
-import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.Tags;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Stream;
 
 public class DarkLatexCaveTorchingGoal extends MoveToBlockGoal {
     private static final int TIME_LIMIT_TO_PATHFIND = 5 * 20;
@@ -106,10 +88,10 @@ public class DarkLatexCaveTorchingGoal extends MoveToBlockGoal {
         if (this.isReachedTarget() && !placed) {
             var torchPos = blockPos.above();
             this.entity.swing(InteractionHand.OFF_HAND);
-            this.level.setBlockAndUpdate(torchPos, Blocks.TORCH.defaultBlockState);
+            this.level.setBlockAndUpdate(torchPos, Blocks.TORCH.defaultBlockState());
             this.entity.getOffhandItem().shrink(1);
 
-            SoundType soundtype = Blocks.TORCH.defaultBlockState.getSoundType(level, torchPos, entity);
+            SoundType soundtype = Blocks.TORCH.defaultBlockState().getSoundType(level, torchPos, entity);
             level.playSound(entity.getUnderlyingPlayer(), torchPos, soundtype.getPlaceSound(), SoundSource.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
             level.gameEvent(GameEvent.BLOCK_PLACE, torchPos);
 

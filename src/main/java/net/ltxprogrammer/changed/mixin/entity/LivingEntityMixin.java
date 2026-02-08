@@ -7,7 +7,6 @@ import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.ability.AbstractAbility;
 import net.ltxprogrammer.changed.ability.GrabEntityAbility;
 import net.ltxprogrammer.changed.ability.GrabEntityAbilityInstance;
-import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.block.StasisChamber;
 import net.ltxprogrammer.changed.block.ThreeXThreeSection;
 import net.ltxprogrammer.changed.block.WearableBlock;
@@ -18,7 +17,6 @@ import net.ltxprogrammer.changed.data.AccessorySlotType;
 import net.ltxprogrammer.changed.data.AccessorySlots;
 import net.ltxprogrammer.changed.entity.*;
 import net.ltxprogrammer.changed.entity.latex.SpreadingLatexType;
-import net.ltxprogrammer.changed.entity.robot.Exoskeleton;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.fluid.AbstractLatexFluid;
 import net.ltxprogrammer.changed.fluid.Gas;
@@ -57,7 +55,6 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.network.PacketDistributor;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.spongepowered.asm.mixin.Final;
@@ -486,7 +483,7 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
         if ((LivingEntity)(Object)this instanceof Player && level instanceof ServerLevel serverLevel) {
             if (serverLevel.players().stream().filter(player -> !player.isSpectator()).count() == 1) {
                 // Singleplayer, just skip stasis time
-                if (this.vehicle instanceof SeatEntity seatEntity) {
+                if (this.getVehicle() instanceof SeatEntity seatEntity) {
                     this.level.getBlockEntity(seatEntity.getAttachedBlockPos(), ChangedBlockEntities.STASIS_CHAMBER.get())
                             .ifPresent(StasisChamberBlockEntity::trimSchedule);
                 }
@@ -499,7 +496,7 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
 
     @Inject(method = "getBedOrientation", at = @At("HEAD"), cancellable = true)
     public void getStasisChamberOrientation(CallbackInfoReturnable<Direction> cir) {
-        if (this.vehicle instanceof SeatEntity seatEntity) {
+        if (this.getVehicle() instanceof SeatEntity seatEntity) {
             seatEntity.getAttachedBlockState()
                     .map(state -> state.getBedDirection(this.level, seatEntity.getAttachedBlockPos()))
                     .ifPresent(cir::setReturnValue);

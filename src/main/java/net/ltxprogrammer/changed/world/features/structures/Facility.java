@@ -141,16 +141,8 @@ public class Facility extends StructureFeature<NoneFeatureConfiguration> {
         net.minecraft.world.level.block.Rotation rotation = net.minecraft.world.level.block.Rotation.getRandom(worldgenrandom);
 
         return Optional.of((builder, generatorContext) -> {
-            generatePieces(builder, generatorContext, blockPos, rotation);
+            tryGeneratePieces(builder, generatorContext, blockPos, rotation);
         });
-    }
-
-    public Optional<Structure.GenerationStub> findGenerationPoint(GenerationContext context) {
-        Rotation rotation = Rotation.getRandom(context.random());
-        BlockPos blockpos = this.getLowestYIn5by5BoxOffset7Blocks(context, rotation);
-        return blockpos.getY() < 60 ? Optional.empty() : Optional.of(new Structure.GenerationStub(blockpos, (builder) -> {
-            this.tryGeneratePieces(builder, context, blockpos, rotation);
-        }));
     }
 
     // ... generatePieces 方法保持之前修改好的版本 (使用 PieceGenerator.Context) ...
@@ -158,7 +150,7 @@ public class Facility extends StructureFeature<NoneFeatureConfiguration> {
 
     // 阶段 2：拼图生成 (Generator)
     // 这里的 context 是 PieceGenerator.Context<NoneFeatureConfiguration>，它拥有你报错缺失的所有方法
-    private static void generatePieces(StructurePiecesBuilder builder, PieceGenerator.Context<NoneFeatureConfiguration> context, BlockPos blockPos, Rotation rotation) {
+    private static void tryGeneratePieces(StructurePiecesBuilder builder, PieceGenerator.Context<NoneFeatureConfiguration> context, BlockPos blockPos, Rotation rotation) {
         ChunkPos center = context.chunkPos();
         Changed.LOGGER.info("Started facility generation at ChunkPos {}",
                 center);
@@ -198,6 +190,7 @@ public class Facility extends StructureFeature<NoneFeatureConfiguration> {
             }
         }
 
+        // 恢复最大的那一组
         ((StructurePiecesBuilderExtender) builder).clear();
         if (largestKeystone == null) {
             Changed.LOGGER.info("Failed generating facility at ChunkPos {}",

@@ -34,11 +34,9 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.*;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -735,7 +733,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
                     host.getAbilities().mayfly = false;
                     host.getAbilities().flying = false;
                     host.onUpdateAbilities();
-                } else if (host.isEyeInFluidType(ForgeMod.WATER_TYPE.get()) && host.getAbilities().mayfly) {
+                } else if (host.isEyeInFluid(FluidTags.WATER) && host.getAbilities().mayfly) {
                     host.getAbilities().mayfly = false;
                     host.getAbilities().flying = false;
                     host.onUpdateAbilities();
@@ -891,12 +889,12 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
                     }
                 });
 
-        if (getEntityShape().isLegless() && host.isEyeInFluidType(ForgeMod.WATER_TYPE.get()) && shouldApplyAbilities())
+        if (getEntityShape().isLegless() && host.isEyeInFluid(FluidTags.WATER) && shouldApplyAbilities())
             host.setPose(Pose.SWIMMING);
 
         // Sink in water
         if (host.getAttributeBaseValue(ForgeMod.SWIM_SPEED.get()) > 1.0) {
-            host.setNoGravity(host.isEyeInFluidType(ForgeMod.WATER_TYPE.get()));
+            host.setNoGravity(host.isEyeInFluid(FluidTags.WATER));
         }
 
         // Effects
@@ -1021,7 +1019,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
     }
 
     public float getFoodEfficiency() {
-        if (host.isSwimming() || host.isEyeInFluidType(ForgeMod.WATER_TYPE.get()) || host.isInWater()) {
+        if (host.isSwimming() || host.isEyeInFluid(FluidTags.WATER) || host.isInWater()) {
             return getSwimEfficiency();
         } else if (host.isOnGround() && host.isSprinting()) {
             return getSprintEfficiency();

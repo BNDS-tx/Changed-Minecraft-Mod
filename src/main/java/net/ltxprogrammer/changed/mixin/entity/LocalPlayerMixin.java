@@ -1,9 +1,6 @@
 package net.ltxprogrammer.changed.mixin.entity;
 
 
-import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.authlib.GameProfile;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.ability.GrabEntityAbility;
@@ -12,7 +9,6 @@ import net.ltxprogrammer.changed.client.LocalPlayerAccessor;
 import net.ltxprogrammer.changed.client.NullInput;
 import net.ltxprogrammer.changed.entity.LivingEntityDataExtension;
 import net.ltxprogrammer.changed.entity.PlayerDataExtension;
-import net.ltxprogrammer.changed.init.ChangedAttributes;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.EntityUtil;
 import net.ltxprogrammer.changed.util.InputWrapper;
@@ -25,8 +21,6 @@ import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.stats.StatsCounter;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.Mth;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeMod;
@@ -80,7 +74,7 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
         ProcessTransfur.ifPlayerTransfurred(this, variant -> {
             if (!variant.getParent().getBreatheMode().canBreatheWater())
                 return;
-            if (!this.isEyeInFluidType(ForgeMod.WATER_TYPE.get()))
+            if (!this.isEyeInFluid(FluidTags.WATER))
                 return;
             for (var level : Thread.currentThread().getStackTrace()) {
                 if (level.toString().contains("LightTexture")) // Light texture breaks when returning > 1.0F

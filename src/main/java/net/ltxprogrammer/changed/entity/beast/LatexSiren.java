@@ -13,7 +13,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.ForgeMod;
 import org.jetbrains.annotations.NotNull;
 
@@ -57,7 +56,7 @@ public class LatexSiren extends AbstractAquaticGenderedEntity {
 
     @Override
     public boolean isVisuallySwimming() {
-        if (this.getUnderlyingPlayer() != null && this.getUnderlyingPlayer().isEyeInFluidType(ForgeMod.WATER_TYPE.get()))
+        if (this.getUnderlyingPlayer() != null && this.getUnderlyingPlayer().isEyeInFluid(FluidTags.WATER))
             return true;
         return super.isVisuallySwimming();
     }

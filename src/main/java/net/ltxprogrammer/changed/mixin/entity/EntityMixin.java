@@ -3,13 +3,11 @@ package net.ltxprogrammer.changed.mixin.entity;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.ltxprogrammer.changed.aaBackport.EntityBackportHelper;
 import net.ltxprogrammer.changed.aaBackport.FluidUtilCompat;
 import net.ltxprogrammer.changed.ability.AbstractAbility;
 import net.ltxprogrammer.changed.ability.GrabEntityAbility;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.block.StasisChamber;
-import net.ltxprogrammer.changed.entity.ChangedEntity;
 import net.ltxprogrammer.changed.entity.LivingEntityDataExtension;
 import net.ltxprogrammer.changed.entity.SeatEntity;
 import net.ltxprogrammer.changed.entity.latex.SpreadingLatexType;
@@ -19,7 +17,6 @@ import net.ltxprogrammer.changed.init.ChangedAbilities;
 import net.ltxprogrammer.changed.init.ChangedAttributes;
 import net.ltxprogrammer.changed.init.ChangedTags;
 import net.ltxprogrammer.changed.init.ChangedTransfurVariants;
-import net.ltxprogrammer.changed.mixin.aaBackport.EntityBackport;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.EntityUtil;
 import net.ltxprogrammer.changed.world.LatexCoverGetter;
@@ -34,7 +31,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.Nameable;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
@@ -49,7 +45,6 @@ import net.minecraft.world.level.entity.EntityAccess;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.common.util.ITeleporter;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
@@ -161,7 +156,7 @@ public abstract class EntityMixin extends net.minecraftforge.common.capabilities
         EntityShape.getShapeOf(livingEntity)
                 .map(EntityShape::isLegless)
                 .flatMap(legless -> {
-                    if (legless && livingEntity.isEyeInFluidType(ForgeMod.WATER_TYPE.get())) {
+                    if (legless && livingEntity.isEyeInFluid(FluidTags.WATER)) {
                         return Optional.of(pose == Pose.SWIMMING);
                     } else
                         return Optional.empty();
