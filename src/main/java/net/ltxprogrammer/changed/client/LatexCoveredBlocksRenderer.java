@@ -45,6 +45,7 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -561,6 +562,10 @@ public class LatexCoveredBlocksRenderer implements PreparableReloadListener {
                         String idStr = path.substring(STATE_PATH.length() + 1, path.length() - ".json".length());
                         ResourceLocation id = new ResourceLocation(location.getNamespace(), idStr);
                         Block block = ForgeRegistries.BLOCKS.getValue(id);
+                        if (block == null || block == Blocks.AIR) {
+                            LOGGER.warn("Skipping latex cover model definition {} from {}", id, location);
+                            return null;
+                        }
 
                         try (Reader reader = new InputStreamReader(resource.getInputStream())) {
                             return Pair.of(block, LatexModelDefinition.fromStream(LATEX_MODEL_DEFINITION_CONTEXT, reader));
@@ -573,7 +578,21 @@ public class LatexCoveredBlocksRenderer implements PreparableReloadListener {
             }
 
             return Util.sequence(list).thenApply((result) -> {
-                return result.stream().filter(Objects::nonNull).collect(Collectors.toUnmodifiableMap(Pair::getFirst, Pair::getSecond));
+                Map<Block, LatexModelDefinition> merged = new HashMap<>();
+                for (Pair<Block, LatexModelDefinition> entry : result) {
+                    if (entry == null) {
+                        continue;
+                    }
+                    Block block = entry.getFirst();
+                    if (block == null) {
+                        continue;
+                    }
+                    merged.merge(block, entry.getSecond(), (existing, incoming) -> {
+                        LOGGER.warn("Merging duplicate latex cover definitions for {}", block);
+                        return new LatexModelDefinition(List.of(existing, incoming));
+                    });
+                }
+                return Collections.unmodifiableMap(merged);
             });
         });
     }
