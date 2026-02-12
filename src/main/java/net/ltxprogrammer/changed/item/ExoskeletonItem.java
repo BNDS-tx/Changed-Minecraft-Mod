@@ -263,7 +263,8 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
                 } else degradeCharge(slotContext, 1);
         }
 
-        if (slotContext.wearer().isInWaterOrRain() && !ignoreDamage) {
+        if (!slotContext.wearer().getCommandSenderWorld().isClientSide
+                && slotContext.wearer().isInWaterOrRain() && !ignoreDamage) {
             int rate = slotContext.wearer().isInWater() ? 20 : 40;
 
             if (slotContext.wearer().tickCount % rate == 0) {
