@@ -207,6 +207,12 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
                 CriteriaTriggers.ITEM_DURABILITY_CHANGED.trigger(wearer, stack, stack.getDamageValue() + damage);
             }
 
+            if (wearer != null) {
+                if (stack.getDamageValue() + damage >= stack.getMaxDamage() - 1) {
+                    damage = stack.getMaxDamage() - stack.getDamageValue() - 1;
+                }
+            }
+
             int l = stack.getDamageValue() + damage;
             stack.setDamageValue(l);
             return l >= stack.getMaxDamage();
@@ -253,7 +259,8 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
                 } else degradeCharge(slotContext, 1);
         }
 
-        if (slotContext.wearer().isInWaterOrRain() && !ignoreDamage) {
+        if (!slotContext.wearer().level.isClientSide
+                && slotContext.wearer().isInWaterOrRain() && !ignoreDamage) {
             int rate = slotContext.wearer().isInWater() ? 20 : 40;
 
             if (slotContext.wearer().tickCount % rate == 0) {
