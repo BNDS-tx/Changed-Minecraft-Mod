@@ -2,6 +2,7 @@ package net.ltxprogrammer.changed.client;
 
 import net.ltxprogrammer.changed.ability.AbstractAbility;
 import net.ltxprogrammer.changed.ability.AbstractAbilityInstance;
+import net.ltxprogrammer.changed.ability.ToggleElectricalSurgeAbility;
 import net.ltxprogrammer.changed.ability.UndeathAbility;
 import net.ltxprogrammer.changed.client.gui.AbstractRadialScreen;
 import net.ltxprogrammer.changed.entity.TransfurMode;
@@ -56,6 +57,18 @@ public class AbilityColors {
 
             return Optional.empty();
         }, ChangedAbilities.UNDEATH.get());
+
+        colors.register((abilityInstance, layer) -> {
+            var scheme = getAbilityColors(abilityInstance);
+
+            boolean isESEnable = ToggleElectricalSurgeAbility.getESEnable(abilityInstance.entity);
+            if (layer == 0 && !isESEnable)
+                return Optional.of(scheme.foreground().toInt());
+            else if (layer == 1 && isESEnable)
+                return Optional.of(scheme.foreground().toInt());
+
+            return Optional.empty();
+        }, ChangedAbilities.TOGGLE_ELECTRICAL_SURGE.get());
 
         return colors;
     }

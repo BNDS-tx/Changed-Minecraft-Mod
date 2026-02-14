@@ -193,7 +193,8 @@ public class ChangedTransfurVariants {
                                     entityType -> ChangedAbilities.THUNDER_PATH.get(),
                                     entityType -> ChangedAbilities.SHOCKWAVE.get(),
                                     entityType -> ChangedAbilities.DODGE.get(),
-                                    entityType -> ChangedAbilities.UNDEATH.get()
+                                    entityType -> ChangedAbilities.UNDEATH.get(),
+                                    entityType -> ChangedAbilities.TOGGLE_ELECTRICAL_SURGE.get()
                             )
                     )
                     .transfurMode(TransfurMode.ABSORPTION)

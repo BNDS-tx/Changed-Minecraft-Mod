@@ -786,6 +786,11 @@
   "ability.mode.changed.not_allow_undeath": "已放弃不死特质",
   "ability.changed.undeath.desc": "特制的基因使你获得拥有对抗死亡的能力。",
   "ability.changed.undeath_mode.not_allowed.desc": "你放弃了永存的能力，收到致命伤害时你将如同其他人一样死去。",
-  "ability.changed.undeath_mode.allowed.desc": "你不再畏惧死亡，但当你回复点数耗尽时，承受致命伤的你将陷入无尽的虚弱中。（击杀敌人以恢复并获得回复点数）。"
+  "ability.changed.undeath_mode.allowed.desc": "你不再畏惧死亡，但当你回复点数耗尽时，承受致命伤的你将陷入无尽的虚弱中。（击杀敌人以恢复并获得回复点数）。",
+
+  "changed.ability.toggle_electrical_surge": "电涌",
+  "ability.changed.toggle_electrical_surge.desc": "让电流在你的皮肤下流淌。电涌状态下，免疫电击伤害并减少受到的 50% 的其他伤害。在雨幕中距离你 20m 内或在同一水域中距离你 15m 的生物将会受到持续的电击伤害。",
+  "ability.changed.toggle_electrical_surge.activated": "已释放电涌",
+  "ability.changed.toggle_electrical_surge.deactivated": "已停止电涌"
 }
 

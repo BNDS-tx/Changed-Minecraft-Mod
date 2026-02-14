@@ -7,11 +7,14 @@ import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.Color3;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.FluidTags;
@@ -28,16 +31,15 @@ import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.network.PlayMessages;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, PowderSnowWalkable, UndeadEntity, AzurebyssCreate{
     private static final EntityDataAccessor<Boolean> PHASE2 =
@@ -45,6 +47,8 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
     private static final EntityDataAccessor<Boolean> PHASE3 =
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
     private boolean shouldBleed;
+    private static final EntityDataAccessor<Boolean> EA =
+            SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
 
     private static final EntityDataAccessor<Boolean> setUndyingSynced =
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
@@ -98,6 +102,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         super.defineSynchedData();
         this.entityData.define(PHASE2, false);
         this.entityData.define(PHASE3, false);
+        this.entityData.define(EA, false);
         defineUndeathData();
     }
 
@@ -216,6 +221,27 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
             if (this.tickCount % 20 == 0) this.hurt(DamageSource.GENERIC, 50);
         }
 
+        if (activateElectrocutionAura()) {
+            if (this.tickCount % 10 == 0) doElectrocutionAura();
+            if (this.tickCount % 3 == 0) {
+                if (!this.getCommandSenderWorld().isClientSide) {
+                    final var sl = (ServerLevel) this.level;
+
+                    Vec3 p = this.position().add(0, this.getBbHeight() * 0.6, 0);
+
+                    // 每 2~4 tick 一次就够，别每 tick 疯狂喷
+                    if (this.tickCount % 3 == 0) {
+                        sl.sendParticles(ParticleTypes.ELECTRIC_SPARK,
+                                p.x, p.y, p.z,
+                                6,              // count
+                                0.55, 0.7, 0.55,// spread
+                                0.2            // speed
+                        );
+                    }
+                }
+            }
+        }
+
         tickCheck(this);
     }
 
@@ -267,6 +293,103 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         this.entityData.set(PHASE2, set);
     }
 
+    public boolean activateElectrocutionAura() {
+        return this.getUnderlyingPlayer() != null && this.entityData.get(EA);
+    }
+
+    public void setElectrocutionAura(boolean set) {
+        this.entityData.set(EA, set);
+    }
+
+    private static final int WATER_RADIUS = 15; // blocks ~= meters
+    private static final int RAIN_RADIUS  = 20;
+    private static final float DMG = 3.0F; // 每秒伤害（自己调）
+
+    private void doElectrocutionAura() {
+        if (this.getCommandSenderWorld().isClientSide) return;
+        final var level = (ServerLevel) this.level;
+
+        (this.getUnderlyingPlayer() != null ? this.getUnderlyingPlayer() : this).addEffect(new MobEffectInstance(MobEffects.GLOWING, 15, 0, true, false, false));
+
+        // 先做一个大 AABB，避免全世界遍历
+        AABB box = this.getBoundingBox().inflate(Math.max(WATER_RADIUS, RAIN_RADIUS));
+
+        // 目标集合（你可以换成 LivingEntity 或者按需过滤）
+        List<LivingEntity> ts = level.getEntitiesOfClass(LivingEntity.class, box, e ->
+                e.isAlive() &&
+                        !e.isSpectator() &&
+                        !e.isInvulnerable()
+        );
+
+        List<LivingEntity> targets = new ArrayList<>();
+        for (LivingEntity t : ts) {
+            if (t == this) continue;
+            if (t == this.getUnderlyingPlayer()) continue;
+            targets.add(t);
+        }
+        if (targets.isEmpty()) return;
+
+        // 1) “同一片水域”判定：只在你自己处于水中时才做 BFS
+        //    BFS 成本可控：每秒一次、半径 15，访问上限你可以卡死避免炸服
+        WaterConnectivity waterConn = null;
+        if (this.isInWaterOrBubble()) {
+            waterConn = WaterConnectivity.build(level, this.blockPosition(), WATER_RADIUS, 4096);
+        }
+
+        for (LivingEntity t : targets) {
+            double d2 = this.distanceToSqr(t);
+
+            boolean inSameWater =
+                    d2 <= (double)WATER_RADIUS * WATER_RADIUS &&
+                            waterConn != null &&
+                            t.isInWaterOrBubble() &&
+                            waterConn.isConnected(t.blockPosition());
+
+            boolean inRain =
+                    d2 <= (double)RAIN_RADIUS * RAIN_RADIUS &&
+                            level.isRainingAt(t.blockPosition().above()); // above() 更符合“淋到雨”的直觉
+
+            if (inSameWater || inRain) {
+                // 可选：防止同一 tick 被多个 Azure 重复电击（看你需不需要）
+                // if (alreadyZappedThisSecond(t, level.getGameTime())) continue;
+
+                t.hurt(ChangedDamageSources.ELECTROCUTION, DMG);
+                // markZapped(t, level.getGameTime());
+                spawnArc(level,
+                        (this.getUnderlyingPlayer() == null)
+                                ? new Vec3(this.position().x, this.position().y + this.getBbHeight() * 0.5, this.position().z)
+                                : new Vec3(
+                                this.getUnderlyingPlayer().position().x,
+                                this.getUnderlyingPlayer().position().y + this.getUnderlyingPlayer().getBbHeight() * 0.5,
+                                this.getUnderlyingPlayer().position().z),
+                        new Vec3(t.position().x, t.position().y + t.getBbHeight() * 0.5, t.position().z));
+            }
+        }
+    }
+
+    private static void spawnArc(ServerLevel sl, Vec3 from, Vec3 to) {
+        Vec3 diff = to.subtract(from);
+        double len = diff.length();
+        if (len < 0.01) return;
+
+        Vec3 step = diff.scale(1.0 / (len * 4.0)); // 每 0.25m 一个点（你可调）
+        int points = (int) Math.min(80, len * 4.0);
+
+        Vec3 pos = from;
+        for (int i = 0; i <= points; i++) {
+            // 加一点随机抖动让线“抖成电弧”
+            double jx = (sl.random.nextDouble() - 0.5) * 0.12;
+            double jy = (sl.random.nextDouble() - 0.5) * 0.12;
+            double jz = (sl.random.nextDouble() - 0.5) * 0.12;
+
+            sl.sendParticles(ParticleTypes.ELECTRIC_SPARK,
+                    pos.x + jx, pos.y + jy, pos.z + jz,
+                    1, 0, 0, 0, 0
+            );
+            pos = pos.add(step);
+        }
+    }
+
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         if (tag.contains("Phase2"))
@@ -275,6 +398,14 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
             setPhase3(tag.getBoolean("Phase3"));
         if (tag.contains("Bleeding"))
             shouldBleed = tag.getBoolean("Bleeding");
+        if (tag.contains("ElectrocutionAura"))
+            setElectrocutionAura(tag.getBoolean("ElectrocutionAura"));
+        if (tag.contains("IsDead"))
+            this.entityData.set(isDeadSynced(), tag.getBoolean("IsDead"));
+        if (tag.contains("Undying"))
+            this.entityData.set(setUndyingSynced(), tag.getBoolean("Undying"));
+        if (tag.contains("HealingChance"))
+            this.entityData.set(healingChanceSynced(), tag.getInt("HealingChance"));
         readUndeathSaveData(tag);
     }
 
@@ -284,6 +415,10 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         tag.putBoolean("Phase2", isPhase2());
         tag.putBoolean("Phase3", isPhase3());
         tag.putBoolean("Bleeding", this.shouldBleed);
+        tag.putBoolean("ElectrocutionAura", activateElectrocutionAura());
+        tag.putBoolean("Undying", this.entityData.get(setUndyingSynced()));
+        tag.putBoolean("IsDead", this.entityData.get(isDeadSynced()));
+        tag.putInt("HealingChance", this.entityData.get(healingChanceSynced()));
         addUndeathSaveData(tag);
     }
 
@@ -456,5 +591,56 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
             mobEffectInstance = new MobEffectInstance(MobEffects.DAMAGE_BOOST, 20, 0, true, true, true);
         }
         this.addEffect(mobEffectInstance);
+    }
+
+    private static final class WaterConnectivity {
+        private final Set<BlockPos> connected;
+
+        private WaterConnectivity(Set<BlockPos> connected) {
+            this.connected = connected;
+        }
+
+        boolean isConnected(BlockPos pos) {
+            return connected.contains(pos);
+        }
+
+        static WaterConnectivity build(ServerLevel level, BlockPos start, int radius, int visitLimit) {
+            // 起点必须在水里，否则直接返回空集合
+            if (!isWater(level, start)) return new WaterConnectivity(Set.of());
+
+            int r2 = radius * radius;
+
+            ArrayDeque<BlockPos> q = new ArrayDeque<>();
+            HashSet<BlockPos> visited = new HashSet<>();
+            q.add(start);
+            visited.add(start);
+
+            while (!q.isEmpty() && visited.size() < visitLimit) {
+                BlockPos p = q.poll();
+
+                // 半径裁剪（球形）
+                if (p.distSqr(start) > r2) continue;
+
+                // 6 邻接（你也可以加对角 26 邻接，但成本更高）
+                for (Direction dir : Direction.values()) {
+                    BlockPos n = p.relative(dir);
+                    if (visited.contains(n)) continue;
+                    if (n.distSqr(start) > r2) continue;
+
+                    if (isWater(level, n)) {
+                        visited.add(n);
+                        q.add(n);
+                    }
+                }
+            }
+
+            return new WaterConnectivity(Collections.unmodifiableSet(visited));
+        }
+
+        private static boolean isWater(ServerLevel level, BlockPos pos) {
+            // 这里用 FluidState 更稳：水/流动水都算
+            return level.getFluidState(pos).is(Fluids.WATER);
+            // 如果你还想把“泡泡柱/水logged”算进去，可按需扩展
+        }
     }
 }
