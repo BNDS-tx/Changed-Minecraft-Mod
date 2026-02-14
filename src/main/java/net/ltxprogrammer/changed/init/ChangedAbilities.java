@@ -36,6 +36,7 @@ public class ChangedAbilities {
     public static final RegistryObject<ShockWaveAbility> SHOCKWAVE = REGISTRY.register("shock_wave", ShockWaveAbility::new);
     public static final RegistryObject<DodgeAbility> DODGE = REGISTRY.register("dodge", DodgeAbility::new);
     public static final RegistryObject<UndeathAbility> UNDEATH = REGISTRY.register("undeath", UndeathAbility::new);
+    public static final RegistryObject<ToggleElectricalSurgeAbility> TOGGLE_ELECTRICAL_SURGE = REGISTRY.register("toggle_electrical_surge", ToggleElectricalSurgeAbility::new);
 
     public static AbstractAbility<?> getAbility(ResourceLocation location) {
         return ChangedRegistry.ABILITY.get().getValue(location);
