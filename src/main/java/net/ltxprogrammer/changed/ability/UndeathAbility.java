@@ -3,7 +3,11 @@ package net.ltxprogrammer.changed.ability;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.entity.AzurebyssCreate;
 import net.ltxprogrammer.changed.entity.UndeadEntity;
+import net.ltxprogrammer.changed.init.ChangedItems;
+import net.ltxprogrammer.changed.network.packet.UndeathPacket;
+import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
@@ -13,11 +17,13 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.network.PacketDistributor;
 
 import java.util.*;
 
@@ -174,13 +180,27 @@ public class UndeathAbility extends SimpleAbility implements AzurebyssCreate {
         entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 5 * 20, 5));
         entity.addEffect(new MobEffectInstance(MobEffects.JUMP, 5 * 20, -50));
         decreaseHealingChance(entity);
-        if (isNotDisable || !isDead) ((ServerPlayer)entity).connection.send(new ClientboundSetTitleTextPacket(Component.translatable(
-                isAble2Healing
-                        ? "changed.ability.undeath.activated"
-                        : "changed.ability.undeath.activated_dead"
-        )));
+        if (isAble2Healing) {
+            Changed.PACKET_HANDLER.send(
+                    PacketDistributor.PLAYER.with(() -> (ServerPlayer)entity),
+                    new UndeathPacket((Player)entity, new ItemStack(ChangedItems.ABILITY_UNDEATH_AVA.get()))
+            );
+        } else if (isNotDisable) {
+            Changed.PACKET_HANDLER.send(
+                    PacketDistributor.PLAYER.with(() -> (ServerPlayer)entity),
+                    new UndeathPacket((Player)entity, new ItemStack(ChangedItems.ABILITY_UNDEATH_UNAVA.get()))
+            );
+        }
         IAbstractChangedEntity.forEitherSafe(entity).get().displayClientMessage(
-                Component.translatable("changed.ability.undeath.point_remain", getHealingChance(entity)), true);
+                Component.empty()
+                        .append((isAble2Healing ? Component.translatable("changed.ability.undeath.activated") :
+                        (isNotDisable ? Component.translatable("changed.ability.undeath.activated_dead")
+                                : Component.literal("......"))).withStyle(ChatFormatting.RED))
+                        .append(Component.literal(" ").withStyle(ChatFormatting.RESET))
+                        .append(Component.translatable(
+                                "changed.ability.undeath.point_remain",
+                                getHealingChance(entity)).withStyle(ChatFormatting.RESET)),
+                true);
     }
 
     private static void increaseUndyingChance(Entity source) {

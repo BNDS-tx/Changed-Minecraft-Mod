@@ -58,6 +58,8 @@ public class ChangedPackets {
         addNetworkMessage(SectionLatexCoversUpdatePacket.class, SectionLatexCoversUpdatePacket::new);
         addNetworkMessage(CustomLevelEventPacket.class, CustomLevelEventPacket::new);
 
+        addNetworkMessage(UndeathPacket.class, UndeathPacket::new);
+
         addNetworkMessage(DebuggerPacket.class, DebuggerPacket::new);
         DebuggerPacket.registerDebugPacket(FacilityAddPiecesPayload.IDENTIFIER, FacilityAddPiecesPayload::new);
     }
