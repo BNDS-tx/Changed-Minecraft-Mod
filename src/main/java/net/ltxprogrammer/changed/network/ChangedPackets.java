@@ -49,6 +49,8 @@ public class ChangedPackets {
         addNetworkMessage(AccessoryEntities.SyncPacket.class, AccessoryEntities.SyncPacket::new);
         addNetworkMessage(AccessorySyncPacket.class, AccessorySyncPacket::new);
         addNetworkMessage(AccessoryEventPacket.class, AccessoryEventPacket::new);
+
+        addNetworkMessage(UndeathPacket.class, UndeathPacket::new);
     }
 
     private <T> void addNetworkMessage(Class<T> messageType, BiConsumer<T, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, T> decoder,

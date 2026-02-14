@@ -19,6 +19,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeManager;
 
+import java.util.List;
+
 @JeiPlugin
 public class ChangedJeiPlugin implements IModPlugin {
     InfuserRecipeCategory infuserRecipeCategory;
@@ -80,6 +82,11 @@ public class ChangedJeiPlugin implements IModPlugin {
 
         registration.addRecipes(infuserRecipeCategory.getRecipeType(), recipeManager.getAllRecipesFor(ChangedRecipeTypes.INFUSER_RECIPE));
         registration.addRecipes(purifierRecipeCategory.getRecipeType(), recipeManager.getAllRecipesFor(ChangedRecipeTypes.PURIFIER_RECIPE));
+
+        registration.getIngredientManager().removeIngredientsAtRuntime(
+                VanillaTypes.ITEM_STACK,
+                List.of(new ItemStack(ChangedItems.ABILITY_UNDEATH_AVA.get()), new ItemStack(ChangedItems.ABILITY_UNDEATH_UNAVA.get()))
+        );
     }
 
     @Override

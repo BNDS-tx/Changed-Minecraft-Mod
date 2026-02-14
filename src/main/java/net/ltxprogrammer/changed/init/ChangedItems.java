@@ -138,6 +138,9 @@ public class ChangedItems {
     public static final RegistryObject<LatexRecordItem> THE_WHITE_TAIL_CHASE_PART_2 = registerLatexRecord("the_white_tail_chase_part_2_record", () -> ChangedSounds.MUSIC_THE_WHITE_TAIL_CHASE_PART_2);
     public static final RegistryObject<LatexRecordItem> VENT_PIPE_RECORD = registerLatexRecord("vent_pipe_record", () -> ChangedSounds.MUSIC_VENT_PIPE);
 
+    public static final RegistryObject<Item> ABILITY_UNDEATH_AVA = register("ability_undeath_ava", () -> new Item(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> ABILITY_UNDEATH_UNAVA = register("ability_undeath_unava", () -> new Item(new Item.Properties().stacksTo(1)));
+
     private static RegistryObject<RecordItem> registerRecord(String name, Supplier<SoundEvent> soundEventSupplier) {
         return register(name, () -> new RecordItem(8, soundEventSupplier, (new Item.Properties()).stacksTo(1).tab(ChangedTabs.TAB_CHANGED_MUSIC).rarity(Rarity.RARE)));
     }
