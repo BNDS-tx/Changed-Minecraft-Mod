@@ -244,6 +244,9 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
 
     @Override
     public void accessoryTick(AccessorySlotContext<?> slotContext) {
+        if (slotContext.wearer().level.isClientSide)
+            return;
+
         boolean ignoreDamage = slotContext.wearer() instanceof Player player && player.getAbilities().invulnerable;
 
         if (!canUse(slotContext.stack(), true)) {

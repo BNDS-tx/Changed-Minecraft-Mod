@@ -34,6 +34,7 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.event.TickEvent;
@@ -726,22 +727,26 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
         }
     }
 
+    protected boolean meetsCriteriaForFlying() {
+        if (host.getFoodData().getFoodLevel() <= 6.0F)
+            return false;
+        if (host.isEyeInFluid(FluidTags.WATER))
+            return false;
+        if (host.getVehicle() != null)
+            return false;
+        return true;
+    }
+
     protected void tickFlying() {
         if (parent.canGlide && shouldApplyAbilities()) {
             if (!host.isCreative() && !host.isSpectator()) {
-                if (host.getFoodData().getFoodLevel() <= 6.0F && host.getAbilities().mayfly) {
+                boolean meetsCriteria = this.meetsCriteriaForFlying();
+
+                if (!meetsCriteria && host.getAbilities().mayfly) {
                     host.getAbilities().mayfly = false;
                     host.getAbilities().flying = false;
                     host.onUpdateAbilities();
-                } else if (host.isEyeInFluid(FluidTags.WATER) && host.getAbilities().mayfly) {
-                    host.getAbilities().mayfly = false;
-                    host.getAbilities().flying = false;
-                    host.onUpdateAbilities();
-                } else if (host.getVehicle() != null && host.getAbilities().mayfly) {
-                    host.getAbilities().mayfly = false;
-                    host.getAbilities().flying = false;
-                    host.onUpdateAbilities();
-                } else if (host.getFoodData().getFoodLevel() > 6.0F && !host.getAbilities().mayfly) {
+                } else if (meetsCriteria && !host.getAbilities().mayfly) {
                     host.getAbilities().mayfly = true;
                     host.onUpdateAbilities();
                 }

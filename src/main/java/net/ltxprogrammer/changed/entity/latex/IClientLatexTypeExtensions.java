@@ -14,6 +14,10 @@ public interface IClientLatexTypeExtensions {
         TRANSLUCENT
     }
 
+    ResourceLocation RENDER_TYPE_SOLID = new ResourceLocation(ResourceLocation.DEFAULT_NAMESPACE, "solid");
+    ResourceLocation RENDER_TYPE_CUTOUT = new ResourceLocation(ResourceLocation.DEFAULT_NAMESPACE, "cutout");
+    ResourceLocation RENDER_TYPE_TRANSLUCENT = new ResourceLocation(ResourceLocation.DEFAULT_NAMESPACE, "translucent");
+
     static IClientLatexTypeExtensions of(LatexCoverState state) {
         return of(state.getType());
     }
@@ -36,5 +40,9 @@ public interface IClientLatexTypeExtensions {
 
     default ResourceLocation getTextureForParticle() {
         return getTextureForFace(Direction.UP);
+    }
+
+    default ResourceLocation getNamedRenderType() {
+        return RENDER_TYPE_SOLID;
     }
 }
