@@ -14,6 +14,11 @@ This repository holds the source code for the **Changed: Minecraft Mod Modefied 
 
 All descriptions bellow and icons with links above are for the **original Changed: Minecraft Mod by LtxProgrammer**, and this modification is currently based on Changed: Minecraft Mod v0.15 for Minecraft 1.18.2 (Backport) and not sure whether will stay up-to-date with the original mod.
 
+>[!CAUTION]
+> - This backport version is still in early development and is extremely unstable, potentially containing numerous critical issues. Please ensure you are willing to accept significant stability risks before using it!
+> - This backport version does not currently support any add-on mods. Please avoid loading any add-on mods (such as Changed Addon) unless specifically adapted for this backport version!
+> - If you encounter any issues during usage, please submit an issue to this repository first. Thank you for your cooperation!
+
 ---
 
 本仓库为 **Changed: Minecraft Mod 改编版 by Azurebyss(蓝夜深空)** 的源码仓库。所有**仅限由 LtxProgrammer 开发制作的原版 Mod 内容**的编译与发布都已由 LtxProgrammer 亲自发布至 Modrinth 和 Curseforge 平台，本改编版暂不对外发布。如有自用或学习需要请自行下载编译。
@@ -21,6 +26,11 @@ All descriptions bellow and icons with links above are for the **original Change
 **未经允许不得擅自对外再分发、宣传、商用！LtxProgrammer 为 Changed: Minecraft Mod 的版权持有者，Azurebyss(蓝夜深空) 仅为本改编版的版权与所有权持有者。本改编版不具备且不得用于分发、宣传与商用用途，任何有关 Changed: Minecraft Mod 的相关事宜请直接与 [LtxProgrammer](https://github.com/LtxProgrammer) 联系，Azurebyss(蓝夜深空) 不持有相关权利，不承担相关版权风险与责任。**
 
 所有**原版 Mod** 的贡献者都在[原版的贡献列表](https://github.com/LtxProgrammer/Changed-Minecraft-Mod/graphs/contributors)以及本改编版的 Mod 菜单中陈列。当前本改编版基于**原版 Changed: Minecraft Mod by LtxProgrammer** 的 v0.15 版本二次开发，仅适用于我的世界（Minecraft）Java 版 1.18.2 版本 Forge 平台（降级移植），未来是否会继续跟随原版版本更新对齐暂且未定。
+
+>[!CAUTION]
+> - 本降级移植版本尚在早期制作阶段，极其不稳定且可能存在许多严重问题，请确保你可以接受极大的稳定性风险再使用！
+> - 本降级移植版本暂不支持任何附属模组，请不要加载任何附属模组（例如 Changed Addon），除非专门适配！
+> - 若在使用期间遇到问题，请先向本仓库提交 issue，感谢你的配合！
 
 ---
 
