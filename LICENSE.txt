@@ -1,5 +1,6 @@
 MIT License
 
+Copyright (c) 2025-2026 LtxProgrammer
 Copyright (c) 2025-2026 徐腾/BNDS-tx FOR THIS MODIFICATION ONLY
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
