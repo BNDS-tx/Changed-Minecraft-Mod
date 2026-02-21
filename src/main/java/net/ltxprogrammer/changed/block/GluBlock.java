@@ -35,6 +35,14 @@ public class GluBlock extends Block implements EntityBlock, GameMasterBlock {
         this.registerDefaultState(this.stateDefinition.any().setValue(ORIENTATION, FrontAndTop.NORTH_UP));
     }
 
+    public static BlockPos getConnection(BlockPos gluPos, BlockState gluState) {
+        return gluPos.relative(gluState.getValue(GluBlock.ORIENTATION).front());
+    }
+
+    public static Zone getZone(CompoundTag nbt) {
+        return ChangedRegistry.FACILITY_ZONES.getValue(TagUtil.getResourceLocation(nbt, GluBlockEntity.ZONE));
+    }
+
     public BlockState rotate(BlockState state, Rotation rotation) {
         return state.setValue(ORIENTATION, rotation.rotation().rotate(state.getValue(ORIENTATION)));
     }
@@ -77,8 +85,8 @@ public class GluBlock extends Block implements EntityBlock, GameMasterBlock {
         if (orientA.front().getAxis() != Direction.Axis.Y && orientA.front() != orientB.front().getOpposite())
             return false;
 
-        var zoneA = ChangedRegistry.FACILITY_ZONES.getValue(TagUtil.getResourceLocation(nbtA, GluBlockEntity.ZONE));
-        var zoneB = ChangedRegistry.FACILITY_ZONES.getValue(TagUtil.getResourceLocation(nbtB, GluBlockEntity.ZONE));
+        var zoneA = getZone(nbtA);
+        var zoneB = getZone(nbtB);
         if (zoneA == null || zoneB == null || !zoneA.canConnectTo(zoneB))
             return false;
 
