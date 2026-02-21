@@ -14,12 +14,10 @@ import net.ltxprogrammer.changed.world.features.structures.facility.types.PieceT
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
-import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.WorldGenLevel;
@@ -174,7 +172,7 @@ public abstract class FacilitySinglePiece extends FacilityPiece {
                     .addProcessor(BlockIgnoreProcessor.STRUCTURE_BLOCK)
                     .setIgnoreEntities(true);
 
-            var gluBlockPos = GluBlock.getConnection(exitGlu.pos(), exitGlu.state());
+            var gluBlockPos = GluBlock.getConnection(exitGlu.pos, exitGlu.state);
 
             var directions = new ArrayList<>(Direction.Plane.HORIZONTAL.stream().toList());
             CollectionUtil.shuffle(directions, random);

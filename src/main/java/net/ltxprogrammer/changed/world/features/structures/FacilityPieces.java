@@ -460,7 +460,7 @@ public class FacilityPieces extends SimplePreparableReloadListener<Set<Configure
             if (testPos.getY() < height) break; // Next structure piece is in the surface
         }
 
-        var zone = entrancePiece.getGluBlocks().stream().map(info -> GluBlock.getZone(info.nbt())).findAny();
+        var zone = entrancePiece.getGluBlocks().stream().map(info -> GluBlock.getZone(info.nbt)).findAny();
         if (zone.isEmpty()) {
             Changed.LOGGER.warn("Facility piece {} is missing glu blocks", entranceNew.getName());
             return Optional.empty();
@@ -469,10 +469,10 @@ public class FacilityPieces extends SimplePreparableReloadListener<Set<Configure
         return Optional.of(new PlacedFacilityPiece(zone.get(), entranceNew, entrancePiece));
     }
 
-    public static Optional<FacilityKeystone> generateFacility(StructurePiecesBuilder builder, Structure.GenerationContext context, int genDepth, int span, BoundingBox allowedRegion) {
+    public static Optional<FacilityKeystone> generateFacility(StructurePiecesBuilder builder, PieceGenerator.Context<NoneFeatureConfiguration> context, int genDepth, int span, BoundingBox allowedRegion) {
         BlockPos chunkCenter = context.chunkPos().getMiddleBlockPosition(0);
         BlockPos surfacePos = chunkCenter.atY(context.chunkGenerator().getBaseHeight(chunkCenter.getX(), chunkCenter.getZ(),
-                Heightmap.Types.WORLD_SURFACE_WG, context.heightAccessor(), context.randomState()));
+                Heightmap.Types.WORLD_SURFACE_WG, context.heightAccessor()));
 
         var facilityGenerationContext = new FacilityGenerationContext(builder, context);
         var entranceOpt = tryPlaceEntrance(facilityGenerationContext, genDepth, surfacePos);

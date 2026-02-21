@@ -4,7 +4,6 @@ import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-
 import net.minecraft.util.random.WeightedRandomList;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
@@ -17,7 +16,6 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 public abstract class FacilityPieceInstance extends StructurePiece {
     protected static final WeightedRandomList<WeightedPieceNeighborSupplier> NO_NEIGHBORS = WeightedRandomList.create();
