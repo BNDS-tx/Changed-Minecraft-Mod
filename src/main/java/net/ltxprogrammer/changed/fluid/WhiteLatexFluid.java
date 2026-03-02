@@ -3,23 +3,17 @@ package net.ltxprogrammer.changed.fluid;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.entity.latex.LatexType;
 import net.ltxprogrammer.changed.init.*;
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.ForgeFlowingFluid;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 public abstract class WhiteLatexFluid extends AbstractLatexFluid {
     public static final ForgeFlowingFluid.Properties PROPERTIES = new ForgeFlowingFluid.Properties(
@@ -28,15 +22,17 @@ public abstract class WhiteLatexFluid extends AbstractLatexFluid {
 
             // --- 核心融合点：这里对应 1.20.1 的 FluidType 和 initializeClient ---
             FluidAttributes.builder(
-                            Changed.modResource("block/white_latex_block"), // 对应 1.20.1 的 getStillTexture
-                            Changed.modResource("block/white_latex_block")  // 对应 1.20.1 的 getFlowingTexture
+                            Changed.modResource("block/white_latex_block_top"), // 对应 1.20.1 的 getStillTexture
+                            Changed.modResource("block/white_latex_fluid_flow")  // 对应 1.20.1 的 getFlowingTexture
                     )
+                    .overlay(Changed.modResource("block/white_latex_fluid_overlay"))
                     // 物理属性 (来自 1.20.1 的 createProperties)
                     .viscosity(6000)        // 粘度
                     .density(6000)          // 密度
 
                     // 声音 (1.20.1 代码没展示，但气体通常需要，否则无声)
                     .sound(SoundEvents.BUCKET_FILL, SoundEvents.BUCKET_EMPTY)
+                    .translationKey("block." + Changed.MODID + ".white_latex")
     )
             // --- 逻辑属性 (来自 1.20.1 的 ForgeFlowingFluid.Properties) ---
             .tickRate(50)                   // 扩散速度
@@ -44,43 +40,6 @@ public abstract class WhiteLatexFluid extends AbstractLatexFluid {
             .explosionResistance(100f)     // 抗爆性
             .bucket(ChangedItems.WHITE_LATEX_BUCKET)
             .block(ChangedBlocks.WHITE_LATEX_FLUID); // 对应的方块
-
-    public static FluidType createFluidType() {
-        return new FluidType(AbstractLatexFluid.createProperties().descriptionId("white_latex")) {
-            @Override
-            public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
-                consumer.accept(new IClientFluidTypeExtensions() {
-                    private static final ResourceLocation WHITE_LATEX_STILL = Changed.modResource("block/white_latex_block_top");
-                    private static final ResourceLocation WHITE_LATEX_FLOW = Changed.modResource("block/white_latex_fluid_flow");
-                    private static final ResourceLocation WHITE_LATEX_OVERLAY = Changed.modResource("block/white_latex_fluid_overlay");
-                    private static final ResourceLocation WHITE_LATEX_RENDER_OVERLAY = Changed.modResource("textures/block/white_latex_fluid_flow.png");
-
-                    public ResourceLocation getStillTexture() {
-                        return WHITE_LATEX_STILL;
-                    }
-
-                    public ResourceLocation getFlowingTexture() {
-                        return WHITE_LATEX_FLOW;
-                    }
-
-                    @Override
-                    public @Nullable ResourceLocation getOverlayTexture() {
-                        return WHITE_LATEX_OVERLAY;
-                    }
-
-                    @Override
-                    public @Nullable ResourceLocation getRenderOverlayTexture(Minecraft mc) {
-                        return WHITE_LATEX_RENDER_OVERLAY;
-                    }
-                });
-            }
-
-            @Override
-            public boolean canDrownIn(LivingEntity entity) {
-                return !ChangedLatexTypes.DARK_LATEX.get().isFriendlyTo(LatexType.getEntityLatexType(entity));
-            }
-        };
-    }
 
     public WhiteLatexFluid() {
         super(PROPERTIES, ChangedLatexTypes.WHITE_LATEX, List.of(ChangedTransfurVariants.PURE_WHITE_LATEX_WOLF));

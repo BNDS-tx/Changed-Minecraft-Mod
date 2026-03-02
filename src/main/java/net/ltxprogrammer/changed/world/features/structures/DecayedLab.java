@@ -86,7 +86,7 @@ public class DecayedLab extends StructureFeature<NoneFeatureConfiguration> {
         return lootTable;
     }
 
-    private void generatePieces(StructurePiecesBuilder builder, GenerationContext context) {
+    private void generatePieces(StructurePiecesBuilder builder, PieceGenerator.Context<?> context) {
         builder.addPiece(new SurfaceNBTPiece(this.getPiece(), lootTable, context));
     }
 
