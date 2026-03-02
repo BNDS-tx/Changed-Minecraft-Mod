@@ -12,6 +12,7 @@ import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import net.minecraft.world.level.levelgen.structure.pieces.PieceGenerator;
 import net.minecraft.world.level.levelgen.structure.pieces.PieceGeneratorSupplier;
+import net.minecraft.world.level.levelgen.structure.pieces.StructurePiecesBuilder;
 
 import java.util.Optional;
 
@@ -75,6 +76,18 @@ public class DecayedLab extends StructureFeature<NoneFeatureConfiguration> {
         this.piece = piece;
         this.lootTable = lootTable;
         this.validBiomes = validBiomes;
+    }
+
+    public ResourceLocation getPiece() {
+        return piece;
+    }
+
+    public ResourceLocation getLootTable() {
+        return lootTable;
+    }
+
+    private void generatePieces(StructurePiecesBuilder builder, GenerationContext context) {
+        builder.addPiece(new SurfaceNBTPiece(this.getPiece(), lootTable, context));
     }
 
     @Override
