@@ -43,8 +43,8 @@ public abstract class FormRenderHandler {
         int skyLight1 = LightTexture.sky(packedLight1);
 
         return LightTexture.pack(
-                Mth.lerpInt(alpha, blockLight0, blockLight1),
-                Mth.lerpInt(alpha, skyLight0, skyLight1)
+                (int) Mth.lerp(alpha, blockLight0, blockLight1),
+                (int) Mth.lerp(alpha, skyLight0, skyLight1)
         );
     }
 

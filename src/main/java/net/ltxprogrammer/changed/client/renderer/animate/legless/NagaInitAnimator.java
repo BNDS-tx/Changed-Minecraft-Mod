@@ -8,8 +8,8 @@ import net.ltxprogrammer.changed.util.CameraUtil;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix3f;
-import org.joml.Vector3f;
+import repack.joml.Matrix3f;
+import repack.joml.Vector3f;
 
 import java.util.List;
 

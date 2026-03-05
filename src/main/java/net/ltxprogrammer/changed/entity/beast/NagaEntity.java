@@ -7,7 +7,7 @@ import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.entity.PartEntity;
-import org.joml.Vector3f;
+import repack.joml.Vector3f;
 
 public interface NagaEntity {
     class SlitherJoint<T extends Entity & NagaEntity> extends PartEntity<T> {
