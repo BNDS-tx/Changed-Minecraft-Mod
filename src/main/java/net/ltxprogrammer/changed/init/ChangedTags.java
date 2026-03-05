@@ -83,6 +83,7 @@ public class ChangedTags {
         public static final TagKey<Biome> HAS_DARK_DECAYED_LABS = create("has_structure/dark_decayed_labs");
         public static final TagKey<Biome> HAS_WHITE_DECAYED_LABS = create("has_structure/white_decayed_labs");
         public static final TagKey<Biome> HAS_FACILITY = create("has_structure/facility");
+        public static final TagKey<Biome> DENY_FACILITY_PLACEMENT = create("deny_facility_placement");
 
         private static TagKey<Biome> create(String name) {
             return TagKey.create(Registry.BIOME_REGISTRY, Changed.modResource(name));

@@ -271,6 +271,16 @@ dependencies {
 
     compileOnly fg.deobf("curse.maven:curios-309927:4985315") // Forge 1.18.2 v5.0.9.2
 
+    compileOnly fg.deobf"quark": [ artifact: "curse.maven:quark-243121:6427817", compile: false, clientOnly: false ] // Forge 1.20.1 v4.0-462
+    compileOnly fg.deobf"zeta": [ artifact: "curse.maven:zeta-968868:6432578", compile: false, clientOnly: false ] // Forge 1.20.1 v1.0-30
+    runtimeOnly fg.deobf "debugutils": [ artifact: "curse.maven:debug-utils-forge-783008:5337491", compile: false, clientOnly: false ] // Forge 1.20.1 v1.0.5
+    compileOnly fg.deobf"placebo": [ artifact: "dev.shadowsoffire:Placebo:${minecraftVersion}-${placeboVersion}", compile: false, clientOnly: false ]
+    compileOnly fg.deobf"attributeslib": [ artifact: "dev.shadowsoffire:ApothicAttributes:${minecraftVersion}-${attributesLibVersion}", compile: true, clientOnly: false ]
+    compileOnly fg.deobf"artifacts": [ artifact: "curse.maven:artifacts-312353:6399828", compile: false, clientOnly: false ]
+    compileOnly fg.deobf"expandability": [ artifact: "curse.maven:expandability-465066:5301414", compile: false, clientOnly: false ]
+    compileOnly fg.deobf"framework": [ artifact: "curse.maven:framework-549225:6531428", compile: false, clientOnly: false ]
+    compileOnly fg.deobf"jeg": [ artifact: "curse.maven:just-enough-guns-820727:6808139", compile: true, clientOnly: false ]
+
     // For more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
