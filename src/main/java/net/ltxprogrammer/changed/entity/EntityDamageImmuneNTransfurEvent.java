@@ -1,6 +1,7 @@
 package net.ltxprogrammer.changed.entity;
 
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
+import net.ltxprogrammer.changed.ability.ToggleElectricalSurgeAbility;
 import net.ltxprogrammer.changed.entity.beast.AzurebyssEntity;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.init.ChangedDamageSources;
@@ -38,9 +39,7 @@ public class EntityDamageImmuneNTransfurEvent implements AzurebyssCreate {
         } else if (event.getSource().is(DamageTypes.IN_FIRE)) {
             if (isInFireImmune(player)) event.setCanceled(true);
         } else if (event.getSource().is(ChangedDamageSources.ELECTROCUTION.key())) {
-            if (IAbstractChangedEntity.forEitherSafe(player).isPresent()
-                    && IAbstractChangedEntity.forEitherSafe(player).get().getSelfVariant() == ChangedTransfurVariants.AZUREBYSS_ENTITY.get()
-                    && ((AzurebyssEntity)IAbstractChangedEntity.forEitherSafe(player).get().getChangedEntity()).activateElectrocutionAura())
+            if (ToggleElectricalSurgeAbility.getESEnable(player))
                 event.setCanceled(true);
         }
     }
@@ -104,22 +103,5 @@ public class EntityDamageImmuneNTransfurEvent implements AzurebyssCreate {
             return thunderImmune.contains(Variant);
         }
         return false;
-    }
-
-    @SubscribeEvent
-    public static void onAzurebyssDamage(LivingHurtEvent event) {
-        LivingEntity entity = event.getEntity();
-//        if (entity.getCommandSenderWorld().isClientSide) return;
-        if (!(entity instanceof Player player)) return;
-        if (IAbstractChangedEntity.forEitherSafe(player).isEmpty() ||
-                IAbstractChangedEntity.forEitherSafe(player).get().getSelfVariant() != ChangedTransfurVariants.AZUREBYSS_ENTITY.get())
-            return;
-
-        if (((AzurebyssEntity)IAbstractChangedEntity.forEitherSafe(player).get().getChangedEntity()).activateElectrocutionAura())
-            if (event.getSource().is(ChangedDamageSources.ELECTROCUTION.key())) {
-                event.setAmount(0F);
-                event.setCanceled(true);
-            }
-            else event.setAmount(event.getAmount() * 0.5F);
     }
 }
