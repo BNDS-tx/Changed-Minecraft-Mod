@@ -5,6 +5,7 @@ import net.ltxprogrammer.changed.entity.*;
 import net.ltxprogrammer.changed.entity.latex.LatexType;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.init.*;
+import net.ltxprogrammer.changed.item.TscWeapon;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.Color3;
 import net.minecraft.core.BlockPos;
@@ -362,6 +363,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
                 // if (alreadyZappedThisSecond(t, level.getGameTime())) continue;
 
                 t.hurt(ChangedDamageSources.ELECTROCUTION.source(), DMG);
+                TscWeapon.applyShock(t, 3);
                 // markZapped(t, level.getGameTime());
                 spawnArc(level,
                         (this.getUnderlyingPlayer() == null)
