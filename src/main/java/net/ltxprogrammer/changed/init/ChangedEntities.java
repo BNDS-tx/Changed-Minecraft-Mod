@@ -3,7 +3,6 @@ package net.ltxprogrammer.changed.init;
 import com.mojang.datafixers.util.Pair;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.entity.ChangedEntity;
-import net.ltxprogrammer.changed.entity.beast.AzurebyssEntity;
 import net.ltxprogrammer.changed.entity.EntityColorProvider;
 import net.ltxprogrammer.changed.entity.SeatEntity;
 import net.ltxprogrammer.changed.entity.beast.*;
@@ -66,7 +65,7 @@ public class ChangedEntities {
         if (entity instanceof EntityColorProvider colorProvider) {
             return Pair.of(colorProvider.getFrontColor(), colorProvider.getBackColor());
         } else {
-            return getEntityColor(ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()))
+            return getEntityColor(ForgeRegistries.ENTITIES.getKey(entity.getType()))
                     .mapFirst(Color3::fromInt).mapSecond(Color3::fromInt);
         }
     }

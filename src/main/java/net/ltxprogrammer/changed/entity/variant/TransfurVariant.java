@@ -556,7 +556,7 @@ public class TransfurVariant<T extends ChangedEntity> extends ForgeRegistryEntry
 
     @Deprecated
     public Pair<Color3, Color3> getColors() {
-        var ints = ChangedEntities.getEntityColor(ForgeRegistries.ENTITY_TYPES.getKey(getEntityType()));
+        var ints = ChangedEntities.getEntityColor(ForgeRegistries.ENTITIES.getKey(getEntityType()));
         return new Pair<>(
                 Color3.fromInt(ints.getFirst()),
                 Color3.fromInt(ints.getSecond()));

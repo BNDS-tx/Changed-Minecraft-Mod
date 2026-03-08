@@ -129,7 +129,7 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
         if (this.level.isClientSide) return;
         ProcessTransfur.ifPlayerTransfurred(EntityUtil.playerOrNull(this), (player, variant) -> {
             if (variant.canElytraGlide()) {
-                this.setSharedFlag(7, player.isFallFlying() && !player.onGround() && !player.isPassenger() && !player.hasEffect(MobEffects.LEVITATION));
+                this.setSharedFlag(7, player.isFallFlying() && !player.isOnGround() && !player.isPassenger() && !player.hasEffect(MobEffects.LEVITATION));
                 callback.cancel();
             }
         });
