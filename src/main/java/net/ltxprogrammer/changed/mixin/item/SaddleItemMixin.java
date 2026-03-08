@@ -29,9 +29,9 @@ public abstract class SaddleItemMixin extends Item implements AccessoryItem {
 
         if (ItemUtil.tryEquipAccessory(player, itemstack, ChangedAccessorySlots.LOWER_BODY.get())) {
             level.playSound((Player)null, player, SoundEvents.HORSE_SADDLE, SoundSource.PLAYERS, 0.5F, 1.0F);
-            player.level().gameEvent(player, GameEvent.EQUIP, player.position());
+            player.level.gameEvent(player, GameEvent.EQUIP, player.blockPosition());
 
-            return InteractionResultHolder.sidedSuccess(itemstack, player.level().isClientSide);
+            return InteractionResultHolder.sidedSuccess(itemstack, player.level.isClientSide);
         }
 
         return super.use(level, player, hand);
