@@ -11,6 +11,7 @@ import net.ltxprogrammer.changed.ability.GrabEntityAbilityInstance;
 import net.ltxprogrammer.changed.entity.LivingEntityDataExtension;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.init.ChangedAbilities;
+import net.ltxprogrammer.changed.init.ChangedEntities;
 import net.ltxprogrammer.changed.util.Color3;
 import net.ltxprogrammer.changed.util.UniversalDist;
 import net.minecraft.client.Minecraft;
@@ -101,12 +102,7 @@ public class GrabOverlay {
         if (grabAbility.grabbedEntity == null) return;
         if (grabAbility.grabbedHasControl) return;
 
-        var tfVariant = grabAbility.entity.getSelfVariant();
-        Color3 barColor;
-        if (tfVariant != null) {
-            barColor = getBrightVariantColor(tfVariant.getColors());
-        } else
-            barColor = Color3.WHITE;
+        Color3 barColor = getBrightVariantColor(ChangedEntities.getEntityColor(grabAbility.entity.getChangedEntity()));
 
         renderBackground(x, y, BAR_WIDTH_LATEX, BAR_HEIGHT_LATEX, stack, Color3.WHITE);
         renderForeground(x, y, BAR_WIDTH_LATEX, BAR_HEIGHT_LATEX, stack, grabAbility.getGrabStrength(partialTicks), barColor);
