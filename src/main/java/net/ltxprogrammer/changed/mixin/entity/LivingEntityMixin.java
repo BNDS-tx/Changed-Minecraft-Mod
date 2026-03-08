@@ -6,7 +6,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.ability.AbstractAbility;
 import net.ltxprogrammer.changed.ability.GrabEntityAbility;
-import net.ltxprogrammer.changed.ability.GrabEntityAbilityInstance;
 import net.ltxprogrammer.changed.block.StasisChamber;
 import net.ltxprogrammer.changed.block.ThreeXThreeSection;
 import net.ltxprogrammer.changed.block.WearableBlock;
@@ -453,12 +452,6 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
             return;
 
         cir.setReturnValue(controlling.isBlocking());
-    }
-
-    @Inject(method = "createLivingAttributes", at = @At("RETURN"))
-    private static void addChangedAttributes(CallbackInfoReturnable<AttributeSupplier.Builder> cir) {
-        cir.getReturnValue().add(ChangedAttributes.TRANSFUR_TOLERANCE.get())
-                .add(ChangedAttributes.GRAB_STRUGGLE_STRENGTH.get(), GrabEntityAbilityInstance.GRAB_STRENGTH_DECAY);
     }
 
     @Inject(method = "increaseAirSupply", at = @At("HEAD"), cancellable = true)
