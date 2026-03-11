@@ -211,6 +211,7 @@ public class StasisChamber extends HorizontalDirectionalBlock implements Partial
         if (player instanceof ServerPlayer serverPlayer) {
             NetworkHooks.openGui(serverPlayer, getMenuProvider(beState, level, bePos), extra -> {
                 extra.writeBlockPos(bePos);
+                extra.writeBoolean(false);
             });
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
