@@ -2,6 +2,7 @@ package net.ltxprogrammer.changed.entity;
 
 import net.minecraft.nbt.*;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringRepresentable;
 import org.jetbrains.annotations.Nullable;
@@ -78,12 +79,12 @@ public interface ModificationVector {
 
         @Override
         public Component getDisplayText() {
-            return Component.translatable(displayId, getCurrentValue.get().getSerializedName());
+            return new TranslatableComponent(displayId, getCurrentValue.get().getSerializedName());
         }
 
         @Override
         public @Nullable Component getTooltipText() {
-            return tooltipId == null ? null : Component.translatable(tooltipId);
+            return tooltipId == null ? null : new TranslatableComponent(tooltipId);
         }
 
         @Override
@@ -137,12 +138,12 @@ public interface ModificationVector {
 
         @Override
         public Component getDisplayText() {
-            return Component.translatable(displayId, getCurrentValue.get());
+            return new TranslatableComponent(displayId, getCurrentValue.get());
         }
 
         @Override
         public @Nullable Component getTooltipText() {
-            return tooltipId == null ? null : Component.translatable(tooltipId);
+            return tooltipId == null ? null : new TranslatableComponent(tooltipId);
         }
 
         @Override
@@ -182,12 +183,12 @@ public interface ModificationVector {
 
         @Override
         public Component getDisplayText() {
-            return Component.translatable(displayId, getCurrentValue.get());
+            return new TranslatableComponent(displayId, getCurrentValue.get());
         }
 
         @Override
         public @Nullable Component getTooltipText() {
-            return tooltipId == null ? null : Component.translatable(tooltipId);
+            return tooltipId == null ? null : new TranslatableComponent(tooltipId);
         }
 
         @Override

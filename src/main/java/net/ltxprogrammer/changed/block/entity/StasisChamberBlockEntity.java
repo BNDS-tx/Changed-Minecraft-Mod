@@ -1,6 +1,7 @@
 package net.ltxprogrammer.changed.block.entity;
 
 import com.google.common.collect.ImmutableList;
+import io.netty.buffer.Unpooled;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.block.StasisChamber;
 import net.ltxprogrammer.changed.entity.*;
@@ -19,6 +20,7 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -27,6 +29,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.CompoundContainer;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
@@ -790,10 +793,30 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
                 boolean playerOpened = blockEntity.getChamberedEntity().map(entity -> {
                     if (!(entity instanceof ServerPlayer serverPlayer))
                         return false;
-                    NetworkHooks.openScreen(serverPlayer, blockEntity.getBlockState().getMenuProvider(blockEntity.level, blockEntity.worldPosition), extra -> {
-                        extra.writeBlockPos(blockEntity.worldPosition);
-                        extra.writeBoolean(true);
+//                    NetworkHooks.openScreen(serverPlayer, blockEntity.getBlockState().getMenuProvider(blockEntity.level, blockEntity.worldPosition), extra -> {
+//                        extra.writeBlockPos(blockEntity.worldPosition);
+//                        extra.writeBoolean(true);
+//                    });
+
+                    serverPlayer.openMenu(new MenuProvider() {
+                        @Override
+                        public Component getDisplayName() {
+                            return blockEntity.getBlockState().getMenuProvider(blockEntity.level, blockEntity.worldPosition).getDisplayName(); // 你原本 MenuProvider 的名字
+                        }
+
+                        @Override
+                        public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player player) {
+                            // 这里写额外数据
+                            FriendlyByteBuf extra = new FriendlyByteBuf(Unpooled.buffer());
+                            extra.writeBlockPos(blockEntity.getBlockPos());
+                            extra.writeBoolean(true);
+
+                            return blockEntity.getBlockState()
+                                    .getMenuProvider(blockEntity.getLevel(), blockEntity.getBlockPos())
+                                    .createMenu(id, playerInventory, player); // 原来的 container
+                        }
                     });
+
                     return true;
                 }).orElse(false);
 
