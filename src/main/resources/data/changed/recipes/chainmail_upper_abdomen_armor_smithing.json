@@ -1,13 +1,10 @@
 {
-  "type": "minecraft:smithing_transform",
+  "type": "minecraft:smithing",
   "base": {
     "item": "minecraft:chainmail_leggings"
   },
   "addition": {
     "item": "minecraft:chain"
-  },
-  "template": {
-    "item": "changed:abdomen_conversion_smithing_template"
   },
   "result": {
     "item": "changed:chainmail_upper_abdomen_armor"

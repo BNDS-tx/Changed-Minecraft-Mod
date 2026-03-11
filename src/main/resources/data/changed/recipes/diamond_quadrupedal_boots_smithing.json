@@ -1,13 +1,10 @@
 {
-  "type": "minecraft:smithing_transform",
+  "type": "minecraft:smithing",
   "base": {
     "item": "minecraft:diamond_boots"
   },
   "addition": {
     "item": "minecraft:diamond"
-  },
-  "template": {
-    "item": "changed:quadrupedal_conversion_smithing_template"
   },
   "result": {
     "item": "changed:diamond_quadrupedal_boots"

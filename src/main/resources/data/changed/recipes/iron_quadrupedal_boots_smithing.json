@@ -1,13 +1,10 @@
 {
-  "type": "minecraft:smithing_transform",
+  "type": "minecraft:smithing",
   "base": {
     "item": "minecraft:iron_boots"
   },
   "addition": {
     "item": "minecraft:iron_ingot"
-  },
-  "template": {
-    "item": "changed:quadrupedal_conversion_smithing_template"
   },
   "result": {
     "item": "changed:iron_quadrupedal_boots"
