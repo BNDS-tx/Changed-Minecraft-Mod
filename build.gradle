@@ -278,6 +278,7 @@ dependencies {
     compileOnly fg.deobf("curse.maven:expandability-465066:3678612") // Forge 1.18.2 v6.0.0
     compileOnly fg.deobf("curse.maven:framework-549225:4613856") // Forge 1.18.2 v0.4.3
     compileOnly fg.deobf("curse.maven:just-enough-guns-820727:5385870") // Forge 1.18.2 v0.4.0
+    compileOnly fg.deobf("curse.maven:scorched-guns-802940:4399679") // Forge 1.18.2 v1.6
 
     // For more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
