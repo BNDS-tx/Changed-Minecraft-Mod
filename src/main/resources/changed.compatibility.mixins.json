@@ -55,7 +55,6 @@
     "Rubidium.RubidiumChunkRenderRebuildTaskMixin",
     "Rubidium.WorldSliceMixin",
     "SG2.AdvancedHumanoidRendererMixin",
-    "SG2.AnimatedGunRendererMixin",
     "SG2.HumanoidAnimatorMixin",
     "SG2.LatexItemInHandLayerMixin",
     "TaCZ.HumanoidAnimatorMixin",

@@ -1,6 +1,8 @@
 package net.ltxprogrammer.changed.mixin.compatibility.SG2;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mrcrayfish.guns.client.handler.AimingHandler;
+import com.mrcrayfish.guns.common.Gun;
 import net.ltxprogrammer.changed.client.renderer.AdvancedHumanoidRenderer;
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel;
 import net.ltxprogrammer.changed.client.renderer.model.armor.LatexHumanoidArmorModel;
@@ -18,12 +20,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import top.ribs.scguns.client.handler.AimingHandler;
-import top.ribs.scguns.common.Gun;
-import top.ribs.scguns.item.GunItem;
+import net.ribs.sc.scorchedguns.core.item.ScGunItem;
 
 @Mixin(value = AdvancedHumanoidRenderer.class, remap = false)
-@RequiredMods("scguns")
+@RequiredMods("scorchedguns")
 public abstract class AdvancedHumanoidRendererMixin<T extends ChangedEntity, M extends AdvancedHumanoidModel<T>, A extends LatexHumanoidArmorModel<T, ?>> extends MobRenderer<T, M> {
     @Shadow public abstract AdvancedHumanoidModel<T> getModel(ChangedEntity entity);
 
@@ -38,9 +38,9 @@ public abstract class AdvancedHumanoidRendererMixin<T extends ChangedEntity, M e
         if (player == null) return;
 
         ItemStack heldItem = player.getMainHandItem();
-        if (!heldItem.isEmpty() && heldItem.getItem() instanceof GunItem) {
-            Gun gun = ((GunItem)heldItem.getItem()).getModifiedGun(heldItem);
-            gun.getGeneral().getGripType(heldItem).heldAnimation().applyPlayerPreRender(player, InteractionHand.MAIN_HAND, AimingHandler.get().getAimProgress(player, partialTicks), poseStack, bufferSource);
+        if (!heldItem.isEmpty() && heldItem.getItem() instanceof ScGunItem) {
+            Gun gun = ((ScGunItem)heldItem.getItem()).getModifiedGun(heldItem);
+            gun.getGeneral().getGripType().getHeldAnimation().applyPlayerPreRender(player, InteractionHand.MAIN_HAND, AimingHandler.get().getAimProgress(player, partialTicks), poseStack, bufferSource);
 
             TransfurVariantInstance.syncEntityPosRotWithEntity(entity, player);
         }

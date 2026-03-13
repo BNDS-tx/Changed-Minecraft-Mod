@@ -9,6 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringRepresentable;
 import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -182,12 +183,12 @@ public interface ModificationVector {
 
         @Override
         public Component getDisplayText() {
-            return Component.translatable(displayId, registry.getKey(getCurrentValue.get()));
+            return new TranslatableComponent(displayId, registry.getKey(getCurrentValue.get()));
         }
 
         @Override
         public @Nullable Component getTooltipText() {
-            return tooltipId == null ? null : Component.translatable(tooltipId);
+            return tooltipId == null ? null : new TranslatableComponent(tooltipId);
         }
 
         @Override
@@ -207,7 +208,7 @@ public interface ModificationVector {
         }
     }
 
-    class SimpleForgeRegistryVector<T> implements EnumVector {
+    class SimpleForgeRegistryVector<T extends IForgeRegistryEntry<T>> implements EnumVector {
         private final IForgeRegistry<T> registry;
         private final Supplier<T> getCurrentValue;
         private final Consumer<T> setValue;
@@ -274,12 +275,12 @@ public interface ModificationVector {
 
         @Override
         public Component getDisplayText() {
-            return Component.translatable(displayId, registry.getKey(getCurrentValue.get()));
+            return new TranslatableComponent(displayId, registry.getKey(getCurrentValue.get()));
         }
 
         @Override
         public @Nullable Component getTooltipText() {
-            return tooltipId == null ? null : Component.translatable(tooltipId);
+            return tooltipId == null ? null : new TranslatableComponent(tooltipId);
         }
 
         @Override
@@ -289,7 +290,7 @@ public interface ModificationVector {
 
         @Override
         public boolean readFromTag(Tag tag) {
-            var value = registry.getValue(ResourceLocation.parse(((StringTag)tag).getAsString()));
+            var value = registry.getValue(new ResourceLocation(((StringTag)tag).getAsString()));
 
             if (getCurrentValue.get() == value)
                 return false;
@@ -418,11 +419,11 @@ public interface ModificationVector {
         return new SimpleRegistryVector<>(registry, getCurrentValue, setValue, displayId, tooltipId);
     }
 
-    static <T> ModificationVector simpleEnum(IForgeRegistry<T> registry, Supplier<T> getCurrentValue, Consumer<T> setValue, String displayId) {
+    static <T extends IForgeRegistryEntry<T>> ModificationVector simpleEnum(IForgeRegistry<T> registry, Supplier<T> getCurrentValue, Consumer<T> setValue, String displayId) {
         return simpleEnum(registry, getCurrentValue, setValue, displayId, displayId + ".tooltip");
     }
 
-    static <T> ModificationVector simpleEnum(IForgeRegistry<T> registry, Supplier<T> getCurrentValue, Consumer<T> setValue, String displayId, @Nullable String tooltipId) {
+    static <T extends IForgeRegistryEntry<T>> ModificationVector simpleEnum(IForgeRegistry<T> registry, Supplier<T> getCurrentValue, Consumer<T> setValue, String displayId, @Nullable String tooltipId) {
         return new SimpleForgeRegistryVector<>(registry, getCurrentValue, setValue, displayId, tooltipId);
     }
 

@@ -1,5 +1,7 @@
 package net.ltxprogrammer.changed.mixin.compatibility.SG2;
 
+import com.mrcrayfish.guns.client.handler.AimingHandler;
+import com.mrcrayfish.guns.common.Gun;
 import net.ltxprogrammer.changed.client.renderer.animate.HumanoidAnimator;
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel;
 import net.ltxprogrammer.changed.entity.ChangedEntity;
@@ -10,9 +12,10 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.ribs.sc.scorchedguns.core.item.ScGunItem;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Vector3f;
-import org.joml.Vector3fc;
+import repack.joml.Vector3f;
+import repack.joml.Vector3fc;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -20,12 +23,9 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import top.ribs.scguns.client.handler.AimingHandler;
-import top.ribs.scguns.common.Gun;
-import top.ribs.scguns.item.GunItem;
 
 @Mixin(value = HumanoidAnimator.class, remap = false)
-@RequiredMods("scguns")
+@RequiredMods("scorchedguns")
 public abstract class HumanoidAnimatorMixin<T extends ChangedEntity, M extends AdvancedHumanoidModel<T>> {
     @Shadow public abstract void applyPropertyModel(HumanoidModel<?> propertyModel);
 
@@ -39,7 +39,7 @@ public abstract class HumanoidAnimatorMixin<T extends ChangedEntity, M extends A
         HumanoidModel<?> model = this.entityModel;
         this.entityModel.syncPropertyModel(entity);
         ItemStack heldItem = player.getMainHandItem();
-        if (heldItem.getItem() instanceof GunItem gunItem) {
+        if (heldItem.getItem() instanceof ScGunItem gunItem) {
             if (player.isLocalPlayer() && limbSwing == 0.0F) {
                 model.rightArm.xRot = 0.0F;
                 model.rightArm.yRot = 0.0F;
@@ -58,7 +58,7 @@ public abstract class HumanoidAnimatorMixin<T extends ChangedEntity, M extends A
             model.rightArm.setPos(-5.0f, 2.0f, 0.0f);
             model.leftArm.setPos(5.0f, 2.0f, 0.0f);
             model.head.setPos(0.0f, 0.0f, 0.0f);
-            gun.getGeneral().getGripType(heldItem).heldAnimation().applyPlayerModelRotation(player, model.rightArm, model.leftArm, model.head, InteractionHand.MAIN_HAND, AimingHandler.get().getAimProgress(player, Minecraft.getInstance().getFrameTime()));
+            gun.getGeneral().getGripType().getHeldAnimation().applyPlayerModelRotation(player, model.rightArm, model.leftArm, model.head, InteractionHand.MAIN_HAND, AimingHandler.get().getAimProgress(player, Minecraft.getInstance().getFrameTime()));
             offsetPart(model.rightArm, rightArmPosO, new Vector3f(-5.0f, 2.0f, 0.0f));
             offsetPart(model.leftArm, leftArmPosO, new Vector3f(5.0f, 2.0f, 0.0f));
             offsetPart(model.head, headPosO, new Vector3f(0.0f, 0.0f, 0.0f));

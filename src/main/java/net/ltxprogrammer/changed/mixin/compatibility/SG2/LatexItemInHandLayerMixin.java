@@ -1,7 +1,10 @@
 package net.ltxprogrammer.changed.mixin.compatibility.SG2;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import com.mojang.math.Vector3f;
+import com.mrcrayfish.guns.client.handler.AimingHandler;
+import com.mrcrayfish.guns.client.handler.GunRenderingHandler;
+import com.mrcrayfish.guns.common.Gun;
 import net.ltxprogrammer.changed.client.renderer.layers.LatexItemInHandLayer;
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedArmedModel;
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel;
@@ -18,22 +21,19 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.client.renderer.block.model.ItemTransforms.TransformType;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import top.ribs.scguns.client.handler.AimingHandler;
-import top.ribs.scguns.client.handler.GunRenderingHandler;
-import top.ribs.scguns.common.Gun;
-import top.ribs.scguns.item.GunItem;
+import net.ribs.sc.scorchedguns.core.item.ScGunItem;
 
 @Mixin(value = LatexItemInHandLayer.class, remap = false)
-@RequiredMods("scguns")
+@RequiredMods("scorchedguns")
 public abstract class LatexItemInHandLayerMixin<T extends ChangedEntity, M extends AdvancedHumanoidModel<T> & AdvancedArmedModel<T> & HeadedModel> extends ItemInHandLayer<T, M> {
     private LatexItemInHandLayerMixin(RenderLayerParent<T, M> p_117183_, ItemInHandRenderer p_234847_) {
-        super(p_117183_, p_234847_);
+        super(p_117183_);
     }
 
     @Inject(
@@ -42,21 +42,21 @@ public abstract class LatexItemInHandLayerMixin<T extends ChangedEntity, M exten
             cancellable = true,
             remap = true
     )
-    private void renderArmWithItemHead(LivingEntity entity, ItemStack stack, ItemDisplayContext transformType, HumanoidArm arm, PoseStack poseStack, MultiBufferSource source, int light, CallbackInfo ci) {
-        InteractionHand hand = Minecraft.getInstance().options.mainHand().get() == arm ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
-        GunItem gunItem;
+    private void renderArmWithItemHead(LivingEntity entity, ItemStack stack, TransformType transformType, HumanoidArm arm, PoseStack poseStack, MultiBufferSource source, int light, CallbackInfo ci) {
+        InteractionHand hand = Minecraft.getInstance().options.mainHand == arm ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+        ScGunItem gunItem;
         Item var11;
         if (hand == InteractionHand.OFF_HAND) {
-            if (stack.getItem() instanceof GunItem) {
+            if (stack.getItem() instanceof ScGunItem) {
                 ci.cancel();
                 return;
             }
 
             var11 = entity.getMainHandItem().getItem();
-            if (var11 instanceof GunItem) {
-                gunItem = (GunItem)var11;
+            if (var11 instanceof ScGunItem) {
+                gunItem = (ScGunItem)var11;
                 Gun modifiedGun = gunItem.getModifiedGun(entity.getMainHandItem());
-                if (!modifiedGun.getGeneral().getGripType(entity.getMainHandItem()).heldAnimation().canRenderOffhandItem()) {
+                if (!modifiedGun.getGeneral().getGripType().getHeldAnimation().canRenderOffhandItem()) {
                     ci.cancel();
                     return;
                 }
@@ -64,8 +64,8 @@ public abstract class LatexItemInHandLayerMixin<T extends ChangedEntity, M exten
         }
 
         var11 = stack.getItem();
-        if (var11 instanceof GunItem) {
-            gunItem = (GunItem)var11;
+        if (var11 instanceof ScGunItem) {
+            gunItem = (ScGunItem)var11;
             ci.cancel();
             LatexItemInHandLayer<?, ?> layer = (LatexItemInHandLayer<?,?>)(Object)this;
             renderArmWithGun(layer, (ChangedEntity)entity, stack, gunItem, transformType, hand, arm, poseStack, source, light, Minecraft.getInstance().getFrameTime());
@@ -73,18 +73,18 @@ public abstract class LatexItemInHandLayerMixin<T extends ChangedEntity, M exten
 
     }
 
-    private static void renderArmWithGun(LatexItemInHandLayer<?, ?> layer, ChangedEntity latex, ItemStack stack, GunItem item, ItemDisplayContext transformType, InteractionHand hand, HumanoidArm arm, PoseStack poseStack, MultiBufferSource source, int light, float deltaTicks) {
+    private static void renderArmWithGun(LatexItemInHandLayer<?, ?> layer, ChangedEntity latex, ItemStack stack, ScGunItem item, TransformType transformType, InteractionHand hand, HumanoidArm arm, PoseStack poseStack, MultiBufferSource source, int light, float deltaTicks) {
         Player player = latex.getUnderlyingPlayer();
         if (player == null) return;
 
         poseStack.pushPose();
         ((AdvancedArmedModel)layer.getParentModel()).translateToHand(latex, arm, poseStack);
-        poseStack.mulPose(Axis.XP.rotationDegrees(-90.0F));
-        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+        poseStack.mulPose(Vector3f.XP.rotationDegrees(-90.0F));
+        poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
         poseStack.translate((double)((float)(arm == HumanoidArm.LEFT ? -1 : 1) / 16.0F), 0.125D, -0.625D);
         GunRenderingHandler.get().applyWeaponScale(stack, poseStack);
         Gun gun = item.getModifiedGun(stack);
-        gun.getGeneral().getGripType(stack).heldAnimation().applyHeldItemTransforms(player, hand, AimingHandler.get().getAimProgress(player, deltaTicks), poseStack, source);
+        gun.getGeneral().getGripType().getHeldAnimation().applyHeldItemTransforms(player, hand, AimingHandler.get().getAimProgress(player, deltaTicks), poseStack, source);
         GunRenderingHandler.get().renderWeapon(latex, stack, transformType, poseStack, source, light, deltaTicks);
         poseStack.popPose();
     }

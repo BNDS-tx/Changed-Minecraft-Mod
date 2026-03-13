@@ -50,7 +50,7 @@ public enum Gender implements IExtensibleEnum, StringRepresentable {
     }
 
     public static ResourceLocation getGenderedForm(ResourceLocation form, Gender gender) {
-        return ResourceLocation.fromNamespaceAndPath(form.getNamespace(), form.getPath() + "/" + gender.getSerializedName());
+        return new ResourceLocation(form.getNamespace(), form.getPath() + "/" + gender.getSerializedName());
     }
 
     public ResourceLocation convertToGendered(ResourceLocation formId) {
