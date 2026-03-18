@@ -1180,7 +1180,7 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
     }
 
     public void copyTraitsFrom(IAbstractChangedEntity entity) {
-
+        getBasicPlayerInfo().copyFrom(entity.getChangedEntity().getBasicPlayerInfo());
     }
 
     public CompoundTag savePlayerVariantData() {
