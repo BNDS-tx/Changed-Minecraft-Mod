@@ -1,5 +1,6 @@
 package net.ltxprogrammer.changed.world.features.structures;
 
+import com.google.common.base.Stopwatch;
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import net.ltxprogrammer.changed.Changed;
@@ -151,9 +152,12 @@ public class Facility extends StructureFeature<NoneFeatureConfiguration> {
     // 阶段 2：拼图生成 (Generator)
     // 这里的 context 是 PieceGenerator.Context<NoneFeatureConfiguration>，它拥有你报错缺失的所有方法
     private static void tryGeneratePieces(StructurePiecesBuilder builder, PieceGenerator.Context<NoneFeatureConfiguration> context, BlockPos blockPos, Rotation rotation) {
+    private void tryGeneratePieces(StructurePiecesBuilder builder, GenerationContext context, BlockPos blockPos, Rotation rotation) {
         ChunkPos center = context.chunkPos();
         Changed.LOGGER.info("Started facility generation at ChunkPos {}",
                 center);
+
+        Stopwatch stopwatch = Stopwatch.createStarted();
 
         ChunkPos min = new ChunkPos(center.x - GENERATION_CHUNK_RADIUS, center.z - GENERATION_CHUNK_RADIUS);
         ChunkPos max = new ChunkPos(center.x + GENERATION_CHUNK_RADIUS, center.z + GENERATION_CHUNK_RADIUS);
@@ -162,20 +166,17 @@ public class Facility extends StructureFeature<NoneFeatureConfiguration> {
 
         BoundingBox generationRegion = BoundingBox.fromCorners(minPos, maxPos);
 
-        List<Integer> sizes = new ArrayList<>(REROLL_FOR_SIZE_COUNT);
+        final int rerollForSizeCount = Changed.config.server.facilityRollForSizeAttempts.get();
+        final int genDepth = Changed.config.server.facilityGenerateDepth.get();
+
+        List<Integer> sizes = new ArrayList<>(rerollForSizeCount);
         List<StructurePiece> largestSet = List.of();
         FacilityKeystone largestKeystone = null;
 
-        // 执行 Reroll 逻辑
-        for (int reroll = 0; reroll < REROLL_FOR_SIZE_COUNT; reroll++) {
-            // 调用 Mixin 的 clear()
-            ((StructurePiecesBuilderExtender) builder).clear();
+        for (int reroll = 0; reroll < rerollForSizeCount; reroll++) {
+            builder.clear();
 
-            // 关键修正：这里直接传入 context，不再报错
-            // 因为 context 类型就是 PieceGenerator.Context<NoneFeatureConfiguration>
-            // 而 FacilityPieces.generateFacility 需要的正是这个类型
-//            FacilityKeystone keystone = FacilityPieces.generateFacility(builder, context, 5, 20, generationRegion);
-            Optional<FacilityKeystone> keystoneOpt = FacilityPieces.generateFacility(builder, context, 5, 20, generationRegion);
+            Optional<FacilityKeystone> keystoneOpt = FacilityPieces.generateFacility(builder, context, genDepth, generationRegion);
             if (keystoneOpt.isEmpty()) continue;
             FacilityKeystone keystone = keystoneOpt.get();
 
@@ -200,10 +201,13 @@ public class Facility extends StructureFeature<NoneFeatureConfiguration> {
 
         largestSet.forEach(builder::addPiece);
 
-        Changed.LOGGER.info("Generated facility \"{}\" with {} pieces (best of {}), at ChunkPos {}",
+        var duration = stopwatch.elapsed().toMillis();
+
+        Changed.LOGGER.info("Generated facility \"{}\" with {} pieces (best of {}), at ChunkPos {} after {} ms",
                 largestKeystone,
                 largestSet.size(),
                 sizes,
-                center);
+                center,
+                duration);
     }
 }

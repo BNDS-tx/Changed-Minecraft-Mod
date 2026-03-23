@@ -141,11 +141,10 @@ public class FacilityKeystone extends StructurePiece {
         super(ChangedStructurePieceTypes.FACILITY_KEYSTONE.get(), genDepth, entrance);
 
         this.piecesByZone = piecesByZone;
-        this.header = new ActiveFacilityInstance.Header();
-
-        // 1.18.2 缺少 BoundingBox.encapsulatingBoxes，需要手动计算
-        BoundingBox calculatedBounds = calculateEncapsulatingBox(piecesByZone);
-        this.header.initialize(calculatedBounds, random);
+        header = new ActiveFacilityInstance.Header();
+        header.initialize(BoundingBox.encapsulatingBoxes(piecesByZone.values().stream().flatMap(List::stream).map(Pair::getSecond)::iterator).orElseThrow(() -> {
+            return new IllegalStateException("Unable to calculate BoundingBox without pieces");
+        }), random);
     }
 
     // 加载时使用的构造函数 (1.18.2 通常只需要 CompoundTag)
