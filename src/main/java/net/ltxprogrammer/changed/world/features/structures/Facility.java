@@ -152,7 +152,6 @@ public class Facility extends StructureFeature<NoneFeatureConfiguration> {
     // 阶段 2：拼图生成 (Generator)
     // 这里的 context 是 PieceGenerator.Context<NoneFeatureConfiguration>，它拥有你报错缺失的所有方法
     private static void tryGeneratePieces(StructurePiecesBuilder builder, PieceGenerator.Context<NoneFeatureConfiguration> context, BlockPos blockPos, Rotation rotation) {
-    private void tryGeneratePieces(StructurePiecesBuilder builder, GenerationContext context, BlockPos blockPos, Rotation rotation) {
         ChunkPos center = context.chunkPos();
         Changed.LOGGER.info("Started facility generation at ChunkPos {}",
                 center);
