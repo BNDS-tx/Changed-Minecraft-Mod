@@ -5,6 +5,7 @@ import io.netty.buffer.Unpooled;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.block.StasisChamber;
 import net.ltxprogrammer.changed.entity.*;
+import net.ltxprogrammer.changed.entity.ai.ImmediateTransfurDecision;
 import net.ltxprogrammer.changed.entity.animation.StasisAnimationParameters;
 import net.ltxprogrammer.changed.entity.beast.CustomLatexEntity;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
@@ -322,7 +323,11 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
     }
 
     private @Nullable TransfurVariant<?> findVariantFromSlots() {
-        return items.get(0).is(ChangedItems.LATEX_SYRINGE.get()) ? Syringe.getVariant(items.get(0)) : null;
+        return getSyringe().is(ChangedItems.LATEX_SYRINGE.get()) ? Syringe.getVariant(getSyringe()) : null;
+    }
+
+    private ItemStack getSyringe() {
+        return items.get(0);
     }
 
     public Optional<TransfurVariant<?>> getConfiguredTransfurVariant() {
@@ -855,11 +860,10 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
                 if (TransfurVariant.getEntityVariant(entity) != null) return;
                 if (!entity.getType().is(ChangedTags.EntityTypes.HUMANOIDS)) return;
 
-                ProcessTransfur.transfur(entity, entity.level, blockEntity.findVariantFromSlots(), true, TransfurContext.hazard(TransfurCause.STASIS_CHAMBER));
-                if (entity.isRemoved() || entity.isDeadOrDying()) { // Transfurring killed entity, replaced with npc
-                    blockEntity.cachedEntity = null;
+                ProcessTransfur.transfur(entity, ImmediateTransfurDecision.safe(blockEntity.findVariantFromSlots(), TransfurCause.STASIS_CHAMBER, newEntity -> {
+                    blockEntity.cachedEntity = newEntity.getEntity();
                     blockEntity.ensureCapturedIsStillInside();
-                }
+                }));
 
                 blockEntity.setItem(0, new ItemStack(ChangedItems.SYRINGE.get()));
             });
