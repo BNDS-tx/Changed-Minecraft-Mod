@@ -100,7 +100,7 @@ public interface EntityAssimilationBehavior<T extends LivingEntity> {
 
         @Override
         public @Nullable AssimilationBehavior latexAssimilateVictimBehavior(T assimilationVictim, @NotNull LatexAssimilationDecision<?> decision) {
-            return AssimilationBehavior.instant(assimilationVictim.level(), () -> {
+            return AssimilationBehavior.instant(assimilationVictim.level, () -> {
                 assimilate(assimilationVictim);
                 return null;
             });
@@ -116,7 +116,7 @@ public interface EntityAssimilationBehavior<T extends LivingEntity> {
 
         @Override
         public @Nullable AssimilationBehavior immediateTransfurTargetBehavior(T assimilateTarget, @NotNull ImmediateTransfurDecision<?> decision) {
-            return AssimilationBehavior.instant(assimilateTarget.level(), () -> {
+            return AssimilationBehavior.instant(assimilateTarget.level, () -> {
                 assimilate(assimilateTarget);
                 return null;
             });
@@ -205,7 +205,7 @@ public interface EntityAssimilationBehavior<T extends LivingEntity> {
          * @return newly transfurred entity
          */
         protected IAbstractChangedEntity transfurPlayer(Player victim, TransfurVariant<?> variant, TransfurContext context, boolean initialKeepConscious) {
-            final var level = victim.level();
+            final var level = victim.level;
 
             final boolean doAnimation = level.getGameRules().getBoolean(ChangedGameRules.RULE_DO_TRANSFUR_ANIMATION);
             final boolean keepConscious;
@@ -282,14 +282,14 @@ public interface EntityAssimilationBehavior<T extends LivingEntity> {
 
             // Override latex assimilation to animate player or possibly allow them to "survive" the transfur
             return switch (decision.method()) {
-                case REPLICATION -> AssimilationBehavior.progressPlayerThenTransfur(assimilationVictim, decision.getDamageSource(assimilationVictim.level().registryAccess()), decision.transfurProgress(), () -> {
+                case REPLICATION -> AssimilationBehavior.progressPlayerThenTransfur(assimilationVictim, decision.getDamageSource(assimilationVictim.level.registryAccess()), decision.transfurProgress(), () -> {
                     var newEntity = this.transfurPlayer(assimilationVictim, decision.transfurVariant(), decision.context(), false);
                     if (decision.context().source() != null)
                         decision.context().source().ifLeft(ProcessTransfur::onAssimilateEntity);
                     decision.postTransfurListener().accept(newEntity);
                     return newEntity;
                 });
-                case ABSORPTION -> AssimilationBehavior.progressPlayerThenTransfur(assimilationVictim, decision.getDamageSource(assimilationVictim.level().registryAccess()), decision.transfurProgress(), () -> {
+                case ABSORPTION -> AssimilationBehavior.progressPlayerThenTransfur(assimilationVictim, decision.getDamageSource(assimilationVictim.level.registryAccess()), decision.transfurProgress(), () -> {
                     var newEntity = this.transfurPlayer(assimilationVictim, decision.transfurVariant(), decision.context(), false);
                     // Intentionally don't call ProcessTransfur.onAbsorbEntity because the player will get buffs from ProcessTransfur.onNewlyTransfurred()
                     decision.postTransfurListener().accept(newEntity);
@@ -305,7 +305,7 @@ public interface EntityAssimilationBehavior<T extends LivingEntity> {
             if (isPlayerTransfurred(assimilationVictim))
                 return null;
 
-            return AssimilationBehavior.progressPlayerThenTransfur(assimilationVictim, decision.getDamageSource(assimilationVictim.level().registryAccess()), decision.transfurProgress(), () -> {
+            return AssimilationBehavior.progressPlayerThenTransfur(assimilationVictim, decision.getDamageSource(assimilationVictim.level.registryAccess()), decision.transfurProgress(), () -> {
                 var newEntity = this.transfurPlayer(assimilationVictim, decision.transfurVariant(), TransfurContext.latexHazard(decision.source(), decision.cause()), false);
                 decision.postTransfurListener().accept(newEntity);
                 return newEntity;
@@ -317,7 +317,7 @@ public interface EntityAssimilationBehavior<T extends LivingEntity> {
             if (isPlayerTransfurred(assimilateTarget))
                 return null;
 
-            return AssimilationBehavior.instant(assimilateTarget.level(), () -> {
+            return AssimilationBehavior.instant(assimilateTarget.level, () -> {
                 var newEntity = this.transfurPlayer(assimilateTarget, decision.transfurVariant(), TransfurContext.latexHazard(decision.source(), decision.cause()), decision.initialKeepConscious());
                 decision.postTransfurListener().accept(newEntity);
                 return newEntity;

@@ -90,7 +90,7 @@ public abstract class AbstractLatexFluid extends ForgeFlowingFluid {
         if (event.getEntityLiving().isAlive() && !event.getEntityLiving().isDeadOrDying() && fluid != null) {
             LatexType latexType = LatexType.getEntityLatexType(event.getEntity());
             if (latexType == null)
-                ProcessTransfur.progressTransfur(event.getEntity(), fluid.makeAssimilationDecision(event.getEntityLiving()));
+                ProcessTransfur.progressTransfur(event.getEntityLiving(), fluid.makeAssimilationDecision(event.getEntityLiving()));
             else if (fluid.getLatexType().isHostileTo(latexType))
                 event.getEntityLiving().hurt(ChangedDamageSources.LATEX_FLUID.source(), 2.0f);
         }

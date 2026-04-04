@@ -110,7 +110,7 @@ public record LatexAssimilationDecision<T extends ChangedEntity>(DecisionStrengt
 
     protected AssimilationBehavior transfurByReplication(LivingEntity target, IAbstractChangedEntity transfurSource) {
         return AssimilationBehavior.progressThenTransfur(target,
-                this.getDamageSource(target.level().registryAccess()),
+                this.getDamageSource(target.level.registryAccess()),
                 transfurProgress,
                 () -> {
                     var newEntity = transfurVariant.replaceEntity(target, transfurSource);
@@ -122,7 +122,7 @@ public record LatexAssimilationDecision<T extends ChangedEntity>(DecisionStrengt
 
     protected AssimilationBehavior transfurByAbsorption(LivingEntity target, IAbstractChangedEntity transfurSource) {
         return AssimilationBehavior.progressThenTransfur(target,
-                this.getDamageSource(target.level().registryAccess()),
+                this.getDamageSource(target.level.registryAccess()),
                 transfurProgress,
                 () -> {
                     if (target instanceof Player player) {
@@ -140,7 +140,7 @@ public record LatexAssimilationDecision<T extends ChangedEntity>(DecisionStrengt
 
     protected AssimilationBehavior transfurByAbsorption(LivingEntity target, ILatexAssimilatedEntity transfurSource) {
         return AssimilationBehavior.progressThenTransfur(target,
-                this.getDamageSource(target.level().registryAccess()),
+                this.getDamageSource(target.level.registryAccess()),
                 transfurProgress,
                 () -> {
                     var newEntity = transfurVariant.replaceEntity(target, transfurSource);
@@ -165,7 +165,7 @@ public record LatexAssimilationDecision<T extends ChangedEntity>(DecisionStrengt
             return entityLatexAssimilateVictimBehavior(target, context.source());
 
         return AssimilationBehavior.progressThenTransfur(target,
-                this.getDamageSource(target.level().registryAccess()),
+                this.getDamageSource(target.level.registryAccess()),
                 transfurProgress,
                 () -> {
                     var newEntity = transfurVariant.replaceEntity(target, (LivingEntity)null);

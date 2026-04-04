@@ -163,7 +163,7 @@ public class ChangedFusions extends SimplePreparableReloadListener<List<ChangedF
     }
 
     private AssimilationBehavior getLatexFusionBehavior(TransfurVariant<?> fusionVariant, IAbstractChangedEntity assimVictim, Either<IAbstractChangedEntity, ILatexAssimilatedEntity> transfurSource) {
-        Level level = assimVictim.getEntity().level();
+        Level level = assimVictim.getEntity().level;
 
         if (transfurSource.left().isPresent()) { // Check if attacker can't fuse
             final IAbstractChangedEntity sourceLatex = transfurSource.left().get();
@@ -189,7 +189,7 @@ public class ChangedFusions extends SimplePreparableReloadListener<List<ChangedF
     }
 
     private AssimilationBehavior getMobFusionBehavior(TransfurVariant<?> fusionVariant, LivingEntity assimVictim, Either<IAbstractChangedEntity, ILatexAssimilatedEntity> transfurSource) {
-        Level level = assimVictim.level();
+        Level level = assimVictim.level;
 
         if (transfurSource.left().isPresent()) { // Check if attacker can't fuse
             final IAbstractChangedEntity sourceLatex = transfurSource.left().get();
@@ -202,7 +202,7 @@ public class ChangedFusions extends SimplePreparableReloadListener<List<ChangedF
                 return null;
             final TransfurVariant<?> newFusionVariant = event.getFusionVariant();
 
-            return AssimilationBehavior.instant(assimVictim.level(), () -> {
+            return AssimilationBehavior.instant(assimVictim.level, () -> {
                 IAbstractChangedEntity oldSourceEntity = sourceLatex.copyAbstraction();
 
                 sourceLatex.replaceVariant(newFusionVariant);
@@ -224,7 +224,7 @@ public class ChangedFusions extends SimplePreparableReloadListener<List<ChangedF
                 return null;
             final TransfurVariant<?> newFusionVariant = event.getFusionVariant();
 
-            return AssimilationBehavior.instant(assimVictim.level(), () -> {
+            return AssimilationBehavior.instant(assimVictim.level, () -> {
                 var newEntity = newFusionVariant.replaceEntity(assimVictim, sourceLatex.getEntity());
 
                 if (!Changed.postModEvent(new TransfurEvents.AssimilatedEntityFusionWithMobEvent(sourceLatex, assimVictim, newEntity, newFusionVariant)))

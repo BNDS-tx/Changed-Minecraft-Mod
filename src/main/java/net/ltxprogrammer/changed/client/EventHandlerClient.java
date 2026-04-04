@@ -21,7 +21,6 @@ import net.ltxprogrammer.changed.init.ChangedAbilities;
 import net.ltxprogrammer.changed.init.ChangedGameRules;
 import net.ltxprogrammer.changed.init.ChangedParticles;
 import net.ltxprogrammer.changed.init.ChangedTags;
-import net.ltxprogrammer.changed.network.packet.QueryTransfurPacket;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.PatreonBenefits;
 import net.ltxprogrammer.changed.world.LatexCoverGetter;
@@ -155,12 +154,6 @@ public class EventHandlerClient {
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
-    public void onRespawn(ClientPlayerNetworkEvent.RespawnEvent event) {
-        Changed.PACKET_HANDLER.sendToServer(QueryTransfurPacket.Builder.of(event.getNewPlayer()));
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    @SubscribeEvent
     public void onInputEvent(InputEvent.ClickInputEvent event) {
         if (event.isAttack() || event.isUseItem()) {
             LocalPlayer localPlayer = Minecraft.getInstance().player;
@@ -253,7 +246,7 @@ public class EventHandlerClient {
             if (event.oldVariant == event.newVariant || event.context == null)
                 return;
 
-            final int duration = event.livingEntity.level().getGameRules().getBoolean(ChangedGameRules.RULE_DO_TRANSFUR_ANIMATION) ?
+            final int duration = event.livingEntity.level.getGameRules().getBoolean(ChangedGameRules.RULE_DO_TRANSFUR_ANIMATION) ?
                     (int)(event.context.cause().getDuration() * 20) : 40;
             event.livingEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, duration, 4, false, false));
 

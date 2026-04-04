@@ -3,13 +3,14 @@ package net.ltxprogrammer.changed.util;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.ForgeMod;
-import net.minecraftforge.fluids.FluidType;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
@@ -110,11 +111,11 @@ public class LevelUtil {
         return Math.max(blockDepth + surfaceHeight - offsetFromBlock, 0d);
     }
 
-    public static double getDepthFromSurfaceOfFluid(BlockGetter level, Vec3 position, FluidType fluidType, int maxDepthCheck) {
-        return getDepthFromSurfaceOfFluid(level, position, state -> state.getType().getFluidType() == fluidType, maxDepthCheck);
+    public static double getDepthFromSurfaceOfFluid(BlockGetter level, Vec3 position, Fluid fluidType, int maxDepthCheck) {
+        return getDepthFromSurfaceOfFluid(level, position, state -> state.getType() == fluidType, maxDepthCheck);
     }
 
     public static double getDepthFromSurfaceOfWater(BlockGetter level, Vec3 position, int maxDepthCheck) {
-        return getDepthFromSurfaceOfFluid(level, position, ForgeMod.WATER_TYPE.get(), maxDepthCheck);
+        return getDepthFromSurfaceOfFluid(level, position, ForgeRegistries.FLUIDS.getValue(new ResourceLocation("minecraft", "water")), maxDepthCheck);
     }
 }

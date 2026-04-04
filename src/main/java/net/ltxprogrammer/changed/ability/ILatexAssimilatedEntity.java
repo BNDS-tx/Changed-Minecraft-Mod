@@ -51,7 +51,7 @@ public interface ILatexAssimilatedEntity {
 
             @Override
             public @NotNull Level getLevel() {
-                return entity.level();
+                return entity.level;
             }
 
             @Override

@@ -456,12 +456,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
                     Changed.PACKET_HANDLER.toVanillaPacket(BasicPlayerInfoPacket.EMPTY, NetworkDirection.PLAY_TO_CLIENT)
             );
 
-            SyncTransfurPacket.Builder builderTf = new SyncTransfurPacket.Builder();
-            builderTf.addPlayer(serverPlayer, true);
-            if (builderTf.worthSending())
-                serverPlayer.connection.send(
-                        Changed.PACKET_HANDLER.toVanillaPacket(builderTf.build(), NetworkDirection.PLAY_TO_CLIENT)
-                );
+            ProcessTransfur.afterServerPlayerJoinsWorld(serverPlayer);
 
             SyncMoversPacket.Builder builderMover = new SyncMoversPacket.Builder();
             builderMover.addPlayer(serverPlayer, true);
@@ -474,16 +469,19 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
                     Changed.PACKET_HANDLER.toVanillaPacket(AccessoryEntities.INSTANCE.syncPacket(serverPlayer), NetworkDirection.PLAY_TO_CLIENT)
             );
         }
+    }
 
-        /*else if (event.getEntity() instanceof Player localPlayer && UniversalDist.isLocalPlayer(localPlayer)) {
-            Changed.PACKET_HANDLER.sendToServer(BasicPlayerInfoPacket.Builder.of(localPlayer));
-
-            QueryTransfurPacket.Builder builderTf = new QueryTransfurPacket.Builder();
-            builderTf.addPlayer(localPlayer);
-            localPlayer.level().players().forEach(builderTf::addPlayer);
-
-            Changed.PACKET_HANDLER.sendToServer(builderTf.build());
-        }*/
+    /**
+     * When a client starts tracking another player, send that player's transfur state (handles chunk load / distance).
+     */
+    @SubscribeEvent
+    public static void onPlayerStartTracking(PlayerEvent.StartTracking event) {
+        if (!(event.getPlayer() instanceof ServerPlayer tracker) || tracker.level.isClientSide)
+            return;
+        if (!(event.getTarget() instanceof ServerPlayer tracked))
+            return;
+        tracker.connection.send(
+                Changed.PACKET_HANDLER.toVanillaPacket(SyncTransfurPacket.Builder.of(tracked), NetworkDirection.PLAY_TO_CLIENT));
     }
 
     public void setDead() {

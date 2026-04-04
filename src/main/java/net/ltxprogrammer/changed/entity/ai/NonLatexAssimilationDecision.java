@@ -59,7 +59,7 @@ public record NonLatexAssimilationDecision<T extends ChangedEntity>(TransfurVari
     public AssimilationBehavior assimilateVictimBehavior(LivingEntity target) {
         final var sourceEntity = source != null ? source.getEntity() : null;
         return AssimilationBehavior.progressThenTransfur(target,
-                this.getDamageSource(target.level().registryAccess()),
+                this.getDamageSource(target.level.registryAccess()),
                 transfurProgress,
                 () -> {
                     var newEntity = transfurVariant.replaceEntity(target, sourceEntity);

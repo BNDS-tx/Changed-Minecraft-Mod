@@ -2,6 +2,8 @@ package net.ltxprogrammer.changed.init;
 
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
+import net.minecraft.core.Holder;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.EntityDamageSource;
 import net.minecraft.world.entity.Entity;
@@ -46,12 +48,20 @@ public class ChangedDamageSources {
     public static final DamageTypeHolder HEART_ATTACK = holder("heart_attack");
     public static final DamageTypeHolder GRAB_ESCAPE = holder("grab_escape");
 
+    public static DamageSource entityTransfur(RegistryAccess access, LivingEntity source) {
+        return TRANSFUR.source(source);
+    }
+
     public static DamageSource entityTransfur(LivingEntity source) {
         return TRANSFUR.source(source);
     }
 
     public static DamageSource entityTransfur(@Nullable IAbstractChangedEntity source) {
         return TRANSFUR.source(source == null ? null : source.getEntity());
+    }
+
+    public static DamageSource entityAbsorb(RegistryAccess access, LivingEntity source) {
+        return ABSORB.source(source);
     }
 
     public static DamageSource entityAbsorb(LivingEntity source) {

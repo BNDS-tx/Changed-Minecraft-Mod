@@ -16,6 +16,8 @@ import net.ltxprogrammer.changed.network.packet.*;
 import net.ltxprogrammer.changed.util.EntityUtil;
 import net.ltxprogrammer.changed.world.enchantments.LatexProtectionEnchantment;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.Difficulty;
@@ -35,6 +37,7 @@ import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -59,7 +62,7 @@ public class ProcessTransfur {
     private static final Map<ResourceLocation, EntityAssimilationBehavior<?>> ASSIMILATED_MOB_TRANSFUR_LOGIC = new HashMap<>();
 
     public static <T extends LivingEntity> void registerMobAssimilation(EntityType<T> entityType, EntityAssimilationBehavior<T> entityAssimilationBehavior) {
-        ASSIMILATED_MOB_TRANSFUR_LOGIC.put(ForgeRegistries.ENTITY_TYPES.getKey(entityType), entityAssimilationBehavior);
+        ASSIMILATED_MOB_TRANSFUR_LOGIC.put(ForgeRegistries.ENTITIES.getKey(entityType), entityAssimilationBehavior);
     }
 
     public static <T extends LivingEntity> void registerMobAssimilation(RegistryObject<EntityType<T>> entityType, EntityAssimilationBehavior<T> entityAssimilationBehavior) {
@@ -78,7 +81,7 @@ public class ProcessTransfur {
     public static <T extends LivingEntity> EntityAssimilationBehavior<T> getEntityAssimilationBehavior(T entity) {
         if (entity == null)
             return null;
-        var key = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
+        var key = ForgeRegistries.ENTITIES.getKey(entity.getType());
         if (!ASSIMILATED_MOB_TRANSFUR_LOGIC.containsKey(key))
             return getDefaultEntityAssimilationBehavior(entity);
         return (EntityAssimilationBehavior<T>) ASSIMILATED_MOB_TRANSFUR_LOGIC.get(key);
@@ -297,7 +300,7 @@ public class ProcessTransfur {
     public static void tickPlayerTransfurProgress(Player player) {
         if (isPlayerTransfurred(player))
             return;
-        if (player.level().isClientSide)
+        if (player.level.isClientSide)
             return;
 
         var progress = getPlayerTransfurProgress(player);
@@ -525,6 +528,46 @@ public class ProcessTransfur {
         if (player instanceof ServerPlayer serverPlayer)
             Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> serverPlayer), SyncTransfurPacket.Builder.of(player));
         return instance;
+    }
+
+    /**
+     * Sends {@link SyncTransfurPacket} for every {@link ServerPlayer} in the same dimension as {@code recipient}.
+     * Used when a client must learn everyone else's form (late join, respawn) without relying on 1.20-style client queries.
+     */
+    public static void sendTransfurSnapshotTo(ServerPlayer recipient) {
+        if (recipient.level.isClientSide)
+            return;
+        ServerLevel level = recipient.getLevel();
+        SyncTransfurPacket.Builder builder = new SyncTransfurPacket.Builder();
+        for (ServerPlayer p : recipient.server.getPlayerList().getPlayers()) {
+            if (p.getLevel() == level)
+                builder.addPlayer(p, false);
+        }
+        if (builder.worthSending())
+            recipient.connection.send(Changed.PACKET_HANDLER.toVanillaPacket(builder.build(), NetworkDirection.PLAY_TO_CLIENT));
+    }
+
+    /**
+     * After a {@link ServerPlayer} is in the world: push a full snapshot to them, push their form to everyone else in the
+     * same dimension, and re-broadcast to tracking (fixes NBT load before any tracker existed).
+     */
+    public static void afterServerPlayerJoinsWorld(ServerPlayer joining) {
+        if (joining.level.isClientSide)
+            return;
+        MinecraftServer server = joining.server;
+        server.execute(() -> finishTransfurNetworkSyncForJoinedPlayer(joining));
+    }
+
+    private static void finishTransfurNetworkSyncForJoinedPlayer(ServerPlayer joining) {
+        if (joining.level.isClientSide || joining.connection == null)
+            return;
+        sendTransfurSnapshotTo(joining);
+        for (ServerPlayer other : joining.server.getPlayerList().getPlayers()) {
+            if (other == joining || other.getLevel() != joining.getLevel())
+                continue;
+            other.connection.send(Changed.PACKET_HANDLER.toVanillaPacket(SyncTransfurPacket.Builder.of(joining), NetworkDirection.PLAY_TO_CLIENT));
+        }
+        Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> joining), SyncTransfurPacket.Builder.of(joining));
     }
 
     public static TransfurVariantInstance<?> setPlayerTransfurVariantNamed(Player player, ResourceLocation variant) {

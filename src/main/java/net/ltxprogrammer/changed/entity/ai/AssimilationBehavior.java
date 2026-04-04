@@ -45,7 +45,7 @@ public interface AssimilationBehavior {
                 if (next >= max && old < max)
                     transfurLogic.get();
                 else {
-                    player.level().broadcastDamageEvent(player, source);
+                    AssimilationDamageSync.broadcastDamageEvent(player, source);
                     player.playHurtSound(source);
                 }
             }
@@ -88,7 +88,7 @@ public interface AssimilationBehavior {
             return new AssimilationBehavior() {
                 @Override
                 public void stepAssimilate() {
-                    if (target.level().isClientSide)
+                    if (target.level.isClientSide)
                         return;
 
                     float scaledDamage = LatexProtectionEnchantment.getLatexProtection(target, transfurProgress);

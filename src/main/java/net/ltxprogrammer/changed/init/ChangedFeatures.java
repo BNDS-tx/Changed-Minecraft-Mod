@@ -4,16 +4,12 @@ import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.world.features.structures.ChestLootTableProcessor;
 import net.ltxprogrammer.changed.world.features.structures.GluReplacementProcessor;
 import net.ltxprogrammer.changed.world.features.structures.HangingBlockFixerProcessor;
-import net.minecraft.core.Holder;
-import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
-import net.minecraft.data.worldgen.features.FeatureUtils;
+import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorType;
-import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -31,7 +27,8 @@ public class ChangedFeatures {
     public static RegistryObject<StructureProcessorType<HangingBlockFixerProcessor>> HANGING_BLOCK_FIXER_PROCESSOR = REGISTRY_PROCESSOR.register("hanging_block_fixer_processor",
             () -> () -> HangingBlockFixerProcessor.CODEC);
 
-    // Defined in changed:worldgen/configured_Feature/orange_tree.json
-    public static final ResourceKey<ConfiguredFeature<?, ?>> ORANGE_TREE = FeatureUtils.createKey(Changed.modResourceStr("orange_tree"));
+    // Defined in data/changed/worldgen/configured_feature/orange_tree.json (1.18.2 has no FeatureUtils.createKey)
+    public static final ResourceKey<ConfiguredFeature<?, ?>> ORANGE_TREE =
+            ResourceKey.create(BuiltinRegistries.CONFIGURED_FEATURE.key(), Changed.modResource("orange_tree"));
     // TODO: replace orange tree and tree feature mixin with an orange bush.
 }
