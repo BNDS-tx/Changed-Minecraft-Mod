@@ -16,6 +16,14 @@ apply plugin: 'org.spongepowered.mixin'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply plugin: 'idea'
+
+idea {
+    module {
+        downloadSources = false
+        downloadJavadoc = false
+    }
+}
 
 version = modVersion
 group = 'net.ltxprogrammer.changed' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
@@ -24,7 +32,8 @@ archivesBaseName = "Changed-m${minecraftVersion}"
 // Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
 java.toolchain.languageVersion = JavaLanguageVersion.of(javaVersion)
 
-println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
+println("[Changed] root configure: java=${System.getProperty('java.version')} java.home=${System.getProperty('java.home')} " +
+        "gradle.user.home=${gradle.gradleUserHomeDir} os.arch=${System.getProperty('os.arch')}")
 
 jarJar.enable()
 

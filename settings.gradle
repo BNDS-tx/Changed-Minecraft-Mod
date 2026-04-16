@@ -7,15 +7,18 @@
  * in the user manual at https://docs.gradle.org/7.2/userguide/multi_project_builds.html
  */
 
+println "[Changed] settings: java=${System.getProperty('java.version')} java.home=${System.getProperty('java.home')}"
+
 // Fail fast: IntelliJ may run Gradle on bundled JBR 21+ unless Gradle JVM uses Project JDK 17.
 if (JavaVersion.current() > JavaVersion.VERSION_17) {
     throw new GradleException(
             "Gradle is running on Java ${JavaVersion.current()} (${System.getProperty('java.version')}). " +
                     "Use JDK 17 for Gradle. IntelliJ: Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JVM → " +
-                    "Project SDK or a named JDK 17 (repo .idea/gradle.xml uses #USE_PROJECT_JDK when present)."
+                    "Project SDK or an explicit JDK 17 (verify .idea/gradle.xml gradleJvm matches your JDK 17 SDK name)."
     )
 }
 
 rootProject.name = 'Changed-m1.18.2-f40.2.0'
 include 'ap'
 
+println "[Changed] Gradle user home: ${gradle.gradleUserHomeDir}"
