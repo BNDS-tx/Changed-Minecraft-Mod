@@ -6,7 +6,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
+        // Pin FG: avoid unbounded 5.1.+ resolution drift (see ForgeGradle findRecomp / JDK issues).
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.48', changing: false
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
