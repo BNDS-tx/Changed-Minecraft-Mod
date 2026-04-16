@@ -8,6 +8,7 @@ import net.ltxprogrammer.changed.entity.latex.LatexType;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
+import net.ltxprogrammer.changed.util.LevelUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -128,10 +129,10 @@ public class WhiteLatexPillar extends AbstractCustomShapeTallBlock implements Wh
                     player.hurt(ChangedDamageSources.WHITE_LATEX.source(player), 3.0f);
                 }
             }
-            else {
+            else if (LevelUtil.isTouchingBlockCollision(level, pos, state, entity)) {
                 ProcessTransfur.progressTransfur(le, this.makeAssimilationDecision(le));
             }
-        } else if (entity instanceof ChangedEntity changedEntity) {
+        } else if (entity instanceof ChangedEntity changedEntity && LevelUtil.isTouchingBlockCollision(level, pos, state, entity)) {
             if (changedEntity.getLatexType().isHostileTo(ChangedLatexTypes.WHITE_LATEX.get()))
                 changedEntity.hurt(ChangedDamageSources.WHITE_LATEX.source(changedEntity), 3.0f);
         }
