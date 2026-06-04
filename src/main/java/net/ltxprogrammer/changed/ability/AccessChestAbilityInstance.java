@@ -1,6 +1,5 @@
 package net.ltxprogrammer.changed.ability;
 
-import net.ltxprogrammer.changed.init.ChangedAbilities;
 import net.ltxprogrammer.changed.init.ChangedAccessorySlots;
 import net.ltxprogrammer.changed.init.ChangedGameRules;
 import net.minecraft.core.NonNullList;
@@ -16,7 +15,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 
 public class AccessChestAbilityInstance extends AbstractAbilityInstance implements Container, MenuProvider {
@@ -74,7 +72,7 @@ public class AccessChestAbilityInstance extends AbstractAbilityInstance implemen
         }
 
         itemStacks.forEach(itemStack -> {
-            entity.drop(itemStack, true);
+            entity.drop(itemStack, false, true);
         });
         clearContent();
     }

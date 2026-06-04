@@ -80,7 +80,6 @@
     "item.ItemRendererMixin",
     "network.ClientPacketListenerMixin",
     "render.CameraMixin",
-    "render.ChunkBufferBuilderPackMixin",
     "render.CubeDefinitionMixin",
     "render.CubeListBuilderMixin",
     "render.CubeMixin",
