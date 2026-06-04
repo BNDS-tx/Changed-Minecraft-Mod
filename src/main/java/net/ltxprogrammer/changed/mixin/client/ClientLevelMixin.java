@@ -21,7 +21,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -40,6 +39,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -114,7 +114,7 @@ public abstract class ClientLevelMixin extends Level {
     }
 
     @WrapMethod(method = "doAnimateTick")
-    private void changed$doLatexCoverAnimateTick(int xCenter, int yCenter, int zCenter, int radius, RandomSource random, @Nullable Block markerBlock, BlockPos.MutableBlockPos pos, Operation<Void> original) {
+    private void changed$doLatexCoverAnimateTick(int xCenter, int yCenter, int zCenter, int radius, Random random, @Nullable Block markerBlock, BlockPos.MutableBlockPos pos, Operation<Void> original) {
         original.call(xCenter, yCenter, zCenter, radius, random, markerBlock, pos);
 
         LatexCoverState coverState = LatexCoverState.getAt(this, pos);

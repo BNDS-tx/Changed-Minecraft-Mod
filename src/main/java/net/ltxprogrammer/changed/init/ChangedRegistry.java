@@ -200,16 +200,14 @@ public abstract class ChangedRegistry<T> extends Registry<T> {
     public static final RegistryHolder<LatexType> LATEX_TYPE = new RegistryHolder<LatexType>(registryKey("latex_type"));
     public static final RegistryHolder<WallSignVariant> WALL_SIGN_VARIANT = new RegistryHolder<WallSignVariant>(registryKey("wall_sign_variant"));
 
-//    public static final RegistryHolder<PieceType<?>> FACILITY_PIECE_TYPES = new RegistryHolder<PieceType<?>>(registryKey("facility/piece_types"));
-//    public static final RegistryHolder<Zone> FACILITY_ZONES = new RegistryHolder<Zone>(registryKey("facility/zones"));
+    public static final RegistryHolder<PieceType<?>> FACILITY_PIECE_TYPES = new RegistryHolder<PieceType<?>>(registryKey("facility/piece_types"));
+    public static final RegistryHolder<Zone> FACILITY_ZONES = new RegistryHolder<Zone>(registryKey("facility/zones"));
+    public static final RegistryHolder<FacilityPieceEvent> FACILITY_EVENTS = new RegistryHolder<FacilityPieceEvent>(registryKey("facility/events"));
 
 //    public static final RegistryHolder<Codec<? extends AbilityTree.NodeEffect>> ABILITY_NODE_EFFECTS = new RegistryHolder<>(registryKey("ability/node_effects"));
 //    public static final RegistryHolder<Codec<? extends AbstractCondition>> ABILITY_EFFECT_CONDITIONS = new RegistryHolder<>(registryKey("ability/effect_conditions"));
     public static final RegistryHolder<CodecWrapperATNE<? extends AbilityTree.NodeEffect>> ABILITY_NODE_EFFECTS = new RegistryHolder<CodecWrapperATNE<? extends AbilityTree.NodeEffect>>(registryKey("ability/node_effects"));
     public static final RegistryHolder<CodecWrapperAC<? extends AbstractCondition>> ABILITY_EFFECT_CONDITIONS = new RegistryHolder<CodecWrapperAC<? extends AbstractCondition>>(registryKey("ability/effect_conditions"));
-    public static final RegistryHolder<PieceType<?>> FACILITY_PIECE_TYPES = new RegistryHolder<>(registryKey("facility/piece_types"));
-    public static final RegistryHolder<Zone> FACILITY_ZONES = new RegistryHolder<>(registryKey("facility/zones"));
-    public static final RegistryHolder<FacilityPieceEvent> FACILITY_EVENTS = new RegistryHolder<>(registryKey("facility/events"));
 
 
 
