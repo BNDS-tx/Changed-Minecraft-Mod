@@ -1,0 +1,15 @@
+{
+  "parent": { "tree": "changed:azurebyss_wolf" },
+  "titleId": "changed.ability_tree.azurebyss_wolf.shockwave",
+  "flavorId": "changed.ability_tree.azurebyss_wolf.shockwave.flavor",
+  "display": { "icon": "changed:textures/abilities/shockwave.png" },
+  "price": 1,
+
+  "comment": "此技能支持玩家释放冲击波，以短暂震慑周围生物。",
+  "acquiredEffects": [
+    {
+      "type": "changed:unlock_active_ability",
+      "ability": "changed:shockwave"
+    }
+  ]
+}

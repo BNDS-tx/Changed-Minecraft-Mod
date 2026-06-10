@@ -20,6 +20,7 @@ import net.ltxprogrammer.changed.network.syncher.ChangedEntityDataSerializers;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.Cacheable;
 import net.ltxprogrammer.changed.util.Color3;
+import net.ltxprogrammer.changed.util.LevelUtil;
 import net.ltxprogrammer.changed.util.UniversalDist;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -91,6 +92,8 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
     public float flyAmountO;
     float tailDragAmount = 0.0F;
     float tailDragAmountO;
+    float depthCompression;
+    float depthCompressionO;
 
     Vec3 deltaMovementOO = Vec3.ZERO;
     Vec3 deltaMovementO = Vec3.ZERO;
@@ -119,6 +122,10 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
         }
         else
             return this.entityData.get(DATA_LOCAL_VARIANT_INFO);
+    }
+
+    public float getDepthCompression(float partialTicks) {
+        return Mth.lerp(partialTicks, depthCompressionO, depthCompression);
     }
 
     public float getTailDragAmount(float partialTicks) {
@@ -411,6 +418,14 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
         }).scale(getBasicPlayerInfo().getSize(this) * this.getScale());
     }
 
+    @Override
+    public float getScale() {
+        float currentScale = super.getScale();
+        if (this.depthCompression > 0f)
+            currentScale *= 1.0f - depthCompression;
+        return currentScale;
+    }
+
     public LatexType getLatexType() {
         return ChangedLatexTypes.NONE.get();
     }
@@ -531,6 +546,8 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
 
     public static AttributeSupplier.Builder createLatexAttributes() {
         return Monster.createMonsterAttributes().add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 3.0D)
+                .add(ChangedAttributes.GRAB_HOLD_STRENGTH.get(), 1.0D)
+                .add(ChangedAttributes.SUIT_HOLD_STRENGTH.get(), 1.0D)
                 .add(ChangedAttributes.SPRINT_SPEED.get(), 1.0D)
                 .add(ChangedAttributes.SNEAK_SPEED.get(), 1.0D)
                 .add(ChangedAttributes.AIR_CAPACITY.get(), 15.0)
@@ -854,6 +871,19 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
             this.flyAmount = Math.min(1.0F, this.flyAmount + 0.15F);
         } else {
             this.flyAmount = Math.max(0.0F, this.flyAmount - 0.15F);
+        }
+
+        this.depthCompressionO = this.depthCompression;
+        this.depthCompression = 0f;
+        ProcessTransfur.ifPlayerTransfurred(underlyingPlayer, variantInstance -> {
+            if (variantInstance.hasFeature(ChangedVariantFeatures.DEPTH_COMPRESSION.get())) {
+                double depth = Math.max(LevelUtil.getDepthFromSurfaceOfWater(level, position(), 144) - 8, 0);
+                this.depthCompression = (float) (depth * 0.25 * 0.02 * variantInstance.getFeatureLevel(ChangedVariantFeatures.DEPTH_COMPRESSION.get()));
+            }
+        });
+
+        if (this.depthCompression != this.depthCompressionO) {
+            refreshDimensions();
         }
 
         if (!this.level().isClientSide) return;

@@ -1,0 +1,19 @@
+{
+  "parent": "changed:azurebyss_wolf/grab",
+  "titleId": "changed.ability_tree.azurebyss_wolf.absorption",
+  "flavorId": "changed.ability_tree.latex.azurebyss_wolf.flavor",
+  "display": { "icon": "changed:textures/gui/nodes/absorption.png" },
+  "price": 1,
+
+  "comment": "This node would allow the player to switch their transfur mode to absorb the entity. It also allows the player to suit the grabbed entity.",
+  "acquiredEffects": [
+    {
+      "type": "changed:enable_feature",
+      "feature": "changed:grab/absorption"
+    },
+    {
+      "type": "changed:unlock_active_ability",
+      "ability": "changed:switch_transfur_mode"
+    }
+  ]
+}

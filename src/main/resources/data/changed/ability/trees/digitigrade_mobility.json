@@ -1,0 +1,29 @@
+{
+  "variants": [
+    "#changed:digitigrade"
+  ],
+  "titleId": "changed.ability_tree.digitigrade_mobility",
+  "flavorId": "changed.ability_tree.digitigrade_mobility.flavor",
+  "pointEvents": [
+    {
+      "type": "changed:distance_walked",
+      "centimeters": 1000,
+      "reward": 1
+    },
+    {
+      "type": "changed:distance_swam",
+      "centimeters": 1000,
+      "reward": 1
+    },
+    {
+      "type": "changed:distance_sprinted",
+      "centimeters": 1000,
+      "reward": 1
+    },
+    {
+      "type": "changed:distance_crouched",
+      "centimeters": 500,
+      "reward": 1
+    }
+  ]
+}

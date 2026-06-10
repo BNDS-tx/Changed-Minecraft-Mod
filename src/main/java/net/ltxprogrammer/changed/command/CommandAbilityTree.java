@@ -1,17 +1,15 @@
 package net.ltxprogrammer.changed.command;
 
-import com.mojang.brigadier.Command;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.datafixers.util.Pair;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.ability.tree.AbilityTree;
+import net.ltxprogrammer.changed.ability.tree.AbilityTreeInstance;
 import net.ltxprogrammer.changed.ability.tree.AbilityTrees;
 import net.ltxprogrammer.changed.entity.PlayerDataExtension;
-import net.ltxprogrammer.changed.entity.animation.AnimationEvent;
-import net.ltxprogrammer.changed.init.ChangedAnimationEvents;
-import net.ltxprogrammer.changed.init.ChangedRegistry;
+import net.ltxprogrammer.changed.network.packet.AbilityTreeSyncInstancePacket;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -25,6 +23,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.network.NetworkDirection;
 
 @Mod.EventBusSubscriber
 public class CommandAbilityTree {
@@ -35,7 +34,7 @@ public class CommandAbilityTree {
     public static final SuggestionProvider<CommandSourceStack> SUGGEST_NODES = SuggestionProviders.register(Changed.modResource("nodes"), (context, p_121668_) -> {
         var treeId = context.getArgument("tree", ResourceLocation.class);
         return SharedSuggestionProvider.suggestResource(AbilityTrees.INSTANCE.getTrees().stream().filter(abilityTree -> abilityTree.getTreeLocation().equals(treeId))
-                .findFirst().map(AbilityTree::getNodes).stream().flatMap(stream -> stream.map(Pair::getFirst)), p_121668_);
+                .findFirst().map(AbilityTree::getTreeNodes).stream().flatMap(stream -> stream.map(Pair::getFirst)), p_121668_);
     });
 
     private static final SimpleCommandExceptionType NOT_TRANSFURRED = new SimpleCommandExceptionType(Component.translatable("command.changed.error.not_transfurred"));
@@ -79,14 +78,19 @@ public class CommandAbilityTree {
         if (tree.isEmpty())
             throw NOT_TREE.create();
 
-        var node = tree.get().getTree().getNode(nodeId);
+        var node = tree.get().getTree().getNamedNode(nodeId);
         if (node == null)
             throw NOT_NODE.create();
 
-        int granted = tree.get().makePurchase(nodeId, variant.getParent(), 0) ? 1 : 0;
+        int granted = tree.get().makePurchase(variant.getParent(), nodeId, 0) ? 1 : 0;
 
-        if (granted > 0)
-            source.sendSuccess(() -> Component.translatable("command.changed.success.abilitytree.grant", node.titleId, player.getScoreboardName()), false);
+        if (granted > 0) {
+            player.connection.send(
+                    Changed.PACKET_HANDLER.toVanillaPacket(AbilityTreeSyncInstancePacket.ofActiveTrees(abilityTree, variant.getParent()), NetworkDirection.PLAY_TO_CLIENT)
+            );
+            source.sendSuccess(() -> Component.translatable("command.changed.success.abilitytree.grant",
+                    node.getTitle(), player.getScoreboardName()), false);
+        }
 
         return granted;
     }
@@ -102,12 +106,16 @@ public class CommandAbilityTree {
         if (tree.isEmpty())
             throw NOT_TREE.create();
 
-        int granted = tree.get().getTree().getNodes().map(Pair::getFirst).map(nodeId -> {
-            return tree.get().makePurchase(nodeId, variant.getParent(), 0) ? 1 : 0;
+        int granted = tree.get().getTree().getTreeNodes().map(Pair::getFirst).map(nodeId -> {
+            return tree.get().makePurchase(variant.getParent(), nodeId, 0) ? 1 : 0;
         }).reduce(Integer::sum).orElse(0);
 
-        if (granted > 0)
+        if (granted > 0) {
+            player.connection.send(
+                    Changed.PACKET_HANDLER.toVanillaPacket(AbilityTreeSyncInstancePacket.ofActiveTrees(abilityTree, variant.getParent()), NetworkDirection.PLAY_TO_CLIENT)
+            );
             source.sendSuccess(() -> Component.translatable("command.changed.success.abilitytree.grant.many", granted, player.getScoreboardName()), false);
+        }
         return granted;
     }
 
@@ -118,14 +126,17 @@ public class CommandAbilityTree {
         if (tree.isEmpty())
             throw NOT_TREE.create();
 
-        var node = tree.get().getTree().getNode(nodeId);
-        if (node == null)
+        if (!tree.get().getTree().hasNode(nodeId))
             throw NOT_NODE.create();
 
         int refunded = tree.get().refundNodePurchases(nodeId);
 
-        if (refunded > 0)
+        if (refunded > 0) {
+            player.connection.send(
+                    Changed.PACKET_HANDLER.toVanillaPacket(AbilityTreeSyncInstancePacket.ofAllTrees(abilityTree), NetworkDirection.PLAY_TO_CLIENT)
+            );
             source.sendSuccess(() -> Component.translatable("command.changed.success.abilitytree.refund.many", refunded, player.getScoreboardName()), false);
+        }
 
         return refunded;
     }
@@ -137,12 +148,16 @@ public class CommandAbilityTree {
         if (tree.isEmpty())
             throw NOT_TREE.create();
 
-        int refunded = tree.get().getTree().getNodes().map(Pair::getFirst).map(nodeId -> {
+        int refunded = tree.get().getTree().getTreeNodes().map(Pair::getFirst).map(nodeId -> {
             return tree.get().refundNodePurchases(nodeId);
         }).reduce(Integer::sum).orElse(0);
 
-        if (refunded > 0)
+        if (refunded > 0) {
+            player.connection.send(
+                    Changed.PACKET_HANDLER.toVanillaPacket(AbilityTreeSyncInstancePacket.ofAllTrees(abilityTree), NetworkDirection.PLAY_TO_CLIENT)
+            );
             source.sendSuccess(() -> Component.translatable("command.changed.success.abilitytree.refund.many", refunded, player.getScoreboardName()), false);
+        }
         return refunded;
     }
 }

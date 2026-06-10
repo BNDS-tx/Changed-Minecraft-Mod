@@ -23,6 +23,16 @@ public class ChangedAttributes {
      */
     public static final RegistryObject<Attribute> GRAB_STRUGGLE_STRENGTH = REGISTRY.register("grab_struggle_strength",
             () -> new RangedAttribute("attribute.name.changed.grab_struggle_strength", 0.005f, 0.0D, 2048.0D).setSyncable(true));
+    /**
+     * How Strong an entity's grab is
+     */
+    public static final RegistryObject<Attribute> GRAB_HOLD_STRENGTH = REGISTRY.register("grab_hold_strength",
+            () -> new RangedAttribute("attribute.name.changed.grab_hold_strength", 1.0D, 0.0D, 2048.0D).setSyncable(true));
+    /**
+     * How difficult it is to escape suit
+     */
+    public static final RegistryObject<Attribute> SUIT_HOLD_STRENGTH = REGISTRY.register("suit_hold_strength",
+            () -> new RangedAttribute("attribute.name.changed.suit_hold_strength", 1.0D, 0.0D, 2048.0D).setSyncable(true));
 
     /**
      * Multiplies the player's speed difference sprinting vs not. One is vanilla. Zero disables sprint. ONLY APPLIES WITH A TRANSFUR VARIANT.
@@ -49,6 +59,16 @@ public class ChangedAttributes {
      */
     public static final RegistryObject<Attribute> FALL_RESISTANCE = REGISTRY.register("fall_resistance",
             () -> new RangedAttribute("attribute.name.changed.fall_resistance", 1.0D, 0.5D, 1024.0D).setSyncable(true));
+    /**
+     * Multiplies the entity's mining speed.
+     */
+    public static final RegistryObject<Attribute> MINING_SPEED = REGISTRY.register("mining_speed",
+            () -> new RangedAttribute("attribute.name.changed.mining_speed", 1.0D, 0.0D, 256.0D).setSyncable(true));
+    /**
+     * Multiplies the entity's jump height. ONLY APPLIES WITH A TRANSFUR VARIANT.
+     */
+    public static final RegistryObject<Attribute> MAX_FLIGHT_STAMINA = REGISTRY.register("max_flight_stamina",
+            () -> new RangedAttribute("attribute.name.changed.max_flight_stamina", 0.0D, 0.0D, 2048.0D).setSyncable(true));
 
     public static void modifyEntityAttributes(EntityAttributeModificationEvent event) {
         event.getTypes().forEach(entityType -> {
@@ -59,10 +79,14 @@ public class ChangedAttributes {
         event.add(EntityType.PLAYER, ChangedAttributes.TRANSFUR_TOLERANCE.get());
         event.add(EntityType.PLAYER, ChangedAttributes.TRANSFUR_DAMAGE.get(), 3.0D);
         event.add(EntityType.PLAYER, ChangedAttributes.GRAB_STRUGGLE_STRENGTH.get(), GrabEntityAbilityInstance.GRAB_STRENGTH_DECAY_PLAYER);
+        event.add(EntityType.PLAYER, ChangedAttributes.GRAB_HOLD_STRENGTH.get(), 1.0D);
+        event.add(EntityType.PLAYER, ChangedAttributes.SUIT_HOLD_STRENGTH.get(), 1.0D);
         event.add(EntityType.PLAYER, ChangedAttributes.SPRINT_SPEED.get(), 1.0D);
         event.add(EntityType.PLAYER, ChangedAttributes.SNEAK_SPEED.get(), 1.0D);
         event.add(EntityType.PLAYER, ChangedAttributes.AIR_CAPACITY.get(), 15.0D);
         event.add(EntityType.PLAYER, ChangedAttributes.JUMP_STRENGTH.get(), 1.0D);
         event.add(EntityType.PLAYER, ChangedAttributes.FALL_RESISTANCE.get(), 1.0D);
+        event.add(EntityType.PLAYER, ChangedAttributes.MINING_SPEED.get(), 1.0D);
+        event.add(EntityType.PLAYER, ChangedAttributes.MAX_FLIGHT_STAMINA.get(), 1.0D);
     }
 }

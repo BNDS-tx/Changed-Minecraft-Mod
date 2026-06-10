@@ -4,22 +4,19 @@ import com.mojang.serialization.Codec;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.ability.tree.*;
 import net.ltxprogrammer.changed.ability.tree.condition.*;
+import net.ltxprogrammer.changed.ability.tree.effects.*;
+import net.ltxprogrammer.changed.ability.tree.events.AbstractPointEvent;
+import net.ltxprogrammer.changed.ability.tree.events.OnTransfurOther;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 
 public class ChangedAbilityTreeCodecs {
-    public static final DeferredRegister<Codec<? extends AbilityTree.NodeEffect>> NODE_EFFECT_REGISTRY = ChangedRegistry.ABILITY_NODE_EFFECTS.createDeferred(Changed.MODID);
+    public static final DeferredRegister<Codec<? extends NodeEffect>> NODE_EFFECT_REGISTRY = ChangedRegistry.ABILITY_NODE_EFFECTS.createDeferred(Changed.MODID);
 
     /**
      * A group of node effects. This is useful for controlling multiple effects under one condition.
      */
     public static final RegistryObject<Codec<GroupNodeEffect>> GROUP_EFFECT = NODE_EFFECT_REGISTRY.register("group", () -> GroupNodeEffect.CODEC);
-    /**
-     * A group of node effects that can be toggled by the entity to be enabled or disabled.
-     * Allows for the creation of an ability that applies effects when enabled.
-     * If the effect is active: the entity has access to an ability that allows them to toggle the state of sub effects.
-     */
-    public static final RegistryObject<Codec<ToggleGroupNodeEffect>> TOGGLE_GROUP_EFFECT = NODE_EFFECT_REGISTRY.register("active/toggle_group", () -> ToggleGroupNodeEffect.CODEC);
     /**
      * Adds a scalar to the specified attribute in the entity. Can be positive or negative.
      */
@@ -32,7 +29,15 @@ public class ChangedAbilityTreeCodecs {
      * Grants the ability to create an item, with a condition, exhaustion, and hunger required.
      * If the effect is active: the entity has access to an ability that allows them to create the defined item.
      */
-    public static final RegistryObject<Codec<CreateItemAbilityNodeEffect>> CREATE_ITEM_ABILITY_EFFECT = NODE_EFFECT_REGISTRY.register("active/create_item_effect", () -> CreateItemAbilityNodeEffect.CODEC);
+    public static final RegistryObject<Codec<UnlockActiveAbilityNodeEffect>> UNLOCK_ACTIVE_ABILITY_EFFECT = NODE_EFFECT_REGISTRY.register("unlock_active_ability", () -> UnlockActiveAbilityNodeEffect.CODEC);
+    /**
+     * Marks a registered feature as enabled with a factor.
+     */
+    public static final RegistryObject<Codec<EnableFeatureNodeEffect>> ENABLE_FEATURE_EFFECT = NODE_EFFECT_REGISTRY.register("enable_feature", () -> EnableFeatureNodeEffect.CODEC);
+    /**
+     * Gives the player an enchantment that is intrinsic to themselves, such as Aqua Affinity
+     */
+    public static final RegistryObject<Codec<IntrinsicEnchantmentNodeEffect>> INTRINSIC_ENCHANTMENT_EFFECT = NODE_EFFECT_REGISTRY.register("intrinsic_enchantment", () -> IntrinsicEnchantmentNodeEffect.CODEC);
 
     public static final DeferredRegister<Codec<? extends AbstractCondition>> EFFECT_CONDITION_REGISTRY = ChangedRegistry.ABILITY_EFFECT_CONDITIONS.createDeferred(Changed.MODID);
 

@@ -1,0 +1,7 @@
+{
+  "variants": [
+    "#changed:quadrupedal"
+  ],
+  "titleId": "changed.ability_tree.quadrupedal_mobility",
+  "flavorId": "changed.ability_tree.quadrupedal_mobility.flavor"
+}

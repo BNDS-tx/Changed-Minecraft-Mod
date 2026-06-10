@@ -13,17 +13,23 @@ public class File {
     );
 
     public enum Type {
-        DATA("dat"),
-        TEXT("txt"),
-        PICTURE("png"),
-        RECIPE("rcp");
+        APP("app", 16, 0),
+        DATA("dat", 32, 0),
+        TEXT("txt", 48, 0),
+        PICTURE("png", 0, 16),
+        RECIPE("rcp", 16, 16);
 
         public final String extension;
         public static Codec<Type> CODEC = Codec.STRING.xmap(Type::valueOf, Type::name);
 
-        Type(String extension) {
+        Type(String extension, int xTexture, int yTexture) {
             this.extension = extension;
+            this.xTexture = xTexture;
+            this.yTexture = yTexture;
         }
+
+        public final int xTexture;
+        public final int yTexture;
     }
 
     public final Type type;
@@ -44,7 +50,7 @@ public class File {
         tag.putString("c", content);
     }
 
-    public CompoundTag save() {
+    public CompoundTag serialize() {
         var t = new CompoundTag();
         saveTo(t);
         return t;

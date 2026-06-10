@@ -1,0 +1,15 @@
+{
+  "parent": { "tree": "changed:latex" },
+  "titleId": "changed.ability_tree.latex.grab",
+  "flavorId": "changed.ability_tree.latex.grab.flavor",
+  "display": { "icon": "changed:textures/gui/nodes/grab.png" },
+  "price": 1,
+
+  "comment": "This node would grant the grab ability to the player, but not suiting",
+  "acquiredEffects": [
+    {
+      "type": "changed:unlock_active_ability",
+      "ability": "changed:grab_entity"
+    }
+  ]
+}

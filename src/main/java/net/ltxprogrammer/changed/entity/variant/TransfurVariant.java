@@ -1,6 +1,5 @@
 package net.ltxprogrammer.changed.entity.variant;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import net.ltxprogrammer.changed.Changed;
@@ -48,7 +47,13 @@ public class TransfurVariant<T extends ChangedEntity> {
     }
 
     public static boolean shouldScareVillager(ChangedEntity entity, AbstractVillager villager) {
-        return entity.getType().is(ChangedTags.EntityTypes.LATEX);
+        if (entity.getType().is(ChangedTags.EntityTypes.LATEX))
+            return true;
+        var variant = ProcessTransfur.getPlayerTransfurVariant(entity.getUnderlyingPlayer());
+        if (variant == null)
+            return false;
+
+        return variant.hasFeature(ChangedVariantFeatures.SCARE_VILLAGERS.get());
     }
 
     public ResourceLocation getFormId() {
@@ -111,7 +116,8 @@ public class TransfurVariant<T extends ChangedEntity> {
         NORMAL,
         WATER,
         ANY,
-        NONE;
+        NOT_REQUIRED,
+        CANNOT /* Uh oh */;
 
         public boolean canBreatheWater() {
             return this == WATER || this == ANY;
@@ -120,8 +126,6 @@ public class TransfurVariant<T extends ChangedEntity> {
         public boolean canBreatheAir() {
             return this == NORMAL || this == ANY;
         }
-
-        public boolean hasAquaAffinity() { return canBreatheWater(); }
     }
 
     private static final AtomicInteger NEXT_ENTITY_ID = new AtomicInteger(-70000000);
@@ -145,14 +149,13 @@ public class TransfurVariant<T extends ChangedEntity> {
     public final UseItemMode itemUseMode;
     public final @Nullable BiPredicate<T, PathfinderMob> scares;
     public final TransfurMode transfurMode;
-    public final ImmutableList<Function<EntityType<?>, ? extends AbstractAbility<?>>> abilities;
     public final float cameraZOffset;
     public final ResourceLocation sound;
 
     public TransfurVariant(Supplier<EntityType<T>> ctor,
                            BreatheMode breatheMode, boolean canGlide, int extraJumpCharges, boolean canClimb,
                            VisionType visionType, MiningStrength miningStrength, UseItemMode itemUseMode, @Nullable BiPredicate<T, PathfinderMob> scares, TransfurMode transfurMode,
-                           List<Function<EntityType<?>, ? extends AbstractAbility<?>>> abilities, float cameraZOffset, ResourceLocation sound) {
+                           float cameraZOffset, ResourceLocation sound) {
         this.ctor = ctor;
         this.breatheMode = breatheMode;
         this.miningStrength = miningStrength;
@@ -160,7 +163,6 @@ public class TransfurVariant<T extends ChangedEntity> {
         this.canGlide = canGlide;
         this.extraJumpCharges = extraJumpCharges;
         this.itemUseMode = itemUseMode;
-        this.abilities = ImmutableList.<Function<EntityType<?>, ? extends AbstractAbility<?>>>builder().addAll(abilities).build();
         this.canClimb = canClimb;
         this.scares = scares;
         this.transfurMode = transfurMode;
@@ -282,6 +284,7 @@ public class TransfurVariant<T extends ChangedEntity> {
         return IAbstractChangedEntity.forEntity(newEntity);
     }
 
+    @Deprecated
     public BreatheMode getBreatheMode() {
         return breatheMode;
     }
@@ -340,16 +343,6 @@ public class TransfurVariant<T extends ChangedEntity> {
 
         public Builder(Supplier<EntityType<T>> entityType) {
             this.entityType = entityType;
-
-            var event = new UniversalAbilitiesEvent(this.abilities);
-            event.addAbility(event.isOfTag(ChangedTags.EntityTypes.LATEX)
-                    .and(event.isNotOfTag(ChangedTags.EntityTypes.PARTIAL_LATEX)), ChangedAbilities.SWITCH_TRANSFUR_MODE);
-            event.addAbility(event.isOfTag(ChangedTags.EntityTypes.LATEX)
-                    .and(event.isNotOfTag(ChangedTags.EntityTypes.ARMLESS))
-                    .and(event.isNotOfTag(ChangedTags.EntityTypes.PARTIAL_LATEX)), ChangedAbilities.GRAB_ENTITY_ABILITY);
-
-            Changed.postModLoadingEvent(event);
-
             this.scares(AbstractVillager.class, TransfurVariant::shouldScareVillager);
         }
 
@@ -359,10 +352,12 @@ public class TransfurVariant<T extends ChangedEntity> {
             return new Builder<T>(entityType);
         }
 
+        @Deprecated(forRemoval = true)
         public Builder<T> gills() {
             return gills(false);
         }
 
+        @Deprecated(forRemoval = true)
         public Builder<T> gills(boolean suffocate_on_land) {
             this.breatheMode = suffocate_on_land ? BreatheMode.WATER : BreatheMode.ANY; return this;
         }
@@ -433,35 +428,42 @@ public class TransfurVariant<T extends ChangedEntity> {
         public Builder<T> extraJumps(int count) {
             this.extraJumpCharges = count; return this;
         }
-        
+
+        @Deprecated(forRemoval = true)
         public Builder<T> addAbility(Function<EntityType<?>, ? extends AbstractAbility<?>> ability) {
             if (ability != null)
                 this.abilities.add(ability);
             return this;
         }
-        
+
+        @Deprecated(forRemoval = true)
         public Builder<T> addAbility(Supplier<? extends AbstractAbility<?>> ability) {
             if (ability != null)
                 this.abilities.add(type -> ability.get());
             return this;
         }
-        
+
+        @Deprecated(forRemoval = true)
         public Builder<T> abilities(List<Function<EntityType<?>, ? extends AbstractAbility<?>>> abilities) {
             this.abilities = new ArrayList<>(abilities); return this;
         }
 
+        @Deprecated(forRemoval = true)
         public Builder<T> extraHands() {
             return addAbility(ChangedAbilities.SWITCH_HANDS);
         }
 
+        @Deprecated(forRemoval = true)
         public Builder<T> rideable() {
             return addAbility(ChangedAbilities.ACCESS_CHEST);
         }
 
+        @Deprecated(forRemoval = true)
         public Builder<T> absorbing() {
             return transfurMode(TransfurMode.ABSORPTION);
         }
-        
+
+        @Deprecated(forRemoval = true)
         public Builder<T> replicating() {
             return transfurMode(TransfurMode.REPLICATION);
         }
@@ -494,18 +496,18 @@ public class TransfurVariant<T extends ChangedEntity> {
             this.transfurMode = mode; return this;
         }
 
+        @Deprecated(forRemoval = true)
         public Builder<T> noLegs() {
-            this.legCount = 0;
             return this;
         }
 
+        @Deprecated(forRemoval = true)
         public Builder<T> hasLegs(boolean v) {
-            this.legCount = 2;
             return this;
         }
 
+        @Deprecated(forRemoval = true)
         public Builder<T> quadrupedal() {
-            this.legCount = 4;
             return this;
         }
 
@@ -534,7 +536,7 @@ public class TransfurVariant<T extends ChangedEntity> {
 
         public TransfurVariant<T> build() {
             return new TransfurVariant<>(entityType, breatheMode, canGlide, extraJumpCharges,
-                    canClimb, visionType, miningStrength, itemUseMode, scares, transfurMode, abilities, cameraZOffset, sound);
+                    canClimb, visionType, miningStrength, itemUseMode, scares, transfurMode, cameraZOffset, sound);
         }
     }
 

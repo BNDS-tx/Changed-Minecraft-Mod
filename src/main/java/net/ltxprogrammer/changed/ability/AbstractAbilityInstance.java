@@ -6,20 +6,19 @@ import net.ltxprogrammer.changed.network.packet.AbilityPayloadPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.function.Supplier;
 
 public abstract class AbstractAbilityInstance {
     public final AbstractAbility<?> ability;
     public final IAbstractChangedEntity entity;
     private final AbstractAbility.Controller controller;
+    private int level = 0;
 
     public AbstractAbilityInstance(AbstractAbility<?> ability, IAbstractChangedEntity entity) {
         this.ability = ability;
@@ -61,6 +60,18 @@ public abstract class AbstractAbilityInstance {
         }
     }
 
+    public final int getLevel() {
+        return level;
+    }
+
+    public final void setLevel(int nextLevel) {
+        if (nextLevel == this.level)
+            return;
+        int last = this.level;
+        this.level = nextLevel;
+        this.onChangeLevel(last, nextLevel);
+    }
+
     public final AbstractAbility<?> getAbility() {
         return ability;
     }
@@ -75,8 +86,13 @@ public abstract class AbstractAbilityInstance {
     // Called every variant tick, regardless
     public void tickIdle() {}
 
-    // Called when the player loses the variant (death or untransfur)
+    // Called when the player gains the ability (ability node unlocked). Not called when instantiated only to call onRemove
+    public void onAdd() {}
+
+    // Called when the player loses the ability (death, untransfur, ability node refunded)
     public void onRemove() {}
+
+    public void onChangeLevel(int previous, int current) {}
 
     // Called when the player selects the ability
     public void onSelected() {}
@@ -87,11 +103,15 @@ public abstract class AbstractAbilityInstance {
         var controllerTag = new CompoundTag();
         controller.saveData(controllerTag);
         tag.put("Controller", controllerTag);
+        tag.putInt("Amplifier", level);
     }
+
     public void readData(CompoundTag tag) {
         ability.readData(tag, this.entity);
         if (tag.contains("Controller"))
             controller.readData(tag.getCompound("Controller"));
+        if (tag.contains("Amplifier"))
+            this.setLevel(tag.getInt("Amplifier"));
     }
 
     public void acceptPayload(CompoundTag tag) {}

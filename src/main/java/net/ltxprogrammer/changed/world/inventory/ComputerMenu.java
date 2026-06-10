@@ -1,57 +1,52 @@
 package net.ltxprogrammer.changed.world.inventory;
 
-import net.ltxprogrammer.changed.block.TextEnterable;
-import net.ltxprogrammer.changed.computers.DiscData;
+import com.mojang.datafixers.util.Pair;
+import net.ltxprogrammer.changed.block.entity.ComputerBlockEntity;
 import net.ltxprogrammer.changed.computers.File;
-import net.ltxprogrammer.changed.init.ChangedMenus;
-import net.ltxprogrammer.changed.util.TagUtil;
-import net.minecraft.core.BlockPos;
+import net.ltxprogrammer.changed.computers.application.Application;
+import net.ltxprogrammer.changed.computers.application.ApplicationType;
+import net.ltxprogrammer.changed.init.*;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.fml.LogicalSide;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.Stack;
 
-public class ComputerMenu extends TextMenu {
-    private DiscData data;
-    private Path workingDir = Path.of("");
-    private ItemStack serverDisk;
+public class ComputerMenu extends AbstractContainerMenu implements UpdateableMenu {
+    protected final Player player;
+    public ComputerBlockEntity computer;
 
-    private final Map<Integer, Slot> customSlots = new HashMap<>();
+    protected final Stack<Application> applications = new Stack<>();
 
-    public ComputerMenu(int id, Inventory inventory, BlockPos pos, BlockState state, TextEnterable textMenuBlockEntity) {
-        super(ChangedMenus.COMPUTER.get(), id, inventory, pos, state, textMenuBlockEntity);
-    }
+    public ComputerMenu(int id, Inventory inventory, ComputerBlockEntity computer) {
+        super(ChangedMenus.COMPUTER.get(), id);
+        this.computer = computer;
+        this.player = inventory.player;
 
-    public ComputerMenu(int id, Inventory inventory, ItemStack disk) {
-        super(ChangedMenus.COMPUTER.get(), id, inventory, null);
-        this.serverDisk = disk;
-        this.data = new DiscData(disk.getOrCreateTag());
-        inventory.removeItem(serverDisk);
-        textCopy = disk.getOrCreateTag().getString("Text");
+        applications.push(ChangedApplications.DESKTOP.get().createApplication(this, List.of()));
     }
 
     public ComputerMenu(int id, Inventory inventory, FriendlyByteBuf extraData) {
-        super(ChangedMenus.COMPUTER.get(), id, inventory, extraData);
+        super(ChangedMenus.COMPUTER.get(), id);
+        this.player = inventory.player;
 
         if (extraData != null) {
-            serverDisk = null;
-            data = null;
-            //inventory.removeItem(extraData.readInt(), 1);
+            computer = player.level().getBlockEntity(extraData.readBlockPos(), ChangedBlockEntities.COMPUTER.get()).orElse(null);
         }
+
+        applications.push(ChangedApplications.DESKTOP.get().createApplication(this, List.of()));
     }
 
     @Override
@@ -60,14 +55,14 @@ public class ComputerMenu extends TextMenu {
     }
 
     @Override
-    public boolean canEditExisting() {
-        return true;
+    public ItemStack quickMoveStack(Player p_38941_, int p_38942_) {
+        return null;
     }
 
     @Override
     public void removed(Player player) {
         super.removed(player);
-        player.addItem(serverDisk);
+        computer.activeUser = null;
     }
 
     public enum Operation {
@@ -75,33 +70,33 @@ public class ComputerMenu extends TextMenu {
     }
 
     @Override
+    public int getId() {
+        return containerId;
+    }
+
+    @Override
+    public Player getPlayer() {
+        return player;
+    }
+
+    @Override
     public void update(CompoundTag payload, LogicalSide receiver, @Nullable ServerPlayer origin) {
-        if (receiver.isServer() && serverDisk != null && data != null) {
-            /*if (payload.contains("op")) {
-                Operation op = Operation.valueOf(payload.getString("op"));
+        if (receiver.isServer() && origin != null) {
+            if (!payload.contains("op"))
+                return;
 
-                switch (op) {
-                    case GET_RECIPE -> {
-                        data.getFileSafe(Path.of(payload.getString("path"))).flatMap(file -> player.level().getRecipeManager().byKey(ResourceLocation.tryParse(file.content))).ifPresent(recipe -> {
-                            player.awardRecipes(Collections.singleton(recipe));
-                        });
-                    }
+            Operation requestedOp = Operation.valueOf(payload.getString("op"));
+            switch (requestedOp) {
+                case GET_RECIPE -> {
+                    Path fullPath = Path.of(payload.getString("path"));
+                    computer.getFileSafe(fullPath).flatMap(file -> {
+                        var recipeLoc = ResourceLocation.parse(file.content);
+                        return origin.serverLevel().getRecipeManager().byKey(recipeLoc);
+                    }).ifPresent(recipe -> {
+                        origin.awardRecipes(Collections.singleton(recipe));
+                    });
                 }
-            }*/
-
-            if (payload.contains("Text")) {
-                textCopy = payload.getString("Text");
-                textCopyLastReceived = textCopy;
-                serverDisk.getOrCreateTag().putString("Text", textCopy);
             }
-
-            this.setDirty(payload);
-        } else if (receiver.isClient()) {
-            textCopy = payload.getString("Text");
-            textCopyLastReceived = textCopy;
-            serverDisk.getOrCreateTag().putString("Text", textCopy);
-
-            // Handled by the server
         }
     }
 
@@ -112,15 +107,64 @@ public class ComputerMenu extends TextMenu {
         return tag;
     }
 
-    public DiscData getData() {
-        return data;
-    }
-
     public Path getWorkingDir() {
-        return workingDir;
+        return computer.currentWorkingDirectory;
     }
 
     public void setWorkingDir(Path workingDir) {
-        this.workingDir = workingDir;
+        computer.currentWorkingDirectory = workingDir;
+    }
+
+    public Path getHomeDir() {
+        return computer.homeDirectory;
+    }
+
+    public Path getDesktopDir() {
+        return computer.homeDirectory.resolve(Path.of("Desktop/"));
+    }
+
+    public Path getBinariesDir() {
+        return computer.binariesDirectory;
+    }
+
+    public List<ApplicationType<?>> getInstalledApplications() {
+        List<ApplicationType<?>> applications = new ArrayList<>();
+
+        var regTags = ChangedRegistry.APPLICATION_TYPES.get().tags();
+        if (regTags != null)
+            regTags.getTag(ChangedTags.ApplicationTypes.ALWAYS_INSTALLED).forEach(applications::add);
+
+        final var binDir = this.getBinariesDir();
+        this.computer.getFolderSafe(binDir).ifPresent(bin -> {
+            bin.files.forEach((fileName, file) -> {
+                if (file.type != File.Type.APP)
+                    return;
+
+                var app = ChangedRegistry.APPLICATION_TYPES.getValue(ResourceLocation.parse(file.content));
+                if (!applications.contains(app))
+                    applications.add(app);
+            });
+        });
+
+        return applications;
+    }
+
+    public Application currentApplication() {
+        return applications.peek();
+    }
+
+    /// INTERNAL
+    public Application launchApplication(ApplicationType<?> applicationType, List<String> args) {
+        var app = applicationType.createApplication(this, args);
+        applications.push(app);
+
+        return app;
+    }
+
+    /// INTERNAL
+    public void closeApplication(ApplicationType<?> applicationType) {
+        if (applications.peek().getType() != applicationType)
+            throw new IllegalArgumentException("Application type mismatch");
+        applications.pop();
     }
 }

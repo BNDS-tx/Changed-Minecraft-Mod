@@ -1,10 +1,15 @@
 package net.ltxprogrammer.changed.entity.variant;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.AtomicDouble;
 import com.mojang.datafixers.util.Pair;
-import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
+import com.mojang.serialization.Codec;
+import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.ability.*;
+import net.ltxprogrammer.changed.ability.tree.AbilityTreeInstance;
+import net.ltxprogrammer.changed.ability.tree.AbilityTrees;
+import net.ltxprogrammer.changed.ability.tree.NodeEffect;
 import net.ltxprogrammer.changed.data.AccessorySlots;
 import net.ltxprogrammer.changed.entity.*;
 import net.ltxprogrammer.changed.entity.latex.LatexType;
@@ -62,7 +67,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
     protected final TransfurVariant<T> parent;
     protected final T entity;
     private final Player host;
-    public final ImmutableMap<AbstractAbility<?>, AbstractAbilityInstance> abilityInstances;
+    public final Map<AbstractAbility<?>, AbstractAbilityInstance> abilityInstances = new Object2ObjectArrayMap<>();
 
     public AbstractAbility<?> selectedAbility = null;
     public AbstractAbility<?> menuAbility = null;
@@ -73,10 +78,8 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
     public MiningStrength miningStrength;
     public UseItemMode itemUseMode;
     public int ageAsVariant = 0;
-    protected int air = -100;
     protected int jumpCharges = 0;
     private boolean dead;
-    public int ticksBreathingUnderwater;
     public int ticksFlying;
     protected int ticksSinceLastAbilityActivity = 0;
     private int ticksInWaveVision = 0;
@@ -89,6 +92,67 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
     public boolean willSurviveTransfur = true;
     protected boolean isTemporaryFromSuit = false;
 
+    protected final Map<VariantFeature, Double> variantFeatures = new HashMap<>();
+    protected final List<NodeEffect> activeNodeEffects = new ArrayList<>();
+
+    public <E extends NodeEffect> void visitActiveNodeEffects(Codec<E> codec, Consumer<E> visitor) {
+        activeNodeEffects.forEach(nodeEffect -> {
+            if (nodeEffect.getCodec() == codec)
+                visitor.accept((E)nodeEffect);
+        });
+    }
+
+    public double getFeatureLevel(VariantFeature feature) {
+        return variantFeatures.computeIfAbsent(feature, key -> {
+            AtomicDouble level = new AtomicDouble(0.0);
+
+            visitActiveNodeEffects(ChangedAbilityTreeCodecs.ENABLE_FEATURE_EFFECT.get(), featureNode -> {
+                if (featureNode.feature != key)
+                    return;
+                switch (key.combinator) {
+                    case MAX ->
+                            level.updateAndGet(current -> Math.max(featureNode.factor, current));
+                    case SUM ->
+                            level.updateAndGet(current -> featureNode.factor + current);
+                    case BINARY ->
+                            level.updateAndGet(current -> {
+                                if (current >= 1.0d || featureNode.factor >= 1.0d)
+                                    return 1.0d;
+                                return 0.0d;
+                            });
+                }
+            });
+
+            return level.get();
+        });
+    }
+
+    public boolean hasFeature(VariantFeature feature) {
+        return getFeatureLevel(feature) > 0.0;
+    }
+
+    public void setNodeEffects(List<NodeEffect> nodeEffects) {
+        this.variantFeatures.clear();
+        this.activeNodeEffects.clear();
+        this.activeNodeEffects.addAll(nodeEffects);
+    }
+
+    public TransfurVariant.BreatheMode getBreatheMode() {
+        if (breatheMode == TransfurVariant.BreatheMode.NOT_REQUIRED)
+            return TransfurVariant.BreatheMode.NOT_REQUIRED;
+
+        boolean breatheAir = !hasFeature(ChangedVariantFeatures.BREATHE_DENY_AIR.get());
+        boolean breatheWater = hasFeature(ChangedVariantFeatures.BREATHE_ACCEPT_WATER.get());
+
+        if (breatheAir && breatheWater)
+            return TransfurVariant.BreatheMode.ANY;
+        if (breatheAir)
+            return TransfurVariant.BreatheMode.NORMAL;
+        if (breatheWater)
+            return TransfurVariant.BreatheMode.WATER;
+        return TransfurVariant.BreatheMode.CANNOT;
+    }
+
     public void refreshAttributes() {
         newAttributes.clear();
     }
@@ -98,7 +162,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
         baseValues.putAll(getBaseAttributeValues(attributeMap));
     }
 
-    private Map<Attribute, Double> getBaseAttributeValues(AttributeMap attributeMap) {
+    protected Map<Attribute, Double> getBaseAttributeValues(AttributeMap attributeMap) {
         Map<Attribute, Double> map = new HashMap<>();
         ForgeRegistries.ATTRIBUTES.getValues().stream()
                 .filter(attributeMap::hasAttribute)
@@ -106,12 +170,11 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
         return map;
     }
 
-    public CompoundTag save() {
+    public CompoundTag saveForNetwork() {
         CompoundTag tag = new CompoundTag();
         tag.putInt("ageAsVariant", ageAsVariant);
         tag.putInt("jumpCharges", jumpCharges);
         tag.putBoolean("dead", dead);
-        tag.putInt("ticksBreathingUnderwater", ticksBreathingUnderwater);
         tag.putInt("ticksFlying", ticksFlying);
 
         tag.put("previousAttributes", TagUtil.createMap(previousAttributes, (attribute, base, map) ->
@@ -136,11 +199,14 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
         return tag;
     }
 
+    public CompoundTag saveForStorage() {
+        return this.saveForNetwork();
+    }
+
     public void load(CompoundTag tag) {
         ageAsVariant = tag.getInt("ageAsVariant");
         jumpCharges = tag.getInt("jumpCharges");
         dead = tag.getBoolean("dead");
-        ticksBreathingUnderwater = tag.getInt("ticksBreathingUnderwater");
         ticksFlying = tag.getInt("ticksFlying");
 
         TagUtil.readMap(tag.getCompound("previousAttributes"), (key, map) ->
@@ -229,17 +295,6 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
         this.visionType = parent.visionType;
         this.miningStrength = parent.miningStrength;
         this.itemUseMode = parent.itemUseMode;
-
-        var builder = new ImmutableMap.Builder<AbstractAbility<?>, AbstractAbilityInstance>();
-        var abilityExclusivity = new ReferenceArraySet<AbstractAbility<?>>();
-        parent.abilities.forEach(abilityFunction -> {
-            var ability = abilityFunction.apply(this.parent.getEntityType());
-            if (ability != null && abilityExclusivity.add(ability))
-                builder.put(ability, ability.makeInstance(IAbstractChangedEntity.forPlayer(host)));
-        });
-        abilityInstances = builder.build();
-        if (abilityInstances.size() > 0)
-            selectedAbility = abilityInstances.keySet().asList().get(0);
     }
 
     @Nullable
@@ -470,6 +525,11 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
 
             serverPlayer.connection.send(
                     Changed.PACKET_HANDLER.toVanillaPacket(AccessoryEntities.INSTANCE.syncPacket(serverPlayer), NetworkDirection.PLAY_TO_CLIENT)
+            );
+
+            AbilityTreeInstance.getForPlayer(serverPlayer).updateTrees();
+            serverPlayer.connection.send(
+                    Changed.PACKET_HANDLER.toVanillaPacket(AbilityTrees.INSTANCE.syncPacket(serverPlayer), NetworkDirection.PLAY_TO_CLIENT)
             );
         }
 
@@ -788,33 +848,70 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
         if (!shouldApplyAbilities())
             return;
 
-        if (breatheMode == TransfurVariant.BreatheMode.NONE) {
-            this.ticksBreathingUnderwater = 0;
+        boolean oxygenSymbiosis = false;
+        if (hasFeature(ChangedVariantFeatures.OXYGEN_SYMBIOSIS.get())) {
+            var grab = getAbilityInstance(ChangedAbilities.GRAB_ENTITY_ABILITY.get());
+            if (grab != null && grab.grabbedEntity != null && grab.suited) {
+                oxygenSymbiosis = !grab.grabbedEntity.canDrownInFluidType(ForgeMod.EMPTY_TYPE.get());
+            }
+        }
 
+        if (getBreatheMode() == TransfurVariant.BreatheMode.NOT_REQUIRED) {
             event.setCanBreathe(true);
             event.setCanRefillAir(false);
         } else if (host.isEyeInFluidType(Fluids.WATER.getFluidType())) {
-            if (breatheMode.canBreatheWater()) {
-                this.ticksBreathingUnderwater++;
-
+            if (getBreatheMode().canBreatheWater()) {
                 event.setCanBreathe(true);
                 event.setCanRefillAir(true);
-            }
 
-            else {
-                this.ticksBreathingUnderwater = 0;
+                double intakeRate = getFeatureLevel(ChangedVariantFeatures.BREATHE_ACCEPT_WATER.get());
+                if (intakeRate <= 0.0)
+                    event.setRefillAirAmount(event.getRefillAirAmount());
+                else
+                    event.setRefillAirAmount((int)(event.getRefillAirAmount() * intakeRate));
             }
         } else {
-            if (!breatheMode.canBreatheAir()) {
-                event.setCanBreathe(false);
-                event.setCanRefillAir(false);
+            if (!getBreatheMode().canBreatheAir()) {
+                event.setCanBreathe(oxygenSymbiosis);
+                event.setCanRefillAir(oxygenSymbiosis);
             }
-
-            this.ticksBreathingUnderwater = 0;
         }
     }
 
+    protected void updateAbilitiesMap() {
+        Map<AbstractAbility<?>, Integer> abilitiesToAdd = new Object2IntArrayMap<>();
+        visitActiveNodeEffects(ChangedAbilityTreeCodecs.UNLOCK_ACTIVE_ABILITY_EFFECT.get(), activeAbilityNode -> {
+            abilitiesToAdd.compute(activeAbilityNode.ability, (ability, amplifier) -> {
+                if (amplifier == null)
+                    return activeAbilityNode.level;
+                else
+                    return Math.max(amplifier, activeAbilityNode.level);
+            });
+        });
+
+        abilityInstances.keySet().removeIf(ability -> {
+            if (!abilitiesToAdd.containsKey(ability)) {
+                abilityInstances.get(ability).onRemove();
+                return true;
+            }
+
+            return false;
+        });
+
+        abilitiesToAdd.forEach((ability, amplifier) -> {
+            if (abilityInstances.containsKey(ability)) {
+                abilityInstances.get(ability).setLevel(amplifier);
+            } else {
+                var abilityInstance = ability.makeInstance(IAbstractChangedEntity.forPlayerWithVariant(host, this));
+                abilityInstances.put(ability, abilityInstance);
+                abilityInstance.onAdd();
+            }
+        });
+    }
+
     protected void tickAbilities() {
+        this.updateAbilitiesMap();
+
         for (var instance : abilityInstances.values()) {
             instance.getController().tickCoolDown();
         }
@@ -851,6 +948,10 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
         }
     }
 
+    public void tickAge() {
+        ageAsVariant++;
+    }
+
     public void tick() {
         if (checkForTemporary())
             return;
@@ -858,7 +959,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
         if (ageAsVariant == 0 && transfurProgression >= 1f)
             checkBreakItems(host);
 
-        ageAsVariant++;
+        this.tickAge();
 
         if (previousAttributes.isEmpty()) {
             if (transfurProgression == 0.0f)
@@ -900,8 +1001,10 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
             host.setPose(Pose.SWIMMING);
 
         // Sink in water
-        if (host.getAttributeBaseValue(ForgeMod.SWIM_SPEED.get()) > 1.0) {
+        if (hasFeature(ChangedVariantFeatures.PREVENT_SINKING.get())) {
             host.setNoGravity(host.isEyeInFluidType(ForgeMod.WATER_TYPE.get()));
+        } else {
+            host.setNoGravity(false);
         }
 
         // Effects
@@ -935,17 +1038,27 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
     }
 
     public void loadAbilities(CompoundTag tagAbilities) {
+        this.updateAbilitiesMap();
+
         if (tagAbilities.contains("selectedAbility")) {
-            var savedSelected = ChangedRegistry.ABILITY.get().getValue(TagUtil.getResourceLocation(tagAbilities, "selectedAbility"));
+            var savedSelected = ChangedRegistry.ABILITY.getValue(TagUtil.getResourceLocation(tagAbilities, "selectedAbility"));
             if (abilityInstances.containsKey(savedSelected))
                 this.selectedAbility = savedSelected;
         }
-        abilityInstances.forEach((name, instance) -> {
-            String abName = Objects.requireNonNull(ChangedRegistry.ABILITY.getKey(name)).toString();
-            if (!tagAbilities.contains(abName))
+        tagAbilities.getAllKeys().stream().filter(key -> !"selectedAbility".equals(key)).forEach(key -> {
+            var ability = ChangedRegistry.ABILITY.getValue(ResourceLocation.parse(key));
+            if (ability == null)
                 return;
-            CompoundTag abilityTag = tagAbilities.getCompound(abName);
-            instance.readData(abilityTag);
+
+            CompoundTag abilityTag = tagAbilities.getCompound(key);
+
+            if (abilityInstances.containsKey(ability)) {
+                abilityInstances.get(ability).readData(abilityTag);
+            } else { // Ability no longer permitted. Load from tag and call onRemove()
+                var abilityInstance = ability.makeInstance(IAbstractChangedEntity.forPlayerWithVariant(host, this));
+                abilityInstance.readData(abilityTag);
+                abilityInstance.onRemove();
+            }
         });
     }
 

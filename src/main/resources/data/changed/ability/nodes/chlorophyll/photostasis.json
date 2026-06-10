@@ -1,0 +1,34 @@
+{
+  "parent": "changed:chlorophyll/photosynthesis2",
+  "titleId": "changed.ability_tree.chlorophyll.photostasis",
+  "flavorId": "changed.ability_tree.chlorophyll.photostasis.flavor",
+  "price": 1,
+  "groupDiscount": -1,
+
+  "missingEffects": [
+    {
+      "type": "changed:mob_effect",
+      "mobEffect": {
+        "effect": "minecraft:hunger",
+        "duration": 40,
+        "hideParticles": true,
+        "visible": false,
+        "showIcon": false
+      },
+      "condition": {
+        "type": "changed:all",
+        "components": [
+          {
+            "type": "changed:light_exposure",
+            "threshold": 6,
+            "operation": "less_than_equal_to"
+          },
+          {
+            "type": "changed:nth_tick",
+            "tickRate": 20
+          }
+        ]
+      }
+    }
+  ]
+}

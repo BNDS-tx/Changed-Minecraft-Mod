@@ -90,6 +90,7 @@ public class ChangedTabs {
                         output.accept(ChangedBlocks.PETRI_DISH.get());
                         output.accept(ChangedBlocks.RETINAL_SCANNER.get());
                         output.accept(ChangedBlocks.ROOMBA_CHARGER.get());
+                        output.accept(ChangedBlocks.ROUTER.get());
                         output.accept(ChangedBlocks.SHIPPING_CONTAINER_BLUE.get());
                         output.accept(ChangedBlocks.SHIPPING_CONTAINER_ORANGE.get());
                         output.accept(ChangedBlocks.SPEAKER.get());
@@ -215,6 +216,7 @@ public class ChangedTabs {
                         output.accept(ChangedItems.MUG_WITH_DARK_LATEX.get());
                         output.accept(ChangedItems.MUG_WITH_WHITE_LATEX.get());
                         output.accept(ChangedItems.ORANGE.get());
+                        output.accept(ChangedItems.DRIED_ORANGE.get());
                         output.accept(ChangedItems.SYRINGE.get());
                         output.accept(ChangedItems.BLOOD_SYRINGE.get());
                         output.accept(ChangedItems.DARK_LATEX_GOO.get());
@@ -225,6 +227,7 @@ public class ChangedTabs {
                         output.accept(ChangedItems.BEIFENG_CRYSTAL_FRAGMENT.get());
                         output.accept(ChangedItems.WOLF_CRYSTAL_FRAGMENT.get());
                         output.accept(ChangedItems.DARK_DRAGON_CRYSTAL_FRAGMENT.get());
+                        output.accept(ChangedItems.PHAGE_CRYSTAL.get());
                         output.accept(ChangedItems.LATEX_INKBALL.get());
                         output.accept(ChangedItems.ROOMBA.get());
                         output.accept(ChangedItems.EXOSKELETON.get());
