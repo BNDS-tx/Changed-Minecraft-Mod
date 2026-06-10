@@ -61,8 +61,10 @@ public abstract class ServerPlayerMixin extends Player implements PlayerDataExte
     public void restoreFrom(ServerPlayer player, boolean restore, CallbackInfo callbackInfo) {
         ServerPlayer self = (ServerPlayer)(Object)this;
 
-        if (player instanceof PlayerDataExtension ext)
+        if (player instanceof PlayerDataExtension ext) {
             setBasicPlayerInfo(ext.getBasicPlayerInfo());
+            getAbilityTree().read(level(), ext.getAbilityTree().save(), false);
+        }
 
         if (player.level().getGameRules().getBoolean(ChangedGameRules.RULE_KEEP_FORM) || restore) {
             ProcessTransfur.ifPlayerTransfurred(player, oldVariant -> {
@@ -169,6 +171,10 @@ public abstract class ServerPlayerMixin extends Player implements PlayerDataExte
 
         readTransfurVariant(tag);
 
+        if (tag.contains("AbilityTree")) {
+            AbilityTreeInstance.getForPlayer(this).read(level(), tag.getCompound("AbilityTree"), false);
+        }
+
         if (tag.contains("PlayerMover")) {
             try {
                 setPlayerMover(ChangedRegistry.PLAYER_MOVER.get().getValue(TagUtil.getResourceLocation(tag, "PlayerMover")).createInstance());
@@ -186,6 +192,7 @@ public abstract class ServerPlayerMixin extends Player implements PlayerDataExte
     protected void addAdditionalSaveData(CompoundTag tag, CallbackInfo ci) {
         tag.putInt("PaleExposure", Pale.getPaleExposure(this));
         tag.putFloat("TransfurProgress", ProcessTransfur.getPlayerTransfurProgress(this));
+        tag.put("AbilityTree", AbilityTreeInstance.getForPlayer(this).save());
         ProcessTransfur.ifPlayerTransfurred(this, variant -> {
             TagUtil.putResourceLocation(tag, "TransfurVariant", variant.getFormId());
             tag.put("TransfurVariantData", variant.saveForStorage());

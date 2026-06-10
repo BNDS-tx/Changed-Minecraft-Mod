@@ -1,7 +1,7 @@
 {
-  "parent": { "tree": "changed:latex" },
-  "titleId": "changed.ability_tree.latex.grab",
-  "flavorId": "changed.ability_tree.latex.grab.flavor",
+  "parent": { "tree": "changed:azurebyss_wolf" },
+  "titleId": "changed.ability_tree.azurebyss_wolf.grab",
+  "flavorId": "changed.ability_tree.azurebyss_wolf.grab.flavor",
   "display": { "icon": "changed:textures/gui/nodes/grab.png" },
   "price": 1,
 

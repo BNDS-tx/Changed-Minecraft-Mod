@@ -39,4 +39,12 @@ public class ChangedVariantFeatures {
     public static final RegistryObject<VariantFeature> FLIGHT_STAMINA_EFFICIENCY = REGISTRY.register("flight/stamina_efficiency/flight", VariantFeature::maxPresent);
     public static final RegistryObject<VariantFeature> GLIDE_STAMINA_EFFICIENCY = REGISTRY.register("flight/stamina_efficiency/glide", VariantFeature::maxPresent);
     public static final RegistryObject<VariantFeature> WING_FLAP_BONUS_HORIZONTAL = REGISTRY.register("wing_flap/bonus_horizontal_speed", VariantFeature::sumPresent);
+
+
+    public static final RegistryObject<VariantFeature> ADDON_THUNDERBOLT = REGISTRY.register("azurebyss_wolf/thunderbolt", VariantFeature::maxPresent);
+    public static final RegistryObject<VariantFeature> ADDON_THUNDER_PATH = REGISTRY.register("azurebyss_wolf/thunder_path", VariantFeature::maxPresent);
+    public static final RegistryObject<VariantFeature> ADDON_SHOCKWAVE = REGISTRY.register("azurebyss_wolf/shockwave", VariantFeature::maxPresent);
+    public static final RegistryObject<VariantFeature> ADDON_DODGE = REGISTRY.register("azurebyss_wolf/dodge", VariantFeature::maxPresent);
+    public static final RegistryObject<VariantFeature> AW_UNDEATH = REGISTRY.register("azurebyss_wolf/undeah", VariantFeature::binary);
+    public static final RegistryObject<VariantFeature> AW_TOGGLE_ELECTRICAL_SURGE = REGISTRY.register("azurebyss_wolf/toggle_electrical_surge", VariantFeature::binary);
 }

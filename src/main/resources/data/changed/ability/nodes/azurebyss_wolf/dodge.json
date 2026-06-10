@@ -1,19 +1,15 @@
 {
-  "parent": "changed:azurebyss_wolf/grab",
-  "titleId": "changed.ability_tree.azurebyss_wolf.absorption",
-  "flavorId": "changed.ability_tree.latex.azurebyss_wolf.flavor",
-  "display": { "icon": "changed:textures/gui/nodes/absorption.png" },
+  "parent": { "tree": "changed:azurebyss_wolf" },
+  "titleId": "changed.ability_tree.azurebyss_wolf.dodge",
+  "flavorId": "changed.ability_tree.azurebyss_wolf.dodge.flavor",
+  "display": { "icon": "changed:textures/abilities/dodge_ability.png" },
   "price": 1,
 
-  "comment": "This node would allow the player to switch their transfur mode to absorb the entity. It also allows the player to suit the grabbed entity.",
+  "comment": "此技能支持玩家闪避来自敌人的远程攻击，来自 Changed Addon。",
   "acquiredEffects": [
     {
-      "type": "changed:enable_feature",
-      "feature": "changed:grab/absorption"
-    },
-    {
       "type": "changed:unlock_active_ability",
-      "ability": "changed:switch_transfur_mode"
+      "ability": "changed:dodge"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
-  "parent": { "tree": "changed:latex" },
-  "titleId": "changed.ability_tree.latex.stability1",
-  "flavorId": "changed.ability_tree.latex.stability1.flavor",
+  "parent": { "tree": "changed:azurebyss_wolf" },
+  "titleId": "changed.ability_tree.azurebyss_wolf.stability1",
+  "flavorId": "changed.ability_tree.azurebyss_wolf.stability1.flavor",
   "price": 1,
 
   "missingEffects": [

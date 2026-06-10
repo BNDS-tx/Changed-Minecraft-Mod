@@ -1,9 +1,9 @@
 {
   "variants": [
-    "#changed:latex"
+    "#changed:azurebyss_wolf"
   ],
-  "titleId": "changed.ability_tree.latex",
-  "flavorId": "changed.ability_tree.latex.flavor",
+  "titleId": "changed.ability_tree.azurebyss_wolf",
+  "flavorId": "changed.ability_tree.azurebyss_wolf.flavor",
   "pointEvents": [
     {
       "type": "changed:on_transfur_other",

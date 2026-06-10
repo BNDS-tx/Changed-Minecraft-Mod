@@ -1,7 +1,7 @@
 {
-  "parent": "changed:latex/absorption",
-  "titleId": "changed.ability_tree.latex.friendly_transfur",
-  "flavorId": "changed.ability_tree.latex.friendly_transfur.flavor",
+  "parent": "changed:azurebyss_wolf/absorption",
+  "titleId": "changed.ability_tree.azurebyss_wolf.friendly_transfur",
+  "flavorId": "changed.ability_tree.azurebyss_wolf.friendly_transfur.flavor",
   "price": 1,
   "groupDiscount": -1,
 

@@ -1,7 +1,7 @@
 {
-  "parent": "changed:latex/aftertaste2",
-  "titleId": "changed.ability_tree.latex.aftertaste3",
-  "flavorId": "changed.ability_tree.latex.aftertaste3.flavor",
+  "parent": "changed:azurebyss_wolf/aftertaste2",
+  "titleId": "changed.ability_tree.azurebyss_wolf.aftertaste3",
+  "flavorId": "changed.ability_tree.azurebyss_wolf.aftertaste3.flavor",
   "display": {
     "icon": { "item": "minecraft:enchanted_golden_apple" },
     "frame": "strong"

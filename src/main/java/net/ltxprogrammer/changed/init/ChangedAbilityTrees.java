@@ -57,4 +57,7 @@ public final class ChangedAbilityTrees {
     public static final PartialNode.TreeReference NIGHT_EYES = namedTree("night_eyes");
     /// UNSTABLE. Only used to grant the sing ability to the siren
     public static final PartialNode.TreeReference SIREN = namedTree("siren");
+
+
+    public static final PartialNode.TreeReference AZUREBYSS_WOLF = namedTree("azurebyss_wolf");
 }

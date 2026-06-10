@@ -1,10 +1,6 @@
 package net.ltxprogrammer.changed.init;
 
 import net.ltxprogrammer.changed.Changed;
-import net.ltxprogrammer.changed.ability.tree.PartialNode;
-import net.ltxprogrammer.changed.ability.tree.PartialNode.TreeReference;
-import net.ltxprogrammer.changed.datagen.ability.AbilityTreeDataProvider;
-import net.ltxprogrammer.changed.datagen.ability.AbilityTreeProvider;
 import net.ltxprogrammer.changed.entity.*;
 import net.ltxprogrammer.changed.entity.ai.EntityAssimilationBehavior;
 import net.ltxprogrammer.changed.entity.ai.TransfurDecider;
@@ -204,6 +200,7 @@ public class ChangedTransfurVariants {
     public static final RegistryObject<TransfurVariant<CustomLatexEntity>> CUSTOM_LATEX = register("form_custom_latex",
             TransfurVariant.Builder.of(ChangedEntities.CUSTOM_LATEX));
 
+    @SuppressWarnings("removal")
     public static final RegistryObject<TransfurVariant<AzurebyssEntity>> AZUREBYSS_ENTITY = register("form_azurebyss_wolf",
             TransfurVariant.Builder.of(ChangedEntities.AZUREBYSS_ENTITY).absorbing()
                     .abilities(List.of(
@@ -227,21 +224,12 @@ public class ChangedTransfurVariants {
                             )
                     )
                     .nightVision()
-                    .addAbility(ChangedAbilities.TOGGLE_NIGHT_VISION)
                     .addAbility(ChangedAbilities.GRAB_ENTITY_ABILITY));
 
     public static final Supplier<? extends TransfurVariant<?>> FALLBACK_VARIANT = WHITE_LATEX_WOLF_MALE;
 
     private static <T extends ChangedEntity> RegistryObject<TransfurVariant<T>> register(String name, TransfurVariant.Builder<T> builder) {
         return REGISTRY.register(name, builder::build);
-    }
-
-    private static <T extends ChangedEntity> RegistryObject<TransfurVariant<T>> registerWithAbilityTree(String name, TransfurVariant.Builder<T> builder, TreeReference... treeReference) {
-        RegistryObject<TransfurVariant<T>> register = REGISTRY.register(name, builder::build);
-        for (TreeReference reference : treeReference) {
-            AbilityTreeProvider.addEntry(reference, register);
-        }
-        return register;
     }
 
     public static class Gendered {

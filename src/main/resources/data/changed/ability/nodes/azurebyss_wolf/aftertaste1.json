@@ -1,7 +1,7 @@
 {
-  "parent": "changed:latex/grab",
-  "titleId": "changed.ability_tree.latex.aftertaste1",
-  "flavorId": "changed.ability_tree.latex.aftertaste1.flavor",
+  "parent": "changed:azurebyss_wolf/grab",
+  "titleId": "changed.ability_tree.azurebyss_wolf.aftertaste1",
+  "flavorId": "changed.ability_tree.azurebyss_wolf.aftertaste1.flavor",
   "display": { "icon": { "item": "minecraft:apple" } },
   "price": 1,
   "groupDiscount": -1,
