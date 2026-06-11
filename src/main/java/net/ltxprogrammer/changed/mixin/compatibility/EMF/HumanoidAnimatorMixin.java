@@ -55,7 +55,7 @@ public abstract class HumanoidAnimatorMixin<T extends ChangedEntity, M extends A
                 playerModel.rightLeg.loadPose(rightLegPose);
 
                 // Run animation code to vanilla model
-                emfPart.getRoot().animate();
+                emfPart.allKnownStateVariants.get(emfPart.currentModelVariant).animation().run();
 
                 // Apply animation differences to advanced model
                 computeNewPartPose(headPose, playerModel.head, model.head);
