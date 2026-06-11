@@ -64,6 +64,18 @@ public class AbilityColors {
         colors.register((abilityInstance, layer) -> {
             var scheme = getAbilityColors(abilityInstance);
 
+            boolean isFallFlying = abilityInstance.entity.getEntity().isFallFlying();
+            if (layer == 0 && !isFallFlying)
+                return Optional.of(scheme.foreground().toInt());
+            else if (layer == 1 && isFallFlying)
+                return Optional.of(scheme.foreground().toInt());
+
+            return Optional.empty();
+        }, ChangedAbilities.SKY_DIVE.get());
+
+        colors.register((abilityInstance, layer) -> {
+            var scheme = getAbilityColors(abilityInstance);
+
             boolean isUndeath = UndeathAbility.getAllowedUndeath(abilityInstance.entity);
             if (layer == 0 && !isUndeath)
                 return Optional.of(scheme.foreground().toInt());
