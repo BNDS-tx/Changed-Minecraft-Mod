@@ -74,7 +74,7 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
 
     public static final int EXOSKELETON_EQUIP_DELAY = 30;
 
-    private static float targetYaw = 0;
+    private static final Map<String, Float> targetYaws = new HashMap<>();
 
     public ExoskeletonItem(Properties builder, Supplier<EntityType<T>> entityType) {
         super(builder.durability(CHARGE_IN_SECONDS), entityType);
@@ -275,10 +275,11 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
 
         if (!canUse(slotContext.stack(), false)) {
             if (slotContext.wearer() instanceof ServerPlayer wearer) {
-                wearer.setYHeadRot(targetYaw);
-                wearer.setYRot(targetYaw);
+                if (!targetYaws.containsKey(wearer.getUUID().toString())) targetYaws.put(wearer.getUUID().toString(), wearer.getYRot());
+                wearer.setYHeadRot(targetYaws.get(wearer.getUUID().toString()));
+                wearer.setYRot(targetYaws.get(wearer.getUUID().toString()));
                 wearer.setXRot(50F);
-                wearer.connection.send(new ClientboundPlayerPositionPacket(wearer.getX(), wearer.getY(), wearer.getZ(), targetYaw, 50F, EnumSet.noneOf(ClientboundPlayerPositionPacket.RelativeArgument.class), 0, wearer.isOnGround()));
+                wearer.connection.send(new ClientboundPlayerPositionPacket(wearer.getX(), wearer.getY(), wearer.getZ(), targetYaws.get(wearer.getUUID().toString()), 50F, EnumSet.noneOf(ClientboundPlayerPositionPacket.RelativeArgument.class), 0, wearer.isOnGround()));
             }
 
             if (slotContext.wearer() instanceof ServerPlayer wearer) {
@@ -302,7 +303,7 @@ public class ExoskeletonItem<T extends AbstractRobot> extends PlaceableEntity<T>
                     wearer.removeEffect(MobEffects.JUMP);
                 wearer.removeEffect(MobEffects.BLINDNESS);
                 wearer.removeEffect(MobEffects.DIG_SLOWDOWN);
-                targetYaw = wearer.getYHeadRot();
+                targetYaws.remove(wearer.getUUID().toString());
             }
         }
     }

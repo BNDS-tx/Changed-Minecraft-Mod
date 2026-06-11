@@ -5,7 +5,7 @@ issueTrackerURL="https://github.com/BNDS-tx/Changed-Minecraft-Mod/issues" #optio
 
 [[mods]]
 modId="changed"
-version="0.15.6.t"
+version="0.15.7.t"
 displayName="Changed: Minecraft Mod Modified by Azurebyss"
 updateJSONURL="https://raw.githubusercontent.com/BNDS-tx/Changed-Minecraft-Mod/master/update.json"
 displayURL="https://github.com/BNDS-tx/Changed-Minecraft-Mod/blob/1.18.2-dev/README.md"
