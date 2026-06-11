@@ -334,11 +334,23 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         // 先做一个大 AABB，避免全世界遍历
         AABB box = this.getBoundingBox().inflate(Math.max(WATER_RADIUS, RAIN_RADIUS));
 
+        // 本体的 AABB
+        AABB self = this.getBoundingBox().inflate(0.3);
+
         // 目标集合（你可以换成 LivingEntity 或者按需过滤）
         List<LivingEntity> ts = level.getEntitiesOfClass(LivingEntity.class, box, e ->
                 e.isAlive() &&
                         !e.isSpectator() &&
                         !e.isInvulnerable()
+        );
+
+        // 扫描和本体接触到的个体
+        List<LivingEntity> touched = level.getEntitiesOfClass(LivingEntity.class, self, e ->
+                e.isAlive() &&
+                        !e.isSpectator() &&
+                        !e.isInvulnerable() &&
+                        e != this.getSelf() &&
+                        e != this.maybeGetUnderlying()
         );
 
         List<LivingEntity> targets = new ArrayList<>();
@@ -347,7 +359,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
             if (t == this.getUnderlyingPlayer()) continue;
             targets.add(t);
         }
-        if (targets.isEmpty()) return;
+        if (targets.isEmpty() && touched.isEmpty()) return;
 
         // 1) “同一片水域”判定：只在你自己处于水中时才做 BFS
         //    BFS 成本可控：每秒一次、半径 15，访问上限你可以卡死避免炸服
@@ -356,6 +368,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
             waterConn = WaterConnectivity.build(level, this.blockPosition(), WATER_RADIUS, 4096);
         }
 
+        List<LivingEntity> validTargets = new ArrayList<>();
         for (LivingEntity t : targets) {
             double d2 = this.distanceToSqr(t);
 
@@ -370,21 +383,29 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
                             level.isRainingAt(t.blockPosition().above()); // above() 更符合“淋到雨”的直觉
 
             if (inSameWater || inRain) {
-                // 可选：防止同一 tick 被多个 Azure 重复电击（看你需不需要）
-                // if (alreadyZappedThisSecond(t, level.getGameTime())) continue;
-
-                t.hurt(ChangedDamageSources.ELECTROCUTION.source(level.registryAccess()), DMG);
-                TscWeapon.applyShock(t, 3);
-                // markZapped(t, level.getGameTime());
-                spawnArc(level,
-                        (this.getUnderlyingPlayer() == null)
-                                ? new Vec3(this.position().x, this.position().y + this.getBbHeight() * 0.5, this.position().z)
-                                : new Vec3(
-                                        this.getUnderlyingPlayer().position().x,
-                                        this.getUnderlyingPlayer().position().y + this.getUnderlyingPlayer().getBbHeight() * 0.5,
-                                        this.getUnderlyingPlayer().position().z),
-                        new Vec3(t.position().x, t.position().y + t.getBbHeight() * 0.5, t.position().z));
+                validTargets.add(t);
             }
+        }
+        for (LivingEntity t : touched) {
+            if (validTargets.contains(t)) continue;
+            validTargets.add(t);
+        }
+
+        for (LivingEntity t : validTargets) {
+            // 可选：防止同一 tick 被多个 Azure 重复电击（看你需不需要）
+            // if (alreadyZappedThisSecond(t, level.getGameTime())) continue;
+
+            t.hurt(ChangedDamageSources.ELECTROCUTION.source(level.registryAccess()), DMG);
+            TscWeapon.applyShock(t, 3);
+            // markZapped(t, level.getGameTime());
+            spawnArc(level,
+                    (this.getUnderlyingPlayer() == null)
+                            ? new Vec3(this.position().x, this.position().y + this.getBbHeight() * 0.5, this.position().z)
+                            : new Vec3(
+                            this.getUnderlyingPlayer().position().x,
+                            this.getUnderlyingPlayer().position().y + this.getUnderlyingPlayer().getBbHeight() * 0.5,
+                            this.getUnderlyingPlayer().position().z),
+                    new Vec3(t.position().x, t.position().y + t.getBbHeight() * 0.5, t.position().z));
         }
     }
 

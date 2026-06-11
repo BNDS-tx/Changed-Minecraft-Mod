@@ -77,8 +77,7 @@ public class ToggleElectricalSurgeAbility extends SimpleAbility implements Azure
         LivingEntity target = event.getEntity();
         Entity source = event.getSource().getDirectEntity();
 //        if (entity.getCommandSenderWorld().isClientSide) return;
-        if ((target instanceof Player player)) {
-            if (!getESEnable(player)) return;
+        if (target instanceof Player player && getESEnable(player)) {
             if (event.getSource().is(ChangedDamageSources.ELECTROCUTION.key())) {
                 event.setAmount(0F);
                 event.setCanceled(true);
@@ -89,8 +88,7 @@ public class ToggleElectricalSurgeAbility extends SimpleAbility implements Azure
             }
         }
 
-        if (source instanceof Player player) {
-            if (!getESEnable(player)) return;
+        if (source instanceof Player player && getESEnable(player)) {
             target.hurt(ChangedDamageSources.ELECTROCUTION.source(target.level().registryAccess()), 3);
             TscWeapon.applyShock(target, 3);
         }
