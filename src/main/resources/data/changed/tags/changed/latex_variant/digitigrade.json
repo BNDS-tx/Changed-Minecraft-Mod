@@ -71,6 +71,8 @@
     "changed:form_latex_squid_dog/male",
     "changed:form_white_wolf/female",
     "changed:form_white_wolf/male",
-    "changed:form_pure_white_latex_wolf"
+    "changed:form_pure_white_latex_wolf",
+
+    "changed:form_azurebyss_wolf"
   ]
 }

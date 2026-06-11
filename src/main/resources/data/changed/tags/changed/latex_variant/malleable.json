@@ -2,6 +2,8 @@
   "replace": false,
   "values": [
     "changed:form_white_latex_wolf/female",
-    "changed:form_white_latex_wolf/male"
+    "changed:form_white_latex_wolf/male",
+
+    "changed:form_azurebyss_wolf"
   ]
 }
