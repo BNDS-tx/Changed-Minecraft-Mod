@@ -16,7 +16,6 @@ import net.minecraftforge.fml.common.Mod;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Objects;
 
 @Mod.EventBusSubscriber(modid = Changed.MODID)
 public class ToggleElectricalSurgeAbility extends SimpleAbility implements AzurebyssCreate {
@@ -79,8 +78,7 @@ public class ToggleElectricalSurgeAbility extends SimpleAbility implements Azure
         Entity target = event.getEntity();
         Entity source = event.getSource().getDirectEntity();
 //        if (entity.getCommandSenderWorld().isClientSide) return;
-        if ((target instanceof Player player)) {
-            if (!getESEnable(player)) return;
+        if (target instanceof Player player && getESEnable(player)) {
             if (event.getSource() == ChangedDamageSources.ELECTROCUTION) {
                 event.setAmount(0F);
                 event.setCanceled(true);
@@ -91,8 +89,7 @@ public class ToggleElectricalSurgeAbility extends SimpleAbility implements Azure
             }
         }
 
-        if (source instanceof Player player) {
-            if (!getESEnable(player)) return;
+        if (source instanceof Player player && getESEnable(player)) {
             if (target instanceof LivingEntity livingTarget) {
                 livingTarget.hurt(ChangedDamageSources.ELECTROCUTION, 3);
                 TscWeapon.applyShock(livingTarget, 3);
