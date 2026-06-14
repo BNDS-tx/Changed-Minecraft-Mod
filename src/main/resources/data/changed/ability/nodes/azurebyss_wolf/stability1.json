@@ -2,7 +2,10 @@
   "parent": { "tree": "changed:azurebyss_wolf" },
   "titleId": "changed.ability_tree.azurebyss_wolf.stability1",
   "flavorId": "changed.ability_tree.azurebyss_wolf.stability1.flavor",
-  "price": 1,
+  "price": {
+    "levels": 0,
+    "groupDiscountLevels": -1
+  },
 
   "missingEffects": [
     {

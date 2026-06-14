@@ -3,9 +3,11 @@
   "titleId": "changed.ability_tree.azurebyss_wolf.undeath",
   "flavorId": "changed.ability_tree.azurebyss_wolf.undeath.flavor",
   "display": { "icon": "changed:textures/abilities/undeath_on.png" },
-  "price": 1,
+  "price": {
+    "levels": 0,
+    "groupDiscountLevels": -1
+  },
 
-  "comment": "",
   "acquiredEffects": [
     {
       "type": "changed:unlock_active_ability",

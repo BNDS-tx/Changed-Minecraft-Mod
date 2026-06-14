@@ -3,9 +3,11 @@
   "titleId": "changed.ability_tree.azurebyss_wolf.toggle_electrical_surge",
   "flavorId": "changed.ability_tree.azurebyss_wolf.toggle_electrical_surge.flavor",
   "display": { "icon": "changed:textures/abilities/es_off.png" },
-  "price": 1,
+  "price": {
+    "levels": 0,
+    "groupDiscountLevels": -1
+  },
 
-  "comment": "",
   "acquiredEffects": [
     {
       "type": "changed:unlock_active_ability",

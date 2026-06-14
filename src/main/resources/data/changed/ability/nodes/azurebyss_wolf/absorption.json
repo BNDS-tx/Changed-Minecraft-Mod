@@ -3,13 +3,19 @@
   "titleId": "changed.ability_tree.azurebyss_wolf.absorption",
   "flavorId": "changed.ability_tree.azurebyss_wolf.absorption.flavor",
   "display": { "icon": "changed:textures/gui/nodes/absorption.png" },
-  "price": 1,
+  "price": {
+    "levels": 1,
+    "groupDiscountLevels": -1
+  },
 
-  "comment": "This node allows the player to suit the grabbed entity.",
   "acquiredEffects": [
     {
       "type": "changed:enable_feature",
       "feature": "changed:grab/absorption"
+    },
+    {
+      "type": "changed:unlock_active_ability",
+      "ability": "changed:switch_transfur_mode"
     }
   ]
 }

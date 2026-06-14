@@ -3,7 +3,10 @@
   "titleId": "changed.ability_tree.azurebyss_wolf.thunderbolt",
   "flavorId": "changed.ability_tree.azurebyss_wolf.thunderbolt.flavor",
   "display": { "icon": "changed:textures/gui/nodes/absorption.png" },
-  "price": 1,
+  "price": {
+    "levels": 0,
+    "groupDiscountLevels": -1
+  },
 
   "comment": "",
   "acquiredEffects": [
