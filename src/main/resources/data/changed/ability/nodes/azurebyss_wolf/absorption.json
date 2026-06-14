@@ -12,10 +12,6 @@
     {
       "type": "changed:enable_feature",
       "feature": "changed:grab/absorption"
-    },
-    {
-      "type": "changed:unlock_active_ability",
-      "ability": "changed:switch_transfur_mode"
     }
   ]
 }
