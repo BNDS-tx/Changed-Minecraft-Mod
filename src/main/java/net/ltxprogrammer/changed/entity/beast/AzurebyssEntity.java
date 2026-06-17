@@ -87,10 +87,14 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
 
     public static AttributeSupplier.Builder createAttributes() {
         AttributeSupplier.Builder builder = Mob.createMobAttributes();
-        builder = builder.add(ChangedAttributes.AIR_CAPACITY.get(), 60D);
-        builder = builder.add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 10D);
-        builder = builder.add(ChangedAttributes.JUMP_STRENGTH.get(), 1.5);
-        builder = builder.add(ChangedAttributes.FALL_RESISTANCE.get(), 2.5);
+
+        builder = builder.add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 10D)
+                .add(ChangedAttributes.SPRINT_SPEED.get(), 3.0D)
+                .add(ChangedAttributes.SNEAK_SPEED.get(), 3.0D)
+                .add(ChangedAttributes.AIR_CAPACITY.get(), 60.0)
+                .add(ChangedAttributes.JUMP_STRENGTH.get(), 1.5D)
+                .add(ChangedAttributes.FALL_RESISTANCE.get(), 2.5D);
+
         builder = builder.add(Attributes.MOVEMENT_SPEED, 0.4);
         builder = builder.add(Attributes.ARMOR, 20);
         builder = builder.add(Attributes.ARMOR_TOUGHNESS, 10);
@@ -119,10 +123,13 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
     }
 
     protected void setAttributes(AttributeMap attributes) {
-        Objects.requireNonNull(attributes.getInstance(ChangedAttributes.AIR_CAPACITY.get())).setBaseValue((60));
-        Objects.requireNonNull(attributes.getInstance(ChangedAttributes.TRANSFUR_DAMAGE.get())).setBaseValue((10));
-        Objects.requireNonNull(attributes.getInstance(ChangedAttributes.JUMP_STRENGTH.get())).setBaseValue(1.5);
-        Objects.requireNonNull(attributes.getInstance(ChangedAttributes.FALL_RESISTANCE.get())).setBaseValue(2.5);
+        Objects.requireNonNull(attributes.getInstance(ChangedAttributes.SPRINT_SPEED.get())).setBaseValue(3.0D);
+        Objects.requireNonNull(attributes.getInstance(ChangedAttributes.SNEAK_SPEED.get())).setBaseValue(2.0D);
+        Objects.requireNonNull(attributes.getInstance(ChangedAttributes.AIR_CAPACITY.get())).setBaseValue(60.0);
+        Objects.requireNonNull(attributes.getInstance(ChangedAttributes.JUMP_STRENGTH.get())).setBaseValue(1.5D);
+        Objects.requireNonNull(attributes.getInstance(ChangedAttributes.FALL_RESISTANCE.get())).setBaseValue(2.5D);
+        Objects.requireNonNull(attributes.getInstance(ChangedAttributes.TRANSFUR_DAMAGE.get())).setBaseValue(10D);
+
         Objects.requireNonNull(attributes.getInstance(Attributes.MAX_HEALTH)).setBaseValue(500);
         Objects.requireNonNull(attributes.getInstance(Attributes.FOLLOW_RANGE)).setBaseValue(64.0);
         Objects.requireNonNull(attributes.getInstance(Attributes.MOVEMENT_SPEED)).setBaseValue(1.5);
