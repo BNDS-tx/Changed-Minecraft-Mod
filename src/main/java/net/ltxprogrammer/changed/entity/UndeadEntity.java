@@ -20,8 +20,11 @@ public interface UndeadEntity extends AzurebyssCreate {
     EntityDataAccessor<Boolean> isDeadSynced();
     EntityDataAccessor<Integer> healingChanceSynced();
     SynchedEntityData getEntityUndeathData();
+    float healthSavedInTick();
 
     default boolean getIsDead() { return getEntityUndeathData().get(isDeadSynced()); }
+
+    void setHealthSavedInTick(float health);
 
     default boolean getAllowedUndeath() { return getEntityUndeathData().get(setUndyingSynced()); }
     default void setAllowedUndeath(boolean value) { getEntityUndeathData().set(setUndyingSynced(), value); }
@@ -87,6 +90,10 @@ public interface UndeadEntity extends AzurebyssCreate {
     }
 
     default void tickCheck(ChangedEntity entity) {
+        var healthCurrent = entity.getHealth();
+        if (!(entity.tickCount <=1 || entity.tickCount % 10 == 0 || (healthSavedInTick() != healthCurrent && healthCurrent <= 1))) return;
+        setHealthSavedInTick(healthCurrent);
+
         boolean isDead = getEntityUndeathData().get(isDeadSynced());
         if (entity.tickCount <=1) isDead = setDisable(entity, isDead, false, true);
 
@@ -106,6 +113,11 @@ public interface UndeadEntity extends AzurebyssCreate {
             if (entity.maybeGetUnderlying().hasEffect(MobEffects.JUMP)
                     && Objects.requireNonNull(entity.maybeGetUnderlying().getEffect(MobEffects.JUMP)).getAmplifier() == -50)
                 entity.maybeGetUnderlying().removeEffect(MobEffects.JUMP);
+            var instance = IAbstractChangedEntity.forEitherSafe(entity.maybeGetUnderlying()).map(IAbstractChangedEntity::getTransfurVariantInstance).orElse(null);
+            if (instance != null && instance.itemUseMode == UseItemMode.NONE) {
+                instance.itemUseMode = UseItemMode.NORMAL;
+                instance.refreshAttributes();
+            }
         }
 
         getEntityUndeathData().set(isDeadSynced(), isDead);
