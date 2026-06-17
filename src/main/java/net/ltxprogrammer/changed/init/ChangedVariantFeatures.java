@@ -42,6 +42,8 @@ public class ChangedVariantFeatures {
     public static final RegistryObject<VariantFeature> WING_FLAP_BONUS_CHARGES = REGISTRY.register("wing_flap/bonus_charges", VariantFeature::sumPresent);
     public static final RegistryObject<VariantFeature> WINDS_PUSH_STRENGTH = REGISTRY.register("gale_force_winds/bonus_push_strength", VariantFeature::sumPresent);
 
+    public static final RegistryObject<VariantFeature> CLIMB_COBWEB = REGISTRY.register("climb/cobweb", VariantFeature::binary);
+
 
     public static final RegistryObject<VariantFeature> ADDON_THUNDERBOLT = REGISTRY.register("azurebyss_wolf/thunderbolt", VariantFeature::maxPresent);
     public static final RegistryObject<VariantFeature> ADDON_THUNDER_PATH = REGISTRY.register("azurebyss_wolf/thunder_path", VariantFeature::maxPresent);
