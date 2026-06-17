@@ -63,6 +63,7 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> healingChanceSynced =
             SynchedEntityData.defineId(AzurebyssEntity.class, EntityDataSerializers.INT);
+    private float healthSaved = -1;
     
     @Override
     public EntityDataAccessor<Boolean> setUndyingSynced() { return setUndyingSynced; };
@@ -270,6 +271,14 @@ public class AzurebyssEntity extends ChangedEntity implements GenderedEntity, Po
         }
 
         tickCheck(this);
+    }
+
+    public float healthSavedInTick() {
+        return healthSaved;
+    }
+
+    public void setHealthSavedInTick(float health) {
+        healthSaved = health;
     }
 
     public LivingEntity getSelf() {
