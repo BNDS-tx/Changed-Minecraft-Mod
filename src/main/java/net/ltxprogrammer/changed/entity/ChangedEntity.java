@@ -14,13 +14,12 @@ import net.ltxprogrammer.changed.entity.latex.LatexType;
 import net.ltxprogrammer.changed.entity.variant.EntityShape;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
+import net.ltxprogrammer.changed.entity.variant.VariantFeature;
 import net.ltxprogrammer.changed.extension.ChangedCompatibility;
 import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.network.syncher.ChangedEntityDataSerializers;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
-import net.ltxprogrammer.changed.util.Cacheable;
-import net.ltxprogrammer.changed.util.Color3;
-import net.ltxprogrammer.changed.util.UniversalDist;
+import net.ltxprogrammer.changed.util.*;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -36,6 +35,7 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
@@ -71,6 +71,10 @@ import java.util.function.Predicate;
 import static net.ltxprogrammer.changed.entity.variant.TransfurVariant.findEntityTransfurVariant;
 
 public abstract class ChangedEntity extends Monster implements EntityShape.Provider {
+    protected static final UUID DEPTH_COMPRESSION_SCALE_UUID = UUID.fromString("cecab49a-6858-4bae-afe9-ccbb887aea82");
+    protected static final UUID DEPTH_COMPRESSION_ARMOR_UUID = UUID.fromString("7efb9a42-11ab-4b64-ab63-19658a9103c7");
+    protected static final UUID BPI_SCALE_UUID = UUID.fromString("874df50a-d533-4ddf-a1a9-9f97ec3aa616");
+
     @Nullable private Player underlyingPlayer;
     private HairStyle hairStyle;
     private EyeStyle eyeStyle;
@@ -91,6 +95,8 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
     public float flyAmountO;
     float tailDragAmount = 0.0F;
     float tailDragAmountO;
+    float renderScaleAddon = 0.0f;
+    float renderScaleAddonO = 0.0f;
 
     Vec3 deltaMovementOO = Vec3.ZERO;
     Vec3 deltaMovementO = Vec3.ZERO;
@@ -119,6 +125,15 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
         }
         else
             return this.entityData.get(DATA_LOCAL_VARIANT_INFO);
+    }
+
+    public float getRenderScale() {
+        return (float) maybeGetUnderlying().getAttributeBaseValue(ChangedAttributes.SCALE.get()) + renderScaleAddon;
+    }
+
+    public float getRenderScale(float partialTicks) {
+        return (float) maybeGetUnderlying().getAttributeBaseValue(ChangedAttributes.SCALE.get())
+                + Mth.lerp(partialTicks, renderScaleAddonO, renderScaleAddon);
     }
 
     public float getTailDragAmount(float partialTicks) {
@@ -408,7 +423,12 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
             case CROUCHING -> EntityDimensions.scalable(core.width, core.height - 0.3f);
             case DYING -> EntityDimensions.fixed(0.2f, 0.2f);
             default -> core;
-        }).scale(getBasicPlayerInfo().getSize(this) * this.getScale());
+        }).scale(this.getScale());
+    }
+
+    @Override
+    public float getScale() {
+        return super.getScale() * ((float) maybeGetUnderlying().getAttributeBaseValue(ChangedAttributes.SCALE.get()) + renderScaleAddon);
     }
 
     public LatexType getLatexType() {
@@ -531,11 +551,15 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
 
     public static AttributeSupplier.Builder createLatexAttributes() {
         return Monster.createMonsterAttributes().add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 3.0D)
+                .add(ChangedAttributes.GRAB_HOLD_STRENGTH.get(), 1.0D)
+                .add(ChangedAttributes.SUIT_HOLD_STRENGTH.get(), 1.0D)
                 .add(ChangedAttributes.SPRINT_SPEED.get(), 1.0D)
                 .add(ChangedAttributes.SNEAK_SPEED.get(), 1.0D)
                 .add(ChangedAttributes.AIR_CAPACITY.get(), 15.0)
                 .add(ChangedAttributes.JUMP_STRENGTH.get(), 1.0D)
-                .add(ChangedAttributes.FALL_RESISTANCE.get(), 1.0D);
+                .add(ChangedAttributes.FALL_RESISTANCE.get(), 1.0D)
+                .add(ChangedAttributes.MINING_SPEED.get(), 1.0D)
+                .add(ChangedAttributes.SCALE.get(), 1.0D);
     }
 
     protected void setAttributes(AttributeMap attributes) {
@@ -833,9 +857,96 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
         return new Vec3((double)(f3), 0.0, (double)(f2));
     }
 
+    /// Allows NPC entities to specify the level of a VariantFeature. This function does not get called for Transfurred players
+    protected double getNPCFeatureLevel(VariantFeature feature) {
+        boolean isLatex = this.getType().is(ChangedTags.EntityTypes.LATEX);
+        if (isLatex && ChangedVariantFeatures.SCARE_VILLAGERS.get() == feature)
+            return 1.0d;
+        if (isLatex && ChangedVariantFeatures.ABSORPTION.get() == feature)
+            return 1.0d;
+        return 0.0d;
+    }
+
+    public final double getFeatureLevel(VariantFeature feature) {
+        var variant = ProcessTransfur.getPlayerTransfurVariant(underlyingPlayer);
+        if (variant != null)
+            return variant.getFeatureLevel(feature);
+        return getNPCFeatureLevel(feature);
+    }
+
+    public final boolean hasFeature(VariantFeature feature) {
+        return getFeatureLevel(feature) > 0.0d;
+    }
+
+    protected void tickScale() {
+        this.renderScaleAddonO = this.renderScaleAddon;
+
+        var scaleAttr = maybeGetUnderlying().getAttribute(ChangedAttributes.SCALE.get());
+        var armorAttr = maybeGetUnderlying().getAttribute(Attributes.ARMOR);
+
+        if (!level().isClientSide) {
+            // Check depth compression
+            if (hasFeature(ChangedVariantFeatures.DEPTH_COMPRESSION.get())) {
+                double depth = Math.max(LevelUtil.getDepthFromSurfaceOfWater(level(), position(), 144) - 8, 0);
+                double depthCompression = depth * 0.25 * 0.02 * getFeatureLevel(ChangedVariantFeatures.DEPTH_COMPRESSION.get());
+                int armorBoost = (int) Mth.lerp(depthCompression, 0.0d, 6.0d);
+                double scaleMultiplier = (1.0d - depthCompression) - 1.0d;
+                if (scaleMultiplier == 0.0) {
+                    scaleAttr.removeModifier(DEPTH_COMPRESSION_SCALE_UUID);
+                    armorAttr.removeModifier(DEPTH_COMPRESSION_ARMOR_UUID);
+                } else {
+                    var prevScaleMod = scaleAttr.getModifier(DEPTH_COMPRESSION_SCALE_UUID);
+                    if (prevScaleMod == null || prevScaleMod.getAmount() != scaleMultiplier) {
+                        scaleAttr.removeModifier(DEPTH_COMPRESSION_SCALE_UUID);
+                        scaleAttr.addTransientModifier(new AttributeModifier(DEPTH_COMPRESSION_SCALE_UUID,
+                                "Depth Compression: Scale",
+                                scaleMultiplier,
+                                AttributeModifier.Operation.MULTIPLY_TOTAL));
+                    }
+                    var prevArmorMod = scaleAttr.getModifier(DEPTH_COMPRESSION_ARMOR_UUID);
+                    if (prevArmorMod == null || prevArmorMod.getAmount() != armorBoost) {
+                        armorAttr.removeModifier(DEPTH_COMPRESSION_ARMOR_UUID);
+                        armorAttr.addTransientModifier(new AttributeModifier(DEPTH_COMPRESSION_ARMOR_UUID,
+                                "Depth Compression: Armor",
+                                armorBoost,
+                                AttributeModifier.Operation.ADDITION));
+                    }
+                }
+            } else {
+                scaleAttr.removeModifier(DEPTH_COMPRESSION_SCALE_UUID);
+                armorAttr.removeModifier(DEPTH_COMPRESSION_ARMOR_UUID);
+            }
+
+            float bpiSize = getBasicPlayerInfo().getSize(this) - 1.0f;
+            if (bpiSize == 0.0f) {
+                scaleAttr.removeModifier(BPI_SCALE_UUID);
+            } else {
+                var prevScaleMod = scaleAttr.getModifier(BPI_SCALE_UUID);
+                if (prevScaleMod == null || prevScaleMod.getAmount() != bpiSize) {
+                    scaleAttr.removeModifier(BPI_SCALE_UUID);
+                    scaleAttr.addTransientModifier(new AttributeModifier(BPI_SCALE_UUID,
+                            "BPI: Scale",
+                            bpiSize,
+                            AttributeModifier.Operation.MULTIPLY_TOTAL));
+                }
+            }
+        }
+
+        if (maybeGetUnderlying().tickCount > 5)
+            this.renderScaleAddon = Mth.lerp(0.1f, this.renderScaleAddon, (float) (scaleAttr.getValue() - scaleAttr.getBaseValue()));
+        else {
+            this.renderScaleAddon = (float) (scaleAttr.getValue() - scaleAttr.getBaseValue());
+            this.renderScaleAddonO = this.renderScaleAddon;
+            maybeGetUnderlying().refreshDimensions();
+        }
+
+        if (this.renderScaleAddon != this.renderScaleAddonO) {
+            maybeGetUnderlying().refreshDimensions();
+        }
+    }
+
     /**
      * Executed by both entity and tf'd player
-     * @param level
      */
     public void variantTick(Level level) {
         this.crouchAmountO = this.crouchAmount;
@@ -855,6 +966,8 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
         } else {
             this.flyAmount = Math.max(0.0F, this.flyAmount - 0.15F);
         }
+
+        this.tickScale();
 
         if (!this.level().isClientSide) return;
 

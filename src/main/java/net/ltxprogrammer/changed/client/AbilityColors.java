@@ -10,6 +10,7 @@ import net.ltxprogrammer.changed.init.ChangedAbilities;
 import net.ltxprogrammer.changed.init.ChangedRegistry;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.common.ForgeMod;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -47,6 +48,30 @@ public class AbilityColors {
 
             return Optional.empty();
         }, ChangedAbilities.SWITCH_TRANSFUR_MODE.get());
+
+        colors.register((abilityInstance, layer) -> {
+            var scheme = getAbilityColors(abilityInstance);
+
+            boolean inWater = abilityInstance.entity.getEntity().isEyeInFluidType(ForgeMod.WATER_TYPE.get());
+            if (layer == 0 && inWater)
+                return Optional.of(scheme.foreground().toInt());
+            else if (layer == 1 && !inWater)
+                return Optional.of(scheme.foreground().toInt());
+
+            return Optional.empty();
+        }, ChangedAbilities.UNDERWATER_DASH.get());
+
+        colors.register((abilityInstance, layer) -> {
+            var scheme = getAbilityColors(abilityInstance);
+
+            boolean isFallFlying = abilityInstance.entity.getEntity().isFallFlying();
+            if (layer == 0 && !isFallFlying)
+                return Optional.of(scheme.foreground().toInt());
+            else if (layer == 1 && isFallFlying)
+                return Optional.of(scheme.foreground().toInt());
+
+            return Optional.empty();
+        }, ChangedAbilities.SKY_DIVE.get());
 
         colors.register((abilityInstance, layer) -> {
             var scheme = getAbilityColors(abilityInstance);

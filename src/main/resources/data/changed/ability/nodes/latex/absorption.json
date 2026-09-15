@@ -1,0 +1,21 @@
+{
+  "parent": "changed:latex/grab",
+  "titleId": "changed.ability_tree.latex.absorption",
+  "flavorId": "changed.ability_tree.latex.absorption.flavor",
+  "display": { "icon": "changed:textures/gui/nodes/absorption.png" },
+  "price": {
+    "levels": 1,
+    "groupDiscountLevels": -1
+  },
+
+  "acquiredEffects": [
+    {
+      "type": "changed:enable_feature",
+      "feature": "changed:grab/absorption"
+    },
+    {
+      "type": "changed:unlock_active_ability",
+      "ability": "changed:switch_transfur_mode"
+    }
+  ]
+}

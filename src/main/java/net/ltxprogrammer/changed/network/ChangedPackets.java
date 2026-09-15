@@ -1,6 +1,7 @@
 package net.ltxprogrammer.changed.network;
 
 import net.ltxprogrammer.changed.Changed;
+import net.ltxprogrammer.changed.ability.tree.AbilityTrees;
 import net.ltxprogrammer.changed.block.CustomFallable;
 import net.ltxprogrammer.changed.entity.AccessoryEntities;
 import net.ltxprogrammer.changed.network.packet.*;
@@ -58,6 +59,13 @@ public class ChangedPackets {
         addNetworkMessage(SectionLatexCoversUpdatePacket.class, SectionLatexCoversUpdatePacket::new);
         addNetworkMessage(CustomLevelEventPacket.class, CustomLevelEventPacket::new);
         addNetworkMessage(AssimilatedEntitySyncPacket.class, AssimilatedEntitySyncPacket::new);
+        addNetworkMessage(AbilityTreeMenuPacket.class, AbilityTreeMenuPacket::new);
+        addNetworkMessage(AbilityTrees.SyncPacket.class, AbilityTrees.SyncPacket::new);
+        addNetworkMessage(AbilityTreeSyncInstancePacket.class, AbilityTreeSyncInstancePacket::new);
+        addNetworkMessage(SyncActiveNodeEffectsPacket.class, SyncActiveNodeEffectsPacket::new);
+        addNetworkMessage(ComputerAppLaunchPacket.class, ComputerAppLaunchPacket::new);
+        addNetworkMessage(ComputerAppClosePacket.class, ComputerAppClosePacket::new);
+        addNetworkMessage(ComputerAppSyncPacket.class, ComputerAppSyncPacket::new);
 
         addNetworkMessage(UndeathPacket.class, UndeathPacket::new);
 

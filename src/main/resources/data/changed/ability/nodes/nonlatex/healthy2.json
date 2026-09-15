@@ -1,0 +1,22 @@
+{
+  "parent": "changed:nonlatex/healthy1",
+  "titleId": "changed.ability_tree.nonlatex.healthy2",
+  "flavorId": "changed.ability_tree.nonlatex.healthy2.flavor",
+  "price": {
+    "levels": 10,
+    "groupDiscountLevels": -1
+  },
+
+  "acquiredEffects": [
+    {
+      "type": "changed:attribute_modifier",
+      "attribute": "minecraft:generic.movement_speed",
+      "factor": 0.02
+    },
+    {
+      "type": "changed:attribute_modifier",
+      "attribute": "changed:generic.attack_damage",
+      "factor": 1.0
+    }
+  ]
+}

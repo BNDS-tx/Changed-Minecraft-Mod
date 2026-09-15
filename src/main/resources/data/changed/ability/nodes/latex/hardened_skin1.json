@@ -1,0 +1,19 @@
+{
+  "parent": "changed:latex/stability2",
+  "titleId": "changed.ability_tree.latex.hardened_skin1",
+  "flavorId": "changed.ability_tree.latex.hardened_skin1.flavor",
+  "display": { "icon": { "item": "minecraft:iron_chestplate" } },
+  "price": {
+    "levels": 1,
+    "groupDiscountLevels": -1
+  },
+
+  "missingEffects": [
+    {
+      "type": "changed:attribute_modifier",
+      "attribute": "minecraft:generic.armor",
+      "method": "add",
+      "factor": -2.0
+    }
+  ]
+}

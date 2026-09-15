@@ -144,12 +144,19 @@ public abstract class RegistryElementPredicate<T> implements Predicate<T> {
     }
 
     public static <T> RegistryElementPredicate<T> parseString(IForgeRegistry<T> registry, String string) {
-        if (string.isEmpty())
+        if (string.isEmpty() || string.equals("*"))
             return new AllSpec<>(registry);
         else if (string.startsWith("#"))
             return new TagSpec<>(registry, ResourceLocation.parse(string.substring(1)));
         else if (string.startsWith("@"))
             return new NamespaceSpec<>(registry, string.substring(1));
+        else
+            return new FullNameSpec<>(registry, ResourceLocation.parse(string));
+    }
+
+    public static <T> RegistryElementPredicate<T> parseStringElementOrTag(IForgeRegistry<T> registry, String string) {
+        if (string.startsWith("#"))
+            return new TagSpec<>(registry, ResourceLocation.parse(string.substring(1)));
         else
             return new FullNameSpec<>(registry, ResourceLocation.parse(string));
     }
@@ -191,6 +198,8 @@ public abstract class RegistryElementPredicate<T> implements Predicate<T> {
     public static boolean isValidSyntax(String string) {
         if (string.isEmpty())
             return true;
+        else if (string.equals("*"))
+            return true;
         else if (string.startsWith("#"))
             return ResourceLocation.isValidResourceLocation(string.substring(1));
         else if (string.startsWith("@"))
@@ -209,6 +218,16 @@ public abstract class RegistryElementPredicate<T> implements Predicate<T> {
         return Codec.STRING.comapFlatMap(string -> {
             try {
                 return DataResult.success(parseString(registry, string));
+            } catch (Exception e) {
+                return DataResult.error(e::getMessage);
+            }
+        }, RegistryElementPredicate::toString);
+    }
+
+    public static <T> Codec<RegistryElementPredicate<T>> codecElementOrTag(IForgeRegistry<T> registry) {
+        return Codec.STRING.comapFlatMap(string -> {
+            try {
+                return DataResult.success(parseStringElementOrTag(registry, string));
             } catch (Exception e) {
                 return DataResult.error(e::getMessage);
             }

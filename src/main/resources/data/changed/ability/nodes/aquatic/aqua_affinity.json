@@ -1,0 +1,18 @@
+{
+  "parent": "changed:aquatic/practice1",
+  "titleId": "changed.ability_tree.aquatic.aqua_affinity",
+  "flavorId": "changed.ability_tree.aquatic.aqua_affinity.flavor",
+  "price": {
+    "levels": 1,
+    "groupDiscountLevels": -1
+  },
+
+  "acquiredEffects": [
+    {
+      "type": "changed:intrinsic_enchantment",
+      "enchantment": "minecraft:aqua_affinity",
+      "method": "minimum",
+      "level": 1
+    }
+  ]
+}

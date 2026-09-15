@@ -1,0 +1,33 @@
+{
+  "parent": { "tree": "changed:aquatic" },
+  "titleId": "changed.ability_tree.practice1",
+  "flavorId": "changed.ability_tree.aquatic.practice1",
+  "price": {
+    "levels": 1,
+    "groupDiscountLevels": -1
+  },
+
+  "missingEffects": [
+    {
+      "type": "changed:attribute_modifier",
+      "attribute": "forge:swim_speed",
+      "factor": -0.1
+    },
+    {
+      "type": "changed:enable_feature",
+      "feature": "changed:breathe/accept_water"
+    }
+  ],
+  "acquiredEffects": [
+    {
+      "type": "changed:attribute_modifier",
+      "attribute": "changed:air_capacity",
+      "method": "add",
+      "factor": 15
+    },
+    {
+      "type": "changed:enable_feature",
+      "feature": "changed:breathe/accept_water"
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 package net.ltxprogrammer.changed.datagen;
 
+import net.ltxprogrammer.changed.datagen.ability.AbilityNodesProvider;
+import net.ltxprogrammer.changed.datagen.ability.AbilityTreeProvider;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
@@ -12,7 +14,6 @@ import java.util.concurrent.CompletableFuture;
 
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 public class GatherData {
-
     @SubscribeEvent
     public static void onGatherData(GatherDataEvent event) {
         DataGenerator generator = event.getGenerator();
@@ -29,6 +30,8 @@ public class GatherData {
                 generator.addProvider(event.includeServer(), new DatapackEntriesProvider(packOutput, lookupProvider)).getRegistryProvider();
 
         generator.addProvider(event.includeServer(), new DamageTypeTagProvider(packOutput, lookup0, helper));
+        generator.addProvider(event.includeServer(), new AbilityNodesProvider(packOutput));
+        generator.addProvider(event.includeServer(), new AbilityTreeProvider(packOutput));
 
 //        BlockTagsProvider blocks = new BlockTagsProvider(packOutput, lookupProvider, helper);
 //        generator.addProvider(true, blocks);

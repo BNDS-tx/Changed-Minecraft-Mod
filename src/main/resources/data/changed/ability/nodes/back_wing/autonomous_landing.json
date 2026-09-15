@@ -1,0 +1,13 @@
+{
+  "parent": "changed:back_wing/strong_wings",
+  "titleId": "changed.ability_tree.back_wing.autonomous_landing",
+  "flavorId": "changed.ability_tree.back_wing.autonomous_landing.flavor",
+  "price": 1,
+
+  "acquiredEffects": [
+    {
+      "type": "changed:enable_feature",
+      "feature": "changed:wing_flap/autonomous_landing"
+    }
+  ]
+}

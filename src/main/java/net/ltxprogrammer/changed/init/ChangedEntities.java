@@ -12,6 +12,7 @@ import net.ltxprogrammer.changed.entity.beast.boss.BehemothHead;
 import net.ltxprogrammer.changed.entity.decoration.*;
 import net.ltxprogrammer.changed.entity.projectile.GasParticle;
 import net.ltxprogrammer.changed.entity.projectile.LatexInkball;
+import net.ltxprogrammer.changed.entity.projectile.WindGust;
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton;
 import net.ltxprogrammer.changed.entity.robot.Roomba;
 import net.ltxprogrammer.changed.util.Color3;
@@ -172,7 +173,7 @@ public class ChangedEntities {
             EntityType.Builder.of(GasWolfPup::new, MobCategory.CREATURE).clientTrackingRange(10).sized(0.6F, 0.85F),
             ChangedEntities::overworldOnly, SpawnPlacements.Type.ON_GROUND, GasWolfPup::checkEntitySpawnRules);
     public static final RegistryObject<EntityType<PooltoyWolf>> POOLTOY_WOLF = registerSpawning("pooltoy_wolf", 0x50c3ff, 0x57a9ec,
-            EntityType.Builder.of(PooltoyWolf::new, MobCategory.CREATURE).clientTrackingRange(10).sized(0.7F * PooltoyWolf.SCALE, 1.93F * PooltoyWolf.SCALE),
+            EntityType.Builder.of(PooltoyWolf::new, MobCategory.CREATURE).clientTrackingRange(10).sized(0.7F, 1.93F),
             ChangedEntities::overworldOnly, SpawnPlacements.Type.ON_GROUND, PooltoyWolf::checkEntitySpawnRules);
     public static final RegistryObject<EntityType<DarkDragon>> DARK_DRAGON = registerSpawning("dark_dragon", 0x393939, 0x909090,
             EntityType.Builder.of(DarkDragon::new, MobCategory.CREATURE).clientTrackingRange(10).sized(0.7F, 1.93F),
@@ -214,7 +215,7 @@ public class ChangedEntities {
             EntityType.Builder.of(LatexBlueWolf::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.7F, 1.93F),
             ChangedEntities::overworldOnly, SpawnPlacements.Type.ON_GROUND, LatexBlueWolf::checkEntitySpawnRules);
     public static final RegistryObject<EntityType<LatexCrocodile>> LATEX_CROCODILE = registerSpawning("latex_crocodile", 0x216d50, 0x43b058,
-            EntityType.Builder.of(LatexCrocodile::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.8F, 2.3F),
+            EntityType.Builder.of(LatexCrocodile::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.7F * 1.2F, 1.93F * 1.2F),
             ChangedEntities::overworldOnly, SpawnPlacements.Type.ON_GROUND, LatexCrocodile::checkEntitySpawnRules);
     public static final RegistryObject<EntityType<LatexCrow>> LATEX_CROW = registerSpawning("latex_crow", 0x0e0e0e, 0xffffff,
             EntityType.Builder.of(LatexCrow::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.7F, 1.93F),
@@ -301,10 +302,10 @@ public class ChangedEntities {
             EntityType.Builder.of(LatexShark::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.7F, 1.93F),
             ChangedEntities::overworldOnly, SpawnPlacements.Type.IN_WATER, LatexShark::checkEntitySpawnRules);
     public static final RegistryObject<EntityType<BuffLatexSharkMale>> LATEX_SHARK_MALE = registerSpawning("latex_shark_male", 0x969696, 0xFFFFFF,
-            EntityType.Builder.of(BuffLatexSharkMale::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.8F, 2.2F),
+            EntityType.Builder.of(BuffLatexSharkMale::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.7F * 1.125F, 1.93F * 1.125F),
             ChangedEntities::overworldOnly, SpawnPlacements.Type.IN_WATER, BuffLatexSharkMale::checkEntitySpawnRules);
     public static final RegistryObject<EntityType<BuffLatexSharkFemale>> LATEX_SHARK_FEMALE = registerSpawning("latex_shark_female", 0x969696, 0xFFFFFF,
-            EntityType.Builder.of(BuffLatexSharkFemale::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.8F, 2.25F),
+            EntityType.Builder.of(BuffLatexSharkFemale::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.7F * 1.125F, 1.93F * 1.125F),
             ChangedEntities::overworldOnly, SpawnPlacements.Type.IN_WATER, BuffLatexSharkFemale::checkEntitySpawnRules);
     public static final RegistryObject<EntityType<SniperDog>> SNIPER_DOG = registerSpawning("sniper_dog", 0xEF8F44, 0x894633,
             EntityType.Builder.of(SniperDog::new, MobCategory.CREATURE).clientTrackingRange(10).sized(0.7F, 1.93F),
@@ -322,10 +323,10 @@ public class ChangedEntities {
             EntityType.Builder.of(LatexSnowLeopardFemale::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.7F, 1.93F),
             ChangedEntities::overworldOnly, SpawnPlacements.Type.ON_GROUND, LatexSnowLeopardFemale::checkEntitySpawnRules);
     public static final RegistryObject<EntityType<LatexSquidDogFemale>> LATEX_SQUID_DOG_FEMALE = registerSpawning("latex_squid_dog_female", 0xFFFFFF, 0x0,
-            EntityType.Builder.of(LatexSquidDogFemale::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.8F, 2.1F),
+            EntityType.Builder.of(LatexSquidDogFemale::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.7F, 1.93F),
             ChangedEntities::overworldOnly, SpawnPlacements.Type.IN_WATER, LatexSquidDogFemale::checkEntitySpawnRules);
     public static final RegistryObject<EntityType<LatexSquidDogMale>> LATEX_SQUID_DOG_MALE = registerSpawning("latex_squid_dog_male", 0xFFFFFF, 0x0,
-            EntityType.Builder.of(LatexSquidDogMale::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.8F, 2.1F),
+            EntityType.Builder.of(LatexSquidDogMale::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.7F, 1.93F),
             ChangedEntities::overworldOnly, SpawnPlacements.Type.IN_WATER, LatexSquidDogMale::checkEntitySpawnRules);
     public static final RegistryObject<EntityType<LatexStiger>> LATEX_STIGER = registerSpawning("latex_stiger", 0x7b4251, 0xe0cfd9,
             EntityType.Builder.of(LatexStiger::new, MobCategory.MONSTER).clientTrackingRange(10).sized(0.7F, 1.93F),
@@ -398,6 +399,8 @@ public class ChangedEntities {
             () -> EntityType.Builder.<LatexInkball>of(LatexInkball::new, MobCategory.MISC).sized(0.25F, 0.25F).clientTrackingRange(4).updateInterval(10).build("latex_inkball"));
     public static final RegistryObject<EntityType<GasParticle>> GAS_PARTICLE = REGISTRY.register("gas_particle",
             () -> EntityType.Builder.of(GasParticle::new, MobCategory.MISC).sized(0.75F, 0.75F).clientTrackingRange(4).updateInterval(10).build("gas_particle"));
+    public static final RegistryObject<EntityType<WindGust>> WIND_GUST = REGISTRY.register("wind_gust",
+            () -> EntityType.Builder.of(WindGust::new, MobCategory.MISC).sized(2.5F, 1.25F).clientTrackingRange(4).updateInterval(10).build("wind_gust"));
     public static final RegistryObject<EntityType<WallSign>> WALL_SIGN = REGISTRY.register("wall_sign",
             () -> EntityType.Builder.of(WallSign::new, MobCategory.MISC).sized(0.5F, 0.5F).clientTrackingRange(10).updateInterval(Integer.MAX_VALUE).build("wall_sign"));
     public static final RegistryObject<EntityType<EmittedLaser>> EMITTED_LASER = REGISTRY.register("emitted_laser",

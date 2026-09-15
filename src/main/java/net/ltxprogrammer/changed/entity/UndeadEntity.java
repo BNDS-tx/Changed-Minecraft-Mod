@@ -3,6 +3,7 @@ package net.ltxprogrammer.changed.entity;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.entity.beast.AzurebyssEntity;
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton;
+import net.ltxprogrammer.changed.init.ChangedAttributes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -75,14 +76,14 @@ public interface UndeadEntity extends AzurebyssCreate {
                 entity.setAttributes(attributes);
             } else {
                 Objects.requireNonNull(attributes.getInstance(Attributes.MOVEMENT_SPEED)).setBaseValue(0);
-                Objects.requireNonNull(attributes.getInstance(ForgeMod.SWIM_SPEED.get())).setBaseValue(0);
+                Objects.requireNonNull(attributes.getInstance(ForgeMod.SWIM_SPEED.get())).setBaseValue(0.2);
                 Objects.requireNonNull(attributes.getInstance(Attributes.ATTACK_DAMAGE)).setBaseValue(1);
+                Objects.requireNonNull(attributes.getInstance(ChangedAttributes.MINING_SPEED.get())).setBaseValue(0.5);
             }
 
             var instance = IAbstractChangedEntity.forEitherSafe(entity.maybeGetUnderlying()).map(IAbstractChangedEntity::getTransfurVariantInstance).orElse(null);
             if (instance != null) {
                 instance.itemUseMode = !shouldDisable ? UseItemMode.NORMAL : UseItemMode.NONE;
-                instance.miningStrength = !shouldDisable ? MiningStrength.NORMAL : MiningStrength.WEAK;
 
                 instance.refreshAttributes();
             }

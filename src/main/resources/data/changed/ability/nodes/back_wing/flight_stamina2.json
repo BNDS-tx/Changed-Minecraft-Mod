@@ -1,0 +1,19 @@
+{
+  "parent": "changed:back_wing/flight_stamina1",
+  "titleId": "changed.ability_tree.back_wing.flight_stamina2",
+  "flavorId": "changed.ability_tree.back_wing.flight_stamina2.flavor",
+  "display": { "icon": { "item": "minecraft:phantom_membrane" } },
+  "price": {
+    "levels": 1,
+    "groupDiscountLevels": -1
+  },
+
+  "acquiredEffects": [
+    {
+      "type": "changed:attribute_modifier",
+      "attribute": "changed:max_flight_stamina",
+      "method": "add",
+      "factor": 16.0
+    }
+  ]
+}

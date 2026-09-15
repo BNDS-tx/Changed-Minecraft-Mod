@@ -15,12 +15,12 @@ import net.ltxprogrammer.changed.network.packet.SyncMoversPacket;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.CameraUtil;
 import net.ltxprogrammer.changed.util.EntityUtil;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Player;
@@ -65,16 +65,9 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
         });
     }
 
-    @Inject(method = "tryToStartFallFlying", at = @At("HEAD"), cancellable = true)
-    protected void tryToStartFallFlying(CallbackInfoReturnable<Boolean> ci) {
-        Player player = (Player)(Object)this;
-        if (latexVariant != null && latexVariant.canElytraGlide()) {
-            if (!player.onGround() && !player.isFallFlying() && !player.isInWater() && !player.hasEffect(MobEffects.LEVITATION)) {
-                player.startFallFlying();
-                ci.setReturnValue(true);
-                ci.cancel();
-            }
-        }
+    @WrapOperation(method = "tryToStartFallFlying", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;canElytraFly(Lnet/minecraft/world/entity/LivingEntity;)Z", remap = false))
+    protected boolean changed$orCanVariantStartGliding(ItemStack instance, LivingEntity livingEntity, Operation<Boolean> original) {
+        return (latexVariant != null && latexVariant.canElytraGlide()) || original.call(instance, livingEntity);
     }
 
     @Inject(method = "tick", at = @At("HEAD"))
@@ -202,13 +195,6 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
         this.paleExposure = paleExposure;
     }
 
-    @Inject(method = "makeStuckInBlock", at = @At("HEAD"), cancellable = true)
-    public void makeStuckInBlock(BlockState state, Vec3 v3, CallbackInfo ci) {
-        if (latexVariant != null)
-            if (latexVariant.getParent().canClimb && state.is(Blocks.COBWEB))
-                ci.cancel();
-    }
-
     @Unique
     private float foodEfficiency = 1.0f;
 
@@ -330,5 +316,17 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
     @WrapMethod(method = "getFlyingSpeed")
     public float changed$getTransfurFlyingSpeed(Operation<Float> original) {
         return this.getTransfurVariant() != null ? this.getTransfurVariant().getChangedEntity().getFlyingSpeed() : original.call();
+    }
+
+    @WrapOperation(method = "causeFallDamage", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/player/Abilities;mayfly:Z"))
+    public boolean changed$shouldIgnoreFallDamage(Abilities instance, Operation<Boolean> original) {
+        if (this.getTransfurVariant() == null)
+            return original.call(instance);
+        return original.call(instance) && !this.getTransfurVariant().canCreativeFly();
+    }
+
+    @WrapMethod(method = "getDigSpeed", remap = false)
+    public float changed$multiplyMiningSpeedAttribute(BlockState blockState, BlockPos pos, Operation<Float> original) {
+        return original.call(blockState, pos) * (float) getAttributeValue(ChangedAttributes.MINING_SPEED.get());
     }
 }

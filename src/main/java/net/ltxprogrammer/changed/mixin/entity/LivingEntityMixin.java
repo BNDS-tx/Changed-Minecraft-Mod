@@ -124,23 +124,15 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
         return Optional.of(accessorySlots);
     }
 
-    @Inject(method = "updateFallFlying", at = @At("HEAD"), cancellable = true)
-    private void updateFallFlying(CallbackInfo callback) {
-        if (this.level().isClientSide) return;
-        ProcessTransfur.ifPlayerTransfurred(EntityUtil.playerOrNull(this), (player, variant) -> {
-            if (variant.canElytraGlide()) {
-                this.setSharedFlag(7, player.isFallFlying() && !player.onGround() && !player.isPassenger() && !player.hasEffect(MobEffects.LEVITATION));
-                callback.cancel();
-            }
-        });
-    }
+    @WrapOperation(method = "updateFallFlying", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;setSharedFlag(IZ)V"))
+    private void updateFallFlying(LivingEntity instance, int flagIndex, boolean fallFlying, Operation<Void> original) {
+        var variant = ProcessTransfur.getPlayerTransfurVariant(EntityUtil.playerOrNull(this));
+        if (variant == null) {
+            original.call(instance, flagIndex, fallFlying);
+            return;
+        }
 
-    @Inject(method = "onClimbable", at = @At("HEAD"), cancellable = true)
-    public void onClimbable(CallbackInfoReturnable<Boolean> callback) {
-        ProcessTransfur.ifPlayerTransfurred(EntityUtil.playerOrNull(this), (variant) -> {
-            if (variant.getParent().canClimb && this.horizontalCollision)
-                callback.setReturnValue(true);
-        });
+        original.call(instance, flagIndex, fallFlying || (isFallFlying() && variant.tickGliding()));
     }
 
     @WrapMethod(method = "getJumpPower")
@@ -159,14 +151,11 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
             if (variant.visionType.test(effect))
                 callback.setReturnValue(true);
 
-            if (variant.miningStrength.test(effect))
-                callback.setReturnValue(true);
-
             if (effect.equals(MobEffects.NIGHT_VISION)) {
                 if (WhiteLatexTransportInterface.isEntityInWhiteLatex(player))
                     callback.setReturnValue(true);
             }
-            if (variant.breatheMode.canBreatheWater() && effect.equals(MobEffects.CONDUIT_POWER) && isEyeInFluidType(ForgeMod.WATER_TYPE.get()))
+            if (variant.getBreatheMode().canBreatheWater() && effect.equals(MobEffects.CONDUIT_POWER) && isEyeInFluidType(ForgeMod.WATER_TYPE.get()))
                 callback.setReturnValue(true);
         });
     }
@@ -177,14 +166,11 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
             if (variant.visionType.test(effect))
                 callback.setReturnValue(new MobEffectInstance(effect, 300, 1, false, false));
 
-            if (variant.miningStrength.test(effect))
-                callback.setReturnValue(new MobEffectInstance(effect, 300, 1, false, false));
-
             if (effect.equals(MobEffects.NIGHT_VISION)) {
                 if (WhiteLatexTransportInterface.isEntityInWhiteLatex(player))
                     callback.setReturnValue(new MobEffectInstance(MobEffects.NIGHT_VISION, 300, 1, false, false));
             }
-            if (variant.breatheMode.canBreatheWater() && effect.equals(MobEffects.CONDUIT_POWER) && isEyeInFluidType(ForgeMod.WATER_TYPE.get()))
+            if (variant.getBreatheMode().canBreatheWater() && effect.equals(MobEffects.CONDUIT_POWER) && isEyeInFluidType(ForgeMod.WATER_TYPE.get()))
                 callback.setReturnValue(new MobEffectInstance(MobEffects.CONDUIT_POWER, 300, 1, false, false));
         });
     }
@@ -378,6 +364,8 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
     @Shadow public abstract AttributeMap getAttributes();
 
     @Shadow protected boolean jumping;
+
+    @Shadow public abstract boolean isFallFlying();
 
     @Unique private boolean isInLatex() {
         return !this.firstTick && this.fluidHeight.getDouble(ChangedTags.Fluids.LATEX) > 0.0D;

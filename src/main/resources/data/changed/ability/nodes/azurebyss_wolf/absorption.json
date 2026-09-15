@@ -1,0 +1,17 @@
+{
+  "parent": "changed:azurebyss_wolf/grab",
+  "titleId": "changed.ability_tree.azurebyss_wolf.absorption",
+  "flavorId": "changed.ability_tree.azurebyss_wolf.absorption.flavor",
+  "display": { "icon": "changed:textures/gui/nodes/absorption.png" },
+  "price": {
+    "levels": 1,
+    "groupDiscountLevels": -1
+  },
+
+  "acquiredEffects": [
+    {
+      "type": "changed:enable_feature",
+      "feature": "changed:grab/absorption"
+    }
+  ]
+}

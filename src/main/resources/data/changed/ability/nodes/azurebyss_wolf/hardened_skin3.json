@@ -1,0 +1,22 @@
+{
+  "parent": "changed:azurebyss_wolf/hardened_skin2",
+  "titleId": "changed.ability_tree.azurebyss_wolf.hardened_skin3",
+  "flavorId": "changed.ability_tree.azurebyss_wolf.hardened_skin3.flavor",
+  "display": {
+    "icon": { "item": "minecraft:netherite_chestplate" },
+    "frame": "strong"
+  },
+  "price": {
+    "levels": 2,
+    "groupDiscountLevels": -1
+  },
+
+  "acquiredEffects": [
+    {
+      "type": "changed:attribute_modifier",
+      "attribute": "minecraft:generic.armor",
+      "method": "add",
+      "factor": 4.0
+    }
+  ]
+}

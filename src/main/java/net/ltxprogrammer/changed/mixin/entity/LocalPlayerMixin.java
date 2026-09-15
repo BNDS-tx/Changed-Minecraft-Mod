@@ -6,12 +6,14 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.authlib.GameProfile;
 import net.ltxprogrammer.changed.Changed;
+import net.ltxprogrammer.changed.ability.AbstractAbility;
 import net.ltxprogrammer.changed.ability.GrabEntityAbility;
 import net.ltxprogrammer.changed.client.InvertedInput;
 import net.ltxprogrammer.changed.client.LocalPlayerAccessor;
 import net.ltxprogrammer.changed.client.NullInput;
 import net.ltxprogrammer.changed.entity.LivingEntityDataExtension;
 import net.ltxprogrammer.changed.entity.PlayerDataExtension;
+import net.ltxprogrammer.changed.init.ChangedAbilities;
 import net.ltxprogrammer.changed.init.ChangedAttributes;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.EntityUtil;
@@ -24,8 +26,9 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.stats.StatsCounter;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -65,6 +68,8 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
 
     @Shadow private boolean handsBusy;
 
+    @Shadow public abstract boolean isCrouching();
+
     @Override
     public void setHandsBusy(boolean busy) {
         this.handsBusy = busy;
@@ -78,7 +83,7 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
     @Inject(method = "getWaterVision", at = @At("RETURN"), cancellable = true)
     private void getWaterVision(CallbackInfoReturnable<Float> callback) {
         ProcessTransfur.ifPlayerTransfurred(this, variant -> {
-            if (!variant.getParent().getBreatheMode().canBreatheWater())
+            if (!variant.getBreatheMode().canBreatheWater())
                 return;
             if (!this.isEyeInFluidType(ForgeMod.WATER_TYPE.get()))
                 return;
@@ -122,6 +127,15 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
         });
     }
 
+    @WrapOperation(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;canElytraFly(Lnet/minecraft/world/entity/LivingEntity;)Z", remap = false))
+    public boolean changed$orCanVariantStartGliding(ItemStack instance, LivingEntity livingEntity, Operation<Boolean> original) {
+        var variant = getTransfurVariant();
+        if (variant == null)
+            return original.call(instance, livingEntity);
+
+        return variant.canElytraGlide() || original.call(instance, livingEntity);
+    }
+
     @WrapMethod(method = "canStartSprinting")
     public boolean denySprintingOnZero(Operation<Boolean> original) {
         LocalPlayer player = (LocalPlayer)(Object)this;
@@ -156,6 +170,11 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer implements P
         ProcessTransfur.ifPlayerTransfurred(this, variant -> {
             if (variant.getChangedEntity() != null)
                 callback.setReturnValue(variant.getChangedEntity().isMovingSlowly());
+        });
+
+        AbstractAbility.getAbilityInstanceSafe(this, ChangedAbilities.WALL_CLIMB.get()).ifPresent(wallClimb -> {
+            if (wallClimb.isActive())
+                callback.setReturnValue(this.isCrouching());
         });
     }
 

@@ -4,9 +4,12 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.Lifecycle;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.ability.AbstractAbility;
-import net.ltxprogrammer.changed.ability.tree.AbilityTree;
+import net.ltxprogrammer.changed.ability.tree.NodeEffect;
 import net.ltxprogrammer.changed.ability.tree.condition.AbstractCondition;
+import net.ltxprogrammer.changed.ability.tree.events.AbstractPointEvent;
+import net.ltxprogrammer.changed.ability.tree.requirements.AbstractRequirement;
 import net.ltxprogrammer.changed.client.latexparticles.LatexParticleType;
+import net.ltxprogrammer.changed.computers.application.ApplicationType;
 import net.ltxprogrammer.changed.data.AccessorySlotType;
 import net.ltxprogrammer.changed.entity.HairStyle;
 import net.ltxprogrammer.changed.entity.PlayerMover;
@@ -14,6 +17,7 @@ import net.ltxprogrammer.changed.entity.decoration.WallSignVariant;
 import net.ltxprogrammer.changed.entity.latex.LatexType;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.entity.animation.AnimationEvent;
+import net.ltxprogrammer.changed.entity.variant.VariantFeature;
 import net.ltxprogrammer.changed.world.LatexCoverState;
 import net.ltxprogrammer.changed.world.features.structures.facility.FacilityPieceEvent;
 import net.ltxprogrammer.changed.world.features.structures.facility.types.PieceType;
@@ -53,7 +57,7 @@ public abstract class ChangedRegistry<T> implements Registry<T> {
             }
 
             @Override
-            public @org.jetbrains.annotations.Nullable T byId(int id) {
+            public @Nullable T byId(int id) {
                 return RegistryHolder.this.getValue(id);
             }
 
@@ -204,8 +208,13 @@ public abstract class ChangedRegistry<T> implements Registry<T> {
     public static final RegistryHolder<Zone> FACILITY_ZONES = new RegistryHolder<>(registryKey("facility/zones"));
     public static final RegistryHolder<FacilityPieceEvent> FACILITY_EVENTS = new RegistryHolder<>(registryKey("facility/events"));
 
-    public static final RegistryHolder<Codec<? extends AbilityTree.NodeEffect>> ABILITY_NODE_EFFECTS = new RegistryHolder<>(registryKey("ability/node_effects"));
+    public static final RegistryHolder<Codec<? extends NodeEffect>> ABILITY_NODE_EFFECTS = new RegistryHolder<>(registryKey("ability/node_effects"));
     public static final RegistryHolder<Codec<? extends AbstractCondition>> ABILITY_EFFECT_CONDITIONS = new RegistryHolder<>(registryKey("ability/effect_conditions"));
+    public static final RegistryHolder<Codec<? extends AbstractRequirement>> PURCHASE_REQUIREMENTS = new RegistryHolder<>(registryKey("ability/purchase_requirements"));
+    public static final RegistryHolder<Codec<? extends AbstractPointEvent<?>>> POINT_EVENTS = new RegistryHolder<>(registryKey("ability/point_events"));
+    public static final RegistryHolder<VariantFeature> TRANSFUR_VARIANT_FEATURES = new RegistryHolder<>(registryKey("ability/variant_features"));
+
+    public static final RegistryHolder<ApplicationType<?>> APPLICATION_TYPES = new RegistryHolder<>(registryKey("computer/application_type"));
 
     private static class ClearableObjectIntIdentityMap<I> extends IdMapper<I> {
         void clear()
@@ -276,6 +285,10 @@ public abstract class ChangedRegistry<T> implements Registry<T> {
         createRegistry(event, FACILITY_EVENTS.key);
         createRegistry(event, ABILITY_NODE_EFFECTS.key);
         createRegistry(event, ABILITY_EFFECT_CONDITIONS.key);
+        createRegistry(event, PURCHASE_REQUIREMENTS.key);
+        createRegistry(event, POINT_EVENTS.key);
+        createRegistry(event, TRANSFUR_VARIANT_FEATURES.key);
+        createRegistry(event, APPLICATION_TYPES.key, RegistryBuilder::hasTags, null);
     }
 
     private static <T> void createRegistry(NewRegistryEvent event, ResourceKey<? extends Registry<T>> key) {

@@ -1,0 +1,18 @@
+{
+  "parent": "changed:latex/aftertaste1",
+  "titleId": "changed.ability_tree.latex.aftertaste2",
+  "flavorId": "changed.ability_tree.latex.aftertaste2.flavor",
+  "display": { "icon": { "item": "minecraft:golden_apple" } },
+  "price": {
+    "levels": 1,
+    "groupDiscountLevels": -1
+  },
+
+  "acquiredEffects": [
+    {
+      "type": "changed:enable_feature",
+      "feature": "changed:transfur/aftertaste",
+      "factor": 2.0
+    }
+  ]
+}

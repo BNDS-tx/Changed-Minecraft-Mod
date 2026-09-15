@@ -1,0 +1,18 @@
+{
+  "parent": { "tree": "changed:azurebyss_wolf" },
+  "titleId": "changed.ability_tree.azurebyss_wolf.grab",
+  "flavorId": "changed.ability_tree.azurebyss_wolf.grab.flavor",
+  "display": { "icon": "changed:textures/gui/nodes/grab.png" },
+  "price": {
+    "levels": 1,
+    "groupDiscountLevels": -1
+  },
+
+  "comment": "This node would grant the grab ability to the player, but not suiting",
+  "acquiredEffects": [
+    {
+      "type": "changed:unlock_active_ability",
+      "ability": "changed:grab_entity"
+    }
+  ]
+}

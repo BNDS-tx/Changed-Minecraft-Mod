@@ -1,0 +1,18 @@
+{
+  "parent": "changed:latex/grab",
+  "titleId": "changed.ability_tree.latex.aftertaste1",
+  "flavorId": "changed.ability_tree.latex.aftertaste1.flavor",
+  "display": { "icon": { "item": "minecraft:apple" } },
+  "price": {
+    "levels": 1,
+    "groupDiscountLevels": -1
+  },
+
+  "acquiredEffects": [
+    {
+      "type": "changed:enable_feature",
+      "feature": "changed:transfur/aftertaste",
+      "factor": 1.0
+    }
+  ]
+}

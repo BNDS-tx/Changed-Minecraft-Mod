@@ -1,0 +1,34 @@
+{
+  "parent": "changed:azurebyss_wolf/hardened_skin3",
+  "titleId": "changed.ability_tree.azurebyss_wolf.like_a_tank",
+  "flavorId": "changed.ability_tree.azurebyss_wolf.like_a_tank.flavor",
+  "display": {
+    "icon": { "item": "minecraft:netherite_chestplate", "nbt": { "Enchantments": [{ "id": "minecraft:unbreaking", "lvl": 1 }] } },
+    "frame": "ultimate"
+  },
+  "price": {
+    "levels": 4,
+    "groupDiscountLevels": -2,
+    "items": [
+      {
+        "item": "minecraft:diamond_chestplate",
+        "groupDiscounted": true
+      }
+    ]
+  },
+
+  "acquiredEffects": [
+    {
+      "type": "changed:attribute_modifier",
+      "attribute": "minecraft:generic.max_health",
+      "method": "add",
+      "factor": 2.0
+    },
+    {
+      "type": "changed:attribute_modifier",
+      "attribute": "minecraft:generic.armor",
+      "method": "add",
+      "factor": 2.0
+    }
+  ]
+}

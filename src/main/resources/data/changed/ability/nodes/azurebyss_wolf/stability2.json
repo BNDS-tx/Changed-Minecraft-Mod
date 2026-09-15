@@ -1,0 +1,29 @@
+{
+  "parent": "changed:azurebyss_wolf/stability1",
+  "titleId": "changed.ability_tree.azurebyss_wolf.stability2",
+  "flavorId": "changed.ability_tree.azurebyss_wolf.stability2.flavor",
+  "price": {
+    "levels": 0,
+    "groupDiscountLevels": -1
+  },
+
+  "missingEffects": [
+    {
+      "type": "changed:attribute_modifier",
+      "attribute": "minecraft:generic.max_health",
+      "method": "add",
+      "factor": -2.0
+    },
+    {
+      "type": "changed:attribute_modifier",
+      "attribute": "changed:transfur_damage",
+      "method": "add",
+      "factor": -1.0
+    },
+    {
+      "type": "changed:attribute_modifier",
+      "attribute": "changed:mining_speed",
+      "factor": -0.1
+    }
+  ]
+}

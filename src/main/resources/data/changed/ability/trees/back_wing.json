@@ -1,0 +1,14 @@
+{
+  "variants": [
+    "#changed:winged_back"
+  ],
+  "titleId": "changed.ability_tree.back_wing",
+  "flavorId": "changed.ability_tree.back_wing.flavor",
+  "flavorCompletedId": "changed.ability_tree.back_wing.mastered",
+  "pointEvents": [
+    {
+      "type": "changed:on_wing_flap",
+      "reward": 1
+    }
+  ]
+}
